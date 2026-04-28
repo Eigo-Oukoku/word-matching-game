@@ -505,22 +505,18 @@ function rendersenseFooter(){
 }
 
 function toggleHint(){
-  if(state.mode !== 'sense') return;
-  state.hintShown = !state.hintShown;
-  
+  if(state.mode!=='sense') return;
+  state.hintShown=!state.hintShown;
   if(state.hintShown){
-    state.lives = Math.max(0, state.lives - 1);
-    
-    if(state.lives <= 0){
-      // ライフが0になったら、即座にゲームオーバー画面を表示する
-      renderGameOver(); 
-      return; // ここで処理を完全に終了させ、下の render() を実行させない
+    state.lives=Math.max(0,state.lives-1);
+    if(state.lives<=0){
+      playSfx('wrongsound');
+      setTimeout(()=>renderGameOver(),600);
+      return;//
     }
-    
-    // playSfx('wrongsound'); // 音を消す場合はコメントアウトのまま
+    playSfx('hintsound');
   }
-  
-  render(); // ライフがある場合のみ、通常の再描画を行う
+  render();
 }
 
 function getMascotEl(excited=false){ return `<div class="footer-mascot-svg mascot-${state.avatar}${excited?' mascot-excited':''}">${ANIMALS[state.avatar]}</div>`; }
