@@ -510,11 +510,11 @@ function toggleHint(){
   if(state.hintShown){
     state.lives=Math.max(0,state.lives-1);
     if(state.lives<=0){
-      //playSfx('wrongsound');ヒントを使ったときの効果音削除//
+      playSfx('wrongsound');ヒントを使ったときの効果音削除//
       setTimeout(()=>renderGameOver(),600);
       return;
     }
-    playSfx('wrongsound');
+    //playSfx('wrongsound');
   }
   render();
 }
