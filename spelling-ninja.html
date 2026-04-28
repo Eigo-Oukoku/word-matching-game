@@ -510,11 +510,11 @@ function toggleHint(){
   if(state.hintShown){
     state.lives=Math.max(0,state.lives-1);
     if(state.lives<=0){
-      playSfx('wrong');
+      playSfx('wrongsound');
       setTimeout(()=>renderGameOver(),600);
       return;
     }
-    playSfx('wrong');
+    playSfx('wrongsound');
   }
   render();
 }
@@ -650,7 +650,7 @@ function checkKeyboard(){
     state.letterScore+=charCount;
     state.score++;
     state.kbLocked=true;
-    playSfx('correct');
+    playSfx('correctsound');
     inp.className='kb-input done';
     if(card) card.className='correct-frame';
     const disp=document.getElementById('blitz-word-display');
@@ -661,7 +661,7 @@ function checkKeyboard(){
     state.round++;
     setTimeout(()=>blitzLoadNextWord(), 600);
   } else {
-    playSfx('wrong');
+    playSfx('wrongsound');
     inp.className='kb-input bad';
     if(card){ card.className='wrong-frame'; setTimeout(()=>{ card.className=''; },800); }
     fb.innerHTML=`<span style="color:#E63946">❌ Answer: <em>${state.currentWord}</em></span>`;
@@ -834,12 +834,12 @@ function tapLetter(letter,index){
     state.userInput[targetIdx]=letter;
     state.shuffledLetters[index]=null;
     state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
-    playSfx('correct_short');
+    playSfx('correctsound_short');
     const isDone=state.userInput.filter(x=>x!==undefined).length===state.currentWord.length;
     if(isDone){
       state.score++;
       if(state.mode==='speedster') state.speedsterTotal+=state.currentWord.length;
-      playSfx('correct');
+      playSfx('correctsound');
       setTimeout(()=>{ state.round++; nextRound(); },state.mode==='speedster'?600:1200);
     }
     render();
@@ -856,7 +856,7 @@ function tapLetter(letter,index){
         state.userInput[targetIdx]=letter;
         state.shuffledLetters[index]=null;
         state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
-        playSfx('correct_short');
+        playSfx('correctsound_short');
         const isDone=state.userInput.filter(x=>x!==undefined).length===state.currentWord.length;
         if(isDone){
           const playerWord = state.userInput.join('');
@@ -866,11 +866,11 @@ function tapLetter(letter,index){
             state.senseAltAccepted = true;
             state.senseAltWord = playerWord;
             state.score++;
-            playSfx('correct');
+            playSfx('correctsound');
             render();
             setTimeout(()=>{ state.round++; nextRound(); }, 1200);
           } else {
-            playSfx('wrong');
+            playSfx('wrongsound');
             state.lives--;
             if(state.lives<=0){
               render();
@@ -894,7 +894,7 @@ function tapLetter(letter,index){
     }
 
     // Normal wrong tap: flash and penalise
-    playSfx('wrong');
+    playSfx('wrongsound');
     const btn=document.querySelectorAll('.letter-btn')[index];
     if(btn){ btn.classList.add('wrong-flash'); setTimeout(()=>btn.classList.remove('wrong-flash'),350); }
     if(state.mode==='speedster'){
