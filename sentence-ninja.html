@@ -46,8 +46,8 @@
   .lblitz{background:linear-gradient(135deg,#4C1D95,#7C3AED);grid-column:span 2;overflow:hidden;box-shadow:0 4px 0 #5B21B6;}
   .lblitz::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.08) 6px,rgba(255,255,255,0.08) 12px);pointer-events:none;}
   /* Ninja Sense Mode */
-  .lsixth{background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);grid-column:span 2;overflow:hidden;box-shadow:0 4px 0 #0a1a20;}
-  .lsixth::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.05) 6px,rgba(255,255,255,0.05) 12px);pointer-events:none;}
+  .lSense{background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);grid-column:span 2;overflow:hidden;box-shadow:0 4px 0 #0a1a20;}
+  .lSense::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.05) 6px,rgba(255,255,255,0.05) 12px);pointer-events:none;}
 
   .back-btn { display:flex; align-items:center; gap:6px; background:#f1f3f5; border:1px solid #dee2e6; border-radius:10px; padding:7px 14px; font-size:13px; font-weight:bold; color:#495057; cursor:pointer; margin-bottom:12px; box-shadow:0 2px 0 #dee2e6; }
   .top-bar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
@@ -69,13 +69,13 @@
   .listen-btn { margin-top:6px; font-size:13px; background:#E0F4FF; border:2px solid #7CC3F0; border-radius:999px; padding:5px 16px; cursor:pointer; font-weight:bold; color:#0077B6; box-shadow:0 2px 0 #7CC3F0; }
 
   /* Ninja Sense Mode clue card */
-  .sixth-card { width:100%; background:#0F2027; border:2px solid #2C5364; border-radius:18px; padding:14px; margin-bottom:8px; text-align:center; }
-  .sixth-label { font-size:10px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; color:#7EC8E3; margin-bottom:6px; }
-  .sixth-scramble { font-size:17px; font-weight:bold; color:#7EC8E3; letter-spacing:3px; line-height:1.6; word-break:break-all; }
+  .Sense-card { width:100%; background:#0F2027; border:2px solid #2C5364; border-radius:18px; padding:14px; margin-bottom:8px; text-align:center; }
+  .Sense-label { font-size:10px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; color:#7EC8E3; margin-bottom:6px; }
+  .Sense-scramble { font-size:17px; font-weight:bold; color:#7EC8E3; letter-spacing:3px; line-height:1.6; word-break:break-all; }
 
   /* Ninja Sense Mode LLM checking UI */
-  .sixth-checking { width:100%; background:#1a2a3a; border:2px solid #2C5364; border-radius:14px; padding:10px 14px; margin-bottom:6px; text-align:center; font-size:13px; color:#7EC8E3; }
-  .sixth-alt-badge { display:inline-block; background:#1e3a2a; border:1.5px solid #2DD368; border-radius:999px; color:#2DD368; font-size:12px; font-weight:bold; padding:3px 12px; margin-top:4px; }
+  .Sense-checking { width:100%; background:#1a2a3a; border:2px solid #2C5364; border-radius:14px; padding:10px 14px; margin-bottom:6px; text-align:center; font-size:13px; color:#7EC8E3; }
+  .Sense-alt-badge { display:inline-block; background:#1e3a2a; border:1.5px solid #2DD368; border-radius:999px; color:#2DD368; font-size:12px; font-weight:bold; padding:3px 12px; margin-top:4px; }
 
   .answer-area { width:100%; min-height:52px; display:flex; flex-wrap:wrap; gap:5px; align-items:center; justify-content:center; background:#f8f9fa; border:2px solid #dee2e6; border-radius:14px; padding:8px 10px; margin-bottom:8px; }
   .answer-area.shake   { animation:shake 0.4s ease; }
@@ -220,7 +220,7 @@
     <div class="ov-item"><div class="ov-item-title">🟡 Normal</div><div class="ov-item-desc">All word chips given. Tap them all in order.</div></div>
     <div class="ov-item"><div class="ov-item-title">🔴 Hard</div><div class="ov-item-desc">Spell each word letter by letter. First word given.</div></div>
     <div class="ov-item"><div class="ov-item-title">🟣 Very Hard</div><div class="ov-item-desc">Spell every word from scratch.</div></div>
-    <div class="ov-item"><div class="ov-item-title">🌌 Ninja Sense Mode</div><div class="ov-item-desc">No JP clue, no audio — only alphabetically sorted letters per word! Build the full sentence. AI checks alternative valid answers too.</div></div>
+    <div class="ov-item"><div class="ov-item-title">🌌 Ninja Sense Mode</div><div class="ov-item-desc">No JP clue, no audio — only alphabetically sorted letters per word! Build the full sentence. Alternative valid answers are also accepted.</div></div>
     <div class="ov-item"><div class="ov-item-title">⚡ Speedster — 60 sec!</div><div class="ov-item-desc">Very Hard + clock. Score = letters typed correctly (partial progress counted at timeout).</div></div>
     <div class="ov-item"><div class="ov-item-title">🥷 Ninja Type Blitz</div><div class="ov-item-desc">See the Japanese, type the English. Score = letters typed correctly (partial progress counted at timeout).</div></div>
     <div class="ov-item"><div class="ov-item-title">🎯 Stages</div><div class="ov-item-desc">Stage 1–4 or Master (all 48 sentences).</div></div>
@@ -234,7 +234,7 @@
     <div class="links-title">🎮 Other Games</div>
     <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/word-matching-game/">🥷 Word Ninja Vol. 1</a>
     <a class="game-link-btn link-wn2" href="https://eigo-oukoku.github.io/word-matching-game/game2">🥷 Word Ninja Vol. 2</a>
-    <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/word-matching-game/spelling-ninja/">✍️ Spelling Ninja</a>
+    <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/spelling-ninja/">✍️ Spelling Ninja</a>
     <button class="links-close" onclick="closeLinks()">Close</button>
    </div>
   </div>
@@ -355,9 +355,7 @@ let G = {
   blitzLocked:false,
   // FIX #1: track partial progress for timeout scoring
   speedsterPartialLetters:0, blitzPartialLetters:0,
-  avatar:'fox', revealed:false, isGameOver:false,
-  // FIX #3: Ninja Sense LLM check state
-  sixthChecking:false, sixthAltAccepted:false, sixthAltAnswer:''
+  avatar:'fox', revealed:false, isGameOver:false
 };
 
 // ═══════════════════════════════════════════════
@@ -405,7 +403,7 @@ function makeLetterChoices(word) {
 }
 
 // Ninja Sense Mode: produce alphabetically sorted letters per word
-function makeSixthSenseClue(sentence) {
+function makeSenseSenseClue(sentence) {
   return tokenise(sentence.en).map(word => {
     const alpha = getAlphaChars(word).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).join('');
     const punct = [...word].filter(c=>!/[a-zA-Z]/.test(c)).join('');
@@ -441,49 +439,6 @@ function makeWordChoices(correctWords, allSentences, count=4) {
   pool=[...new Set(pool)];
   let wrong=shuffle(pool).slice(0,count);
   return shuffle([...correctWords,...wrong]);
-}
-
-// ═══════════════════════════════════════════════
-// FIX #3 — NINJA SENSE MODE: LLM-based alt-answer checking
-// ═══════════════════════════════════════════════
-// The player's built answer uses the scrambled letters from the clue.
-// We ask the LLM: given these sorted-letter clues, is the player's answer valid?
-async function checkSixthSenseWithLLM(playerAnswer, sentence) {
-  const clue = makeSixthSenseClue(sentence);
-
-  // Build system prompt
-  const systemPrompt = `You are a strict but fair answer checker for an English sentence-building game.
-
-The game shows players alphabetically sorted letters for each word as clues (e.g. "acer" could be "care", "race", "acre", "acer", or "race"). Players must reconstruct a grammatically correct, natural English sentence using EXACTLY those letter sets — one word per letter group.
-
-The reference sentence is: "${sentence.en}"
-The letter clues shown were: "${clue}"
-
-Your job: decide if the player's answer is a valid English sentence that uses EXACTLY the same letters (in each word slot) as the reference sentence. Each word in the player's answer must be an anagram (same letters, different order) of the corresponding word in the reference. Punctuation may differ slightly.
-
-Reply with ONLY valid JSON, no markdown, no explanation:
-{"accepted": true, "reason": "short reason"} or {"accepted": false, "reason": "short reason"}`;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: `Player's answer: "${playerAnswer}"` }]
-      })
-    });
-    const data = await response.json();
-    const text = (data.content||[]).map(b=>b.text||'').join('').trim();
-    const clean = text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    return parsed.accepted === true;
-  } catch(e) {
-    // On any error, fall back to rejecting
-    return false;
-  }
 }
 
 // ═══════════════════════════════════════════════
@@ -592,7 +547,7 @@ function checkBlitz() {
     G.blitzLocked=true;
     playSfx('wrongsound');
     inp.className='blitz-input wrong';
-    if(fb) fb.innerHTML=`<span class="fb-wrong">❌ Answer: <em>${G.currentSentence.en}</em></span>`;
+    if(fb) fb.innerHTML=`<span class="fb-wrong">❌ Keep trying!</span>`;
     G.round++;
     setTimeout(()=>blitzNextSentence(),1600);
   }
@@ -646,7 +601,7 @@ function renderLevelSelect() {
         <button class="level-btn ln" onclick="startGame('normal')">Normal<span class="sub">Words given · no first word</span></button>
         <button class="level-btn lh" onclick="startGame('hard')">Hard<span class="sub">Spell each word · first word given</span></button>
         <button class="level-btn lv" onclick="startGame('vhard')">Very Hard<span class="sub">Spell everything from scratch</span></button>
-        <button class="level-btn lsixth" onclick="startGame('sixth')">🌌 Ninja Sense Mode<span class="sub">Letters only · AI checks alt answers</span></button>
+        <button class="level-btn lSense" onclick="startGame('Sense')">🌌 Ninja Sense Mode<span class="sub">Letters only · alt answers supported</span></button>
         <button class="level-btn lsp" onclick="startGame('speedster')">⚡ Speedster — 60 sec!<span class="sub">Very Hard letter-tap · beat the clock!</span></button>
         <button class="level-btn lblitz" onclick="startGame('blitz')">🥷 Ninja Type Blitz<span class="sub">Beat the clock · type for points!</span></button>
       </div>
@@ -715,7 +670,7 @@ function updateSpeedsterBar() {
 function nextRound() {
   if(G.isGameOver) return;
   const isSpeedster=G.level==='speedster';
-  const isSixth=G.level==='sixth';
+  const isSense=G.level==='Sense';
 
   if(!isSpeedster && G.round>=ROUNDS_PER_GAME){ renderEnd(); return; }
   if(!isSpeedster && G.lives<=0){ renderEnd(); return; }
@@ -727,9 +682,6 @@ function nextRound() {
   pickMascot(G.avatar);
   G.currentSentence=G.sentences[G.round];
   G.revealed=false;
-  G.sixthChecking=false;
-  G.sixthAltAccepted=false;
-  G.sixthAltAnswer='';
 
   const words=tokenise(G.currentSentence.en);
 
@@ -751,7 +703,7 @@ function nextRound() {
   }
 
   renderGame();
-  if(!isSixth) speakSentence(G.currentSentence.audio);
+  if(!isSense) speakSentence(G.currentSentence.audio);
 }
 
 // ─────────────────────────────────────────────
@@ -761,7 +713,7 @@ function renderGame() {
   if(G.isGameOver) return;
   const st=STAGES.find(s=>s.id===G.stageId);
   const isSpeedster=G.level==='speedster';
-  const isSixth=G.level==='sixth';
+  const isSense=G.level==='Sense';
   const progress=(G.round/ROUNDS_PER_GAME)*100;
   const excitedSp=isSpeedster && G.speedsterTimeLeft<=15;
 
@@ -784,22 +736,14 @@ function renderGame() {
   const stageBadge=`<div class="stage-badge" style="background:${st.color}">${st.label} · ${st.topic}</div>`;
 
   let clueCard='';
-  if(isSixth){
-    const clue=makeSixthSenseClue(G.currentSentence);
-    // Show LLM checking state if applicable
-    let checkingBanner='';
-    if(G.sixthChecking){
-      checkingBanner=`<div class="sixth-checking">🤖 AI is checking your answer…</div>`;
-    } else if(G.sixthAltAccepted){
-      checkingBanner=`<div class="sixth-checking">🤖 AI accepted: <span class="sixth-alt-badge">✅ "${G.sixthAltAnswer}"</span></div>`;
-    }
+  if(isSense){
+    const clue=makeSenseSenseClue(G.currentSentence);
     clueCard=`
-      <div class="sixth-card">
+      <div class="Sense-card">
         ${stageBadge}
-        <div class="sixth-label">🌌 Ninja Sense Mode — Letters only</div>
-        <div class="sixth-scramble">${clue}</div>
-      </div>
-      ${checkingBanner}`;
+        <div class="Sense-label">🌌 Ninja Sense Mode — Letters only</div>
+        <div class="Sense-scramble">${clue}</div>
+      </div>`;
   } else {
     clueCard=`
       <div class="jp-card">
@@ -820,7 +764,7 @@ function renderGame() {
       <div class="progress-label">${G.round} / ${ROUNDS_PER_GAME} done</div>
     </div>`;
 
-  const footerMsg=isSpeedster?(excitedSp?'Hurry!!':'Go go go! ⚡'):isSixth?'Use the Force! 🌌':'Build the sentence!';
+  const footerMsg=isSpeedster?(excitedSp?'Hurry!!':'Go go go! ⚡'):isSense?'Use the Force! 🌌':'Build the sentence!';
 
   document.getElementById('game-area').innerHTML=
     topBar+timerHTML+clueCard+mainContent+progressBar+getFooter(footerMsg,excitedSp);
@@ -848,7 +792,7 @@ function renderWordMode() {
     </div>`;
 }
 
-// ── Letter mode (hard / vhard / speedster / sixth) ──
+// ── Letter mode (hard / vhard / speedster / Sense) ──
 function renderLetterMode() {
   const words=tokenise(G.currentSentence.en);
   const doneWords=G.answer.map((w,i)=>{
@@ -867,13 +811,16 @@ function renderLetterMode() {
   }).join('');
   const alphaCount=getAlphaChars(currentWord).length;
   const progress=alphaCount>0?`<div style="font-size:11px;color:#adb5bd;text-align:center;margin-top:5px;">${G.currentLetterBuf.length} / ${alphaCount} letters</div>`:'';
+  const isSenseMode=G.level==='Sense';
+  const deleteBtn=isSenseMode?`<button onclick="deleteLetter()" style="margin-top:8px;padding:8px 22px;background:#f1f3f5;border:2px solid #dee2e6;border-radius:10px;font-size:14px;font-weight:bold;color:#495057;cursor:pointer;box-shadow:0 2px 0 #dee2e6;">⌫ Delete</button>`:'';
   return `
     <div class="answer-area" id="answer-area">${doneWords}${currentSlot}${remaining}</div>
     <div class="feedback-row" id="feedback-row"></div>
     <div class="choices-wrap">
-      <div class="choices-label">Spelling: <strong>${currentWord}</strong></div>
+      <div class="choices-label">Tap letters in order</div>
       <div class="letter-choices">${letterHTML}</div>
       ${progress}
+      ${deleteBtn}
     </div>`;
 }
 
@@ -912,7 +859,7 @@ function removeWord(i) {
 // LETTER MODE LOGIC
 // ─────────────────────────────────────────────
 function tapLetter(letter,idx) {
-  if(G.revealed || G.sixthChecking) return;
+  if(G.revealed) return;
   const words=tokenise(G.currentSentence.en);
   const currentWord=words[G.currentWordIdx]||'';
   const alphaChars=getAlphaChars(currentWord);
@@ -928,48 +875,29 @@ function tapLetter(letter,idx) {
       if(G.currentWordIdx>=words.length){
         G.revealed=true;
         const isSpeedster=G.level==='speedster';
-        const isSixth=G.level==='sixth';
+        const isSense=G.level==='Sense';
         if(isSpeedster){ G.score+=countletters(G.currentSentence.en); }
-        else if(isSixth){
-          // FIX #3: sixth sense — check if it's exact match first, then LLM for alts
+        else if(isSense){
           const builtAnswer=G.answer.join(' ');
           if(isAccepted(builtAnswer, G.currentSentence)){
             G.score++;
-            playSfx('correct');
+            playSfx('correctsound');
             renderGame();
             document.getElementById('answer-area').classList.add('correct');
             showFeedback(true);
             setTimeout(()=>{ G.round++; nextRound(); },1200);
           } else {
-            // Not an exact match — ask LLM if it's a valid alternative
-            G.sixthChecking=true;
+            playSfx('wrongsound');
             renderGame();
-            checkSixthSenseWithLLM(builtAnswer, G.currentSentence).then(accepted=>{
-              if(G.isGameOver) return;
-              G.sixthChecking=false;
-              if(accepted){
-                G.sixthAltAccepted=true;
-                G.sixthAltAnswer=builtAnswer;
-                G.score++;
-                playSfx('correctsound');
-                renderGame();
-                document.getElementById('answer-area').classList.add('correct');
-                showFeedback(true);
-                setTimeout(()=>{ G.round++; nextRound(); },1800);
-              } else {
-                playSfx('wrongsound');
-                renderGame();
-                document.getElementById('answer-area').classList.add('shake');
-                showFeedback(false);
-                handleWrong();
-              }
-            });
+            document.getElementById('answer-area').classList.add('shake');
+            showFeedback(false);
+            handleWrong();
           }
-          return; // don't fall through to the else block
+          return;
         }
         else { G.score++; }
 
-        if(!isSixth) {
+        if(!isSense) {
           playSfx('correctsound');
           renderGame();
           document.getElementById('answer-area').classList.add('correct');
@@ -990,6 +918,13 @@ function tapLetter(letter,idx) {
 // ─────────────────────────────────────────────
 // SHARED HELPERS
 // ─────────────────────────────────────────────
+function deleteLetter() {
+  if(G.revealed || G.currentLetterBuf.length===0) return;
+  G.currentLetterBuf.pop();
+  G.usedLetterIdxs.pop();
+  renderGame();
+}
+
 function handleWrong() {
   const isSpeedster=G.level==='speedster';
   if(isSpeedster){
