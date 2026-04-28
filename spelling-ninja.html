@@ -512,7 +512,7 @@ function toggleHint(){
     if(state.lives<=0){
       playSfx('wrongsound');ヒントを使ったときの効果音削除//
       setTimeout(()=>renderGameOver(),600);
-      return;
+      return;//
     }
     //playSfx('wrongsound');
   }
