@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en" translate="no">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google" content="notranslate">
+  <title>Spelling Ninja - ELKえいご王国</title>
+  <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
+  #game-root { padding: 0.5rem 0.75rem 1rem; min-height: 100vh; display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: 0 auto; background-color: #ffffff; }
+  .start-screen { text-align: center; padding: 1rem; width: 100%; }
+  .welcome-title { font-size: 44px; font-weight: bold; color: #2b2d42; margin-bottom: 5px; letter-spacing: -1px; }
+  .vol-tag { font-size: 22px; color: #E63946; font-weight: bold; margin-bottom: 15px; display: block; }
+  .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .level-btn {
+    font-size: 14px; font-weight: bold; color: white; border: none; border-radius: 15px;
+    padding: 14px 8px; cursor: pointer; transition: 0.1s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    position: relative; gap: 2px;
+  }
+  .level-btn:active { transform: scale(0.97); }
+  .level-btn .sub { font-size: 10px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
+  .btn-easy      { background: #2DD368; border-bottom: 4px solid #24A652; }
+  .btn-normal    { background: #FFB000; border-bottom: 4px solid #D18F00; }
+  .btn-hard      { background: #E63946; border-bottom: 4px solid #B52D37; }
+  .btn-vhard     { background: #8E44AD; border-bottom: 4px solid #703689; }
+  .btn-ninja     { background: #2b2d42; border-bottom: 4px solid #000000; grid-column: span 2; }
+  .btn-phantom   { background: #3d5a80; border-bottom: 4px solid #293241; grid-column: span 2; }
+
+  .btn-speedster {
+    background: linear-gradient(135deg,#FF6B00,#E63946);
+    border-bottom: 4px solid #b52200;
+    grid-column: span 2; overflow: hidden; position: relative;
+  }
+  .btn-speedster::after {
+    content:''; position:absolute; inset:0;
+    background: repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.08) 6px,rgba(255,255,255,0.08) 12px);
+  }
+
+  .btn-blitz {
+    background: linear-gradient(135deg,#4C1D95,#7C3AED);
+    border-bottom: 4px solid #5B21B6;
+    grid-column: span 2; overflow: hidden; position: relative;
+  }
+  .btn-blitz::after {
+    content:''; position:absolute; inset:0;
+    background: repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.08) 6px,rgba(255,255,255,0.08) 12px);
+  }
+
+  /* ── Ninja Sense Mode ── */
+  .btn-sense {
+    background: linear-gradient(135deg,#0F2027,#2C5364);
+    border-bottom: 4px solid #0a1a20;
+    grid-column: span 2; overflow: hidden; position: relative;
+  }
+  .btn-sense::after {
+    content:""; position:absolute; inset:0;
+    background: repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.05) 6px,rgba(255,255,255,0.05) 12px);
+  }
+  /* Ninja Sense Mode clue card */
+  .sense-card { background:#0F2027; border:3px dashed #2C5364; border-radius:24px; padding:15px; display:inline-block; width:95%; min-height:100px; text-align:center; }
+  .sense-label { font-size:10px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; color:#7EC8E3; margin-bottom:8px; display:block; }
+  .sense-scramble { font-size:26px; font-weight:bold; color:#7EC8E3; letter-spacing:6px; word-break:break-all; }
+
+  /* Alt-accepted banner (static check) */
+  .sense-alt-banner { width:100%; background:#1a2a3a; border:2px solid #2C5364; border-radius:12px; padding:8px 12px; margin-top:6px; text-align:center; font-size:13px; color:#7EC8E3; }
+  .sense-alt-badge { display:inline-block; background:#1e3a2a; border:1.5px solid #2DD368; border-radius:999px; color:#2DD368; font-size:12px; font-weight:bold; padding:3px 12px; margin-top:4px; }
+
+  .util-btn-row { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+  .util-btn { flex: 1; font-size: 14px; font-weight: bold; border: 2px solid #dee2e6; border-radius: 12px; padding: 11px 6px; cursor: pointer; background: #f8f9fa; color: #2b2d42; box-shadow: 0 3px 0 #dee2e6; transition: 0.1s; }
+  .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #dee2e6; }
+  .util-btn.links-btn { background: #E0F4FF; border-color: #7CC3F0; color: #064E8A; box-shadow: 0 3px 0 #7CC3F0; }
+
+  .how-overlay, .links-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
+  .how-box, .links-box { background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  .how-title { font-size: 22px; font-weight: bold; color: #E63946; margin-bottom: 12px; text-align: center; }
+  .how-intro { font-size: 13px; color: #444; margin-bottom: 14px; line-height: 1.6; }
+  .how-item { margin-bottom: 10px; }
+  .how-item-title { font-size: 14px; font-weight: bold; color: #2b2d42; margin-bottom: 2px; }
+  .how-item-desc  { font-size: 12px; color: #555; line-height: 1.5; padding-left: 6px; border-left: 3px solid #F5C842; }
+  .how-close { display: block; width: 100%; margin-top: 18px; padding: 12px; font-size: 16px; font-weight: bold; background: #E63946; color: white; border: none; border-radius: 12px; cursor: pointer; }
+  .links-title { font-size: 20px; font-weight: bold; color: #064E8A; margin-bottom: 14px; text-align: center; }
+  .game-link-btn { display: block; width: 100%; padding: 14px 12px; margin-bottom: 10px; font-size: 15px; font-weight: bold; text-align: center; text-decoration: none; border-radius: 14px; border: none; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: 0.1s; color: white; }
+  .game-link-btn:active { transform: translateY(2px); }
+  .link-wn1 { background: #2b2d42; } .link-wn2 { background: #3d5a80; } .link-sn { background: #E63946; }
+  .links-close { display: block; width: 100%; margin-top: 6px; padding: 11px; font-size: 15px; font-weight: bold; background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; border-radius: 12px; cursor: pointer; }
+
+  .top-bar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; }
+  .menu-btn { font-size:14px; font-weight:bold; background:#f1f3f5; color:#495057; border:1px solid #dee2e6; border-radius:8px; padding:5px 12px; cursor:pointer; box-shadow:0 2px 0 #dee2e6; }
+  .score-pill { font-size:12px; font-weight:bold; background:#FFF3B0; color:#9B5E00; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; }
+  .hearts-row { width:100%; text-align:center; margin-bottom:0.4rem; font-size:22px; line-height:1; min-height:28px; }
+  .hearts-row.shake { animation: heartShake 0.5s ease; }
+  @keyframes heartShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-6px) rotate(-6deg);} 30%{transform:translateX(6px) rotate(6deg);} 45%{transform:translateX(-5px) rotate(-4deg);} 60%{transform:translateX(5px) rotate(4deg);} 75%{transform:translateX(-3px);} }
+
+  .timer-wrap { width:100%; margin-bottom:0.4rem; }
+  .timer-label { font-size:14px; font-weight:bold; color:#E63946; text-align:center; margin-bottom:3px; }
+  .timer-track { width:100%; height:13px; background:#f1f3f5; border-radius:999px; border:2px solid #dee2e6; overflow:hidden; }
+  .timer-bar { height:100%; border-radius:999px; transition:width 1s linear, background 1s linear; }
+  .timer-bar.green  { background:#2DD368; }
+  .timer-bar.yellow { background:#FFB000; }
+  .timer-bar.red    { background:#E63946; animation:timerPulse 0.5s ease infinite alternate; }
+  @keyframes timerPulse { from{opacity:1} to{opacity:0.45} }
+
+  .target-section { text-align:center; margin-bottom:0.5rem; width:100%; }
+  .word-card { background:#F8F9FA; border:3px dashed #DEE2E6; border-radius:24px; padding:15px; display:inline-block; width:95%; min-height:160px; transition:0.3s; }
+  .image-frame { width:100px; height:100px; background:white; border-radius:20px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid #eee; }
+  .word-img { max-width:90%; max-height:90%; object-fit:contain; }
+  .target-word-display { font-size:28px; font-weight:bold; color:#E63946; min-height:40px; letter-spacing:1px; }
+
+  .spelling-area { margin:12px 0; min-height:50px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
+  .letter-slot { width:30px; height:40px; border-bottom:3px solid #adb5bd; font-size:24px; font-weight:bold; color:#2b2d42; display:flex; align-items:center; justify-content:center; }
+  .letters-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; margin-top:8px; }
+  .letter-btn { width:42px; height:42px; font-size:20px; font-weight:bold; border-radius:10px; border:2px solid #dee2e6; background:white; cursor:pointer; box-shadow:0 3px 0 #dee2e6; display:flex; align-items:center; justify-content:center; color:#2b2d42; }
+  .letter-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #dee2e6; }
+  .letter-btn.wrong-flash { animation:wrongFlash 0.35s ease; }
+  @keyframes wrongFlash { 0%{background:white} 30%{background:#FFD6D9;border-color:#E63946} 100%{background:white} }
+
+  /* Delete button */
+  .delete-btn { margin-top:10px; font-size:14px; font-weight:bold; background:#f1f3f5; color:#495057; border:2px solid #dee2e6; border-radius:10px; padding:8px 20px; cursor:pointer; box-shadow:0 3px 0 #dee2e6; transition:0.1s; }
+  .delete-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #dee2e6; }
+  .delete-btn:disabled { opacity:0.35; cursor:default; transform:none; box-shadow:0 3px 0 #dee2e6; }
+
+  /* ── Persistent Ninja Type Blitz panel ── */
+  #blitz-panel {
+    width:100%; display:none; flex-direction:column; gap:8px;
+  }
+  #blitz-panel.active { display:flex; }
+  #blitz-timer-wrap { width:100%; }
+  #blitz-timer-label { font-size:14px; font-weight:bold; color:#E63946; text-align:center; margin-bottom:3px; }
+  #blitz-timer-track { width:100%; height:13px; background:#f1f3f5; border-radius:999px; border:2px solid #dee2e6; overflow:hidden; }
+  #blitz-timer-bar   { height:100%; border-radius:999px; background:#2DD368; transition:width 1s linear, background 1s linear; }
+  #blitz-word-card { background:#F8F9FA; border:3px dashed #DEE2E6; border-radius:24px; padding:15px; width:100%; text-align:center; }
+  #blitz-image-frame { width:100px; height:100px; background:white; border-radius:20px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px solid #eee; }
+  #blitz-word-img    { max-width:90%; max-height:90%; object-fit:contain; }
+  #blitz-word-card.correct-frame { border-color:#2DD368; background:#E8FFF2; transition:0.3s; }
+  #blitz-word-card.wrong-frame   { border-color:#E63946; background:#FFF2F2; transition:0.3s; }
+  .blitz-top-row { display:flex; align-items:center; justify-content:space-between; width:100%; }
+
+  .kb-wrap { width:100%; display:flex; gap:8px; align-items:center; }
+  .kb-input {
+    flex:1; font-size:20px; font-weight:bold; color:#2b2d42;
+    padding:12px 14px; border:2.5px solid #dee2e6; border-radius:14px;
+    background:white; outline:none; transition:border-color 0.15s, background 0.15s;
+    -webkit-user-select:text; user-select:text;
+  }
+  .kb-input:focus  { border-color:#7C3AED; }
+  .kb-input.ok     { border-color:#2DD368; background:#F2FFF8; }
+  .kb-input.bad    { border-color:#E63946; background:#FFF2F2; }
+  .kb-input.done   { border-color:#2DD368; background:#E8FFF2; }
+  .kb-btn {
+    padding:12px 16px; background:linear-gradient(135deg,#4C1D95,#7C3AED); color:white;
+    border:none; border-radius:14px; font-size:15px; font-weight:bold; cursor:pointer;
+    box-shadow:0 3px 0 #5B21B6; transition:0.1s;
+  }
+  .kb-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #5B21B6; }
+  .kb-fb   { min-height:24px; text-align:center; font-size:15px; font-weight:bold; }
+  .kb-hint { font-size:11px; color:#adb5bd; text-align:center; }
+
+  /* Footer */
+  .footer-area { margin-top:auto; padding-top:16px; text-align:center; width:100%; display:flex; flex-direction:column; align-items:center; }
+  .mascot-row { display:flex; align-items:center; justify-content:center; margin-bottom:5px; }
+  .footer-mascot-svg { width:56px; height:56px; margin-right:8px; display:block; }
+  .mascot-bubble { background:#f1f3f5; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold; color:#495057; position:relative; border:1px solid #dee2e6; transition:background 0.2s, border-color 0.2s; }
+  .mascot-bubble.hint-active { background:#FFF8E1; border-color:#F5C842; color:#7A5000; }
+  .mascot-tap-hint { font-size:10px; color:#adb5bd; text-align:center; margin-top:3px; font-weight:normal; }
+  .footer-mascot-svg.tappable { cursor:pointer; }
+  .footer-mascot-svg.tappable:active { transform:scale(0.9); }
+  .mascot-bubble::after { content:''; position:absolute; left:-6px; top:50%; transform:translateY(-50%); border-width:6px 6px 6px 0; border-style:solid; border-color:transparent #f1f3f5 transparent transparent; }
+  .brand-footer { font-weight:bold; color:#6A5ACD; font-size:20px; border-top:2px solid #f0f0f0; padding-top:10px; width:100%; letter-spacing:1px; }
+
+  .mascot-fox      { animation: mascotBob     2.2s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-bear     { animation: mascotWobble  2.8s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-bunny    { animation: mascotHop     1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-elephant { animation: mascotSway    3.2s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-lion     { animation: mascotPounce  2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-deer     { animation: mascotTilt    2.6s ease-in-out infinite; transform-origin: 50% 90%; }
+  .mascot-penguin  { animation: mascotWaddle  1.8s ease-in-out infinite; transform-origin: 50% 90%; }
+  @keyframes mascotBob     { 0%,100%{transform:translateY(0) rotate(0deg) scaleX(1);} 25%{transform:translateY(-6px) rotate(-5deg) scaleX(1.06);} 75%{transform:translateY(-3px) rotate(5deg) scaleX(0.96);} }
+  @keyframes mascotWobble  { 0%,100%{transform:rotate(0deg) scaleY(1);} 30%{transform:rotate(-6deg) scaleY(1.05);} 70%{transform:rotate(6deg) scaleY(0.96);} }
+  @keyframes mascotHop     { 0%,100%{transform:translateY(0) scaleY(1) scaleX(1);} 35%{transform:translateY(-10px) scaleY(1.1) scaleX(0.92);} 55%{transform:translateY(-6px) scaleY(1.05) scaleX(0.96);} 80%{transform:translateY(3px) scaleY(0.9) scaleX(1.1);} }
+  @keyframes mascotSway    { 0%,100%{transform:translateX(0) rotate(0deg);} 33%{transform:translateX(-5px) rotate(-4deg);} 66%{transform:translateX(5px) rotate(4deg);} }
+  @keyframes mascotPounce  { 0%,100%{transform:scaleX(1) translateY(0);} 20%{transform:scaleX(1.12) translateY(-5px);} 40%{transform:scaleX(0.92) translateY(3px);} 65%{transform:scaleX(1.07) translateY(-2px);} }
+  @keyframes mascotTilt    { 0%,100%{transform:rotate(0deg) translateY(0);} 40%{transform:rotate(-7deg) translateY(-5px);} 80%{transform:rotate(5deg) translateY(-2px);} }
+  @keyframes mascotWaddle  { 0%,100%{transform:rotate(0deg) translateX(0);} 25%{transform:rotate(-10deg) translateX(-4px);} 75%{transform:rotate(10deg) translateX(4px);} }
+  .mascot-excited { animation-duration: 0.45s !important; }
+
+  .gameover-screen { text-align:center; padding:1rem; width:100%; }
+</style>
+ </head>
+ <body>
+  <div id="game-root">
+   <!-- Persistent Blitz panel -->
+   <div id="blitz-panel">
+     <div id="blitz-timer-wrap">
+       <div id="blitz-timer-label">⏱ 20s</div>
+       <div id="blitz-timer-track"><div id="blitz-timer-bar"></div></div>
+     </div>
+     <div class="blitz-top-row">
+       <button class="menu-btn" onclick="blitzExit()">🏠 Menu</button>
+       <div id="blitz-score-pill" class="score-pill">🥷 0 chars</div>
+     </div>
+     <div id="blitz-word-card">
+       <div id="blitz-image-frame">
+         <img id="blitz-word-img" src="" alt="" onerror="this.parentElement.style.display='none'">
+       </div>
+       <div class="target-word-display" id="blitz-word-display">???</div>
+     </div>
+     <div class="kb-wrap">
+       <input class="kb-input" id="kb-input"
+         type="text"
+         placeholder="Type the word…"
+         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+         inputmode="text"
+         enterkeyhint="go"
+         oninput="onKbInput()"
+         onkeydown="if(event.key==='Enter'){event.preventDefault();checkKeyboard();}">
+       <button class="kb-btn" onclick="checkKeyboard()">Go ➜</button>
+     </div>
+     <div class="kb-fb" id="kb-fb"></div>
+     <div class="kb-hint">Type &amp; press Enter — border turns 🟢 green while on track</div>
+     <div id="blitz-hearts" style="text-align:center;font-size:22px;margin-top:2px"></div>
+   </div>
+
+   <div id="game-area"></div>
+  </div>
+
+<!-- How to Play Overlay -->
+<div class="how-overlay" id="how-overlay" style="display:none;" onclick="if(event.target===this)closeHow()">
+ <div class="how-box">
+  <div class="how-title">📖 How to Play — Spelling Ninja（遊び方）</div>
+
+  <p class="how-intro">
+    Tap letters in order to spell each word — or in Ninja Type Blitz mode, just type it!<br>
+    文字を順番にタップして単語を完成させよう！Ninja Type Blitzではキーボード入力に挑戦！
+  </p>
+
+  <div class="how-item">
+    <div class="how-item-title">🟢 Easy — Word shown（おてほんあり）</div>
+    <div class="how-item-desc">
+      See the word and tap the remaining letters in order.<br>
+      単語を見ながら、文字を順番にタップしよう。
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🟡 Normal — Hides after ~3.5 sec（3.5秒で消える）</div>
+    <div class="how-item-desc">
+      The word disappears after about 3.5 seconds.<br>
+      単語は約3.5秒で消えるよ。覚えてつづろう。
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🔴 Hard — Hides after ~2.5 sec（2.5秒で消える）</div>
+    <div class="how-item-desc">
+      The word disappears after about 2.5 seconds.<br>
+      単語は約2.5秒で消えるよ。つづりをすばやく覚えよう！
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🟣 Very Hard — Hides after ~1.3 sec（1.3秒で消える）</div>
+    <div class="how-item-desc">
+      The word disappears after just 1.3 seconds!<br>
+      単語はたった1.3秒で消えるよ！
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🥷 Ninja Mode — Listen only（音で単語を当てよう）</div>
+    <div class="how-item-desc">
+      Use the audio clue to spell the word. No text shown!<br>
+      音だけを聞いて単語をつづろう。文字は出ません！
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">👻 Phantom Mode — Picture only（絵で単語を当てよう）</div>
+    <div class="how-item-desc">
+      Look at the illustration and spell the word.<br>
+      イラストを見て単語をつづろう。
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🌌 Ninja Sense Mode  — Letters only!（文字だけヒント）</div>
+    <div class="how-item-desc">
+      No word shown, no picture, no audio. Only the letters of the word, sorted A→Z, are shown.<br>
+      Valid alternative words using the same letters are also accepted!<br>
+      Tap the mascot for a hint (costs 1 life point).<br>
+      単語・絵・音なし！A→Z順に並んだ文字だけがヒント。同じ文字でできる別の単語もOK！<br>
+      マスコットをタップするとヒントがでるよ。（-1 ライフポイント）
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">⚡ Speedster Mode — 20 sec letter rush!（20秒スピード勝負）</div>
+    <div class="how-item-desc">
+      How many letters can you tap correctly in 20 seconds? Partial progress at timeout counts!<br>
+      20秒で何文字正しくつづれるかな？時間切れ時の途中入力もカウントされるよ！
+    </div>
+  </div>
+
+  <div class="how-item">
+    <div class="how-item-title">🥷 Ninja Type Blitz — Beat the clock!（タイピングバトル）</div>
+    <div class="how-item-desc">
+      How many letters can you type correctly in 20 seconds? Partial progress at timeout counts!<br>
+      Score = total letters typed correctly.<br>
+      20秒で何文字正しく打てるかな？時間切れ時の途中入力もカウントされるよ！
+    </div>
+  </div>
+
+  <button class="how-close" onclick="closeHow()">
+    Got it! Let's play 🎉<br>
+    わかった！あそぼう！
+  </button>
+
+ </div>
+</div>
+  <!-- Other Games Overlay -->
+  <div class="links-overlay" id="links-overlay" style="display:none;" onclick="if(event.target===this)closeLinks()">
+   <div class="links-box">
+    <div class="links-title">🎮 Other Games</div>
+    <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/word-matching-game/">🥷 Word Ninja Vol. 1</a>
+    <a class="game-link-btn link-wn2" href="https://eigo-oukoku.github.io/word-matching-game/game2">🥷 Word Ninja Vol. 2</a>
+    <a class="game-link-btn link-sn" href="https://eigo-oukoku.github.io/word-matching-game/sentence-ninja">💬 Sentence Ninja</a>
+    <button class="links-close" onclick="closeLinks()">Close</button>
+   </div>
+  </div>
+
+  <script>
+function openHow()   { document.getElementById('how-overlay').style.display='flex'; }
+function closeHow()  { document.getElementById('how-overlay').style.display='none'; }
+function openLinks() { document.getElementById('links-overlay').style.display='flex'; }
+function closeLinks(){ document.getElementById('links-overlay').style.display='none'; }
+
+const ANIMALS = {
+  fox: `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,
+  bear: `<svg viewBox="0 0 64 64" width="56" height="56"><circle cx="16" cy="20" r="8" fill="#8B5E3C"/><circle cx="48" cy="20" r="8" fill="#8B5E3C"/><circle cx="16" cy="20" r="5" fill="#C49A6C"/><circle cx="48" cy="20" r="5" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="40" rx="14" ry="12" fill="#C49A6C"/><ellipse cx="23" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="41" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="24" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="42" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="24.8" cy="30.2" r="0.8" fill="white"/><circle cx="42.8" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="39" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M28.5 43 Q32 46.5 35.5 43" stroke="#5C3317" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/><ellipse cx="44" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/></svg>`,
+  bunny: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="22" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="42" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="22" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="42" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F2C9D8"/><ellipse cx="32" cy="40" rx="13" ry="10" fill="white"/><ellipse cx="24" cy="31" rx="3.8" ry="4.2" fill="white"/><ellipse cx="40" cy="31" rx="3.8" ry="4.2" fill="white"/><circle cx="24.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="40.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="25.2" cy="30.2" r="0.7" fill="white"/><circle cx="41.2" cy="30.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="2.5" ry="1.8" fill="#F08CA0"/><path d="M29 41 Q32 44 35 41" stroke="#C06070" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="21" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/><ellipse cx="43" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/></svg>`,
+  elephant: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="18" rx="8" ry="10" fill="#A0B4C8"/><ellipse cx="46" cy="18" rx="8" ry="10" fill="#A0B4C8"/><ellipse cx="32" cy="35" rx="22" ry="19" fill="#A0B4C8"/><ellipse cx="32" cy="42" rx="14" ry="11" fill="#C8D8E8"/><path d="M26 48 Q24 54 27 57 Q30 60 32 57 Q34 54 32 51" fill="#A0B4C8" stroke="#8898A8" stroke-width="0.8"/><ellipse cx="23" cy="30" rx="4.2" ry="4.5" fill="white"/><ellipse cx="41" cy="30" rx="4.2" ry="4.5" fill="white"/><circle cx="23.8" cy="30" r="2.6" fill="#2244AA"/><circle cx="41.8" cy="30" r="2.6" fill="#2244AA"/><circle cx="24.6" cy="29.2" r="0.8" fill="white"/><circle cx="42.6" cy="29.2" r="0.8" fill="white"/><ellipse cx="32" cy="40" rx="3" ry="2" fill="#8898A8"/><path d="M29 43 Q32 46 35 43" stroke="#8898A8" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.2" fill="#E0A0B0" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.2" fill="#E0A0B0" opacity="0.5"/></svg>`,
+  lion: `<svg viewBox="0 0 64 64" width="56" height="56"><circle cx="32" cy="34" r="24" fill="#E8A83A" opacity="0.55"/><circle cx="32" cy="34" r="20" fill="#F5C040" opacity="0.7"/><ellipse cx="32" cy="36" rx="17" ry="16" fill="#F5C96A"/><ellipse cx="32" cy="41" rx="11" ry="9" fill="#FAEAC0"/><ellipse cx="15" cy="20" rx="5" ry="6" fill="#E8A83A"/><ellipse cx="49" cy="20" rx="5" ry="6" fill="#E8A83A"/><ellipse cx="24" cy="31" rx="3.8" ry="4.2" fill="white"/><ellipse cx="40" cy="31" rx="3.8" ry="4.2" fill="white"/><circle cx="24.6" cy="31" r="2.5" fill="#7B3F00"/><circle cx="40.6" cy="31" r="2.5" fill="#7B3F00"/><circle cx="25.3" cy="30.2" r="0.8" fill="white"/><circle cx="41.3" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="38" rx="3" ry="2.2" fill="#C0622A"/><path d="M28.5 42 Q32 45.5 35.5 42" stroke="#C0622A" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4.5" ry="2.5" fill="#F4A070" opacity="0.5"/><ellipse cx="44" cy="37" rx="4.5" ry="2.5" fill="#F4A070" opacity="0.5"/></svg>`,
+  deer: `<svg viewBox="0 0 64 64" width="56" height="56"><path d="M18 18 Q14 8 10 6 Q14 10 16 16" fill="#8B5E2A"/><path d="M18 18 Q16 8 20 4 Q19 10 20 16" fill="#8B5E2A"/><path d="M46 18 Q50 8 54 6 Q50 10 48 16" fill="#8B5E2A"/><path d="M46 18 Q48 8 44 4 Q45 10 44 16" fill="#8B5E2A"/><ellipse cx="18" cy="20" rx="6" ry="7" fill="#C49A58"/><ellipse cx="46" cy="20" rx="6" ry="7" fill="#C49A58"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A58"/><ellipse cx="32" cy="41" rx="13" ry="10" fill="#F0D8A8"/><ellipse cx="23" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="41" cy="30" rx="4" ry="4.5" fill="white"/><circle cx="23.8" cy="30" r="2.5" fill="#3D2B1A"/><circle cx="41.8" cy="30" r="2.5" fill="#3D2B1A"/><circle cx="24.6" cy="29.2" r="0.8" fill="white"/><circle cx="42.6" cy="29.2" r="0.8" fill="white"/><ellipse cx="32" cy="39" rx="3" ry="2" fill="#B07840"/><path d="M29 42 Q32 45.5 35 42" stroke="#8B5E2A" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4" ry="2.2" fill="#E09060" opacity="0.45"/><ellipse cx="44" cy="37" rx="4" ry="2.2" fill="#E09060" opacity="0.45"/></svg>`,
+  penguin: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="36" rx="19" ry="21" fill="#1A1A2E"/><ellipse cx="32" cy="39" rx="12" ry="14" fill="white"/><ellipse cx="18" cy="30" rx="5" ry="9" fill="#1A1A2E"/><ellipse cx="46" cy="30" rx="5" ry="9" fill="#1A1A2E"/><circle cx="25" cy="28" r="5" fill="white"/><circle cx="39" cy="28" r="5" fill="white"/><circle cx="25.5" cy="28" r="3" fill="#1A1A2E"/><circle cx="39.5" cy="28" r="3" fill="#1A1A2E"/><circle cx="26.3" cy="27" r="1" fill="white"/><circle cx="40.3" cy="27" r="1" fill="white"/><ellipse cx="32" cy="36" rx="4" ry="2.5" fill="#F5A623"/><path d="M29 39 Q32 41.5 35 39" stroke="#D4881E" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="21" cy="35" rx="3.5" ry="2" fill="#3A5A9A" opacity="0.4"/><ellipse cx="43" cy="35" rx="3.5" ry="2" fill="#3A5A9A" opacity="0.4"/></svg>`
+};
+
+const ALL_WORDS = [
+  "nose","mouth","ear","eye","head","rice","bread","noodles","ramen noodles","miso soup",
+  "milk","orange juice","green tea","coffee","cake","ice cream","tangerine","watermelon",
+  "peach","grapes","strawberry","pineapple","skiing","skating","tennis","karate",
+  "swimming","red","blue","green","yellow","purple","lily","tulip","dandelion","rose",
+  "slide","swing","seesaw","jungle gym","television","telephone","camera","one","two","three","four","five","six","seven","eight","nine","ten","pants","skirt","sweater","T-shirt","handkerchief","cap","toothbrush","soap","towel","hairbrush","mirror","knife","fork","chopsticks","cup","glass","plate","dish","bowl","car","bus","motorcycle","bicycle","tricycle","train","airplane","helicopter"
+];
+
+// ── Static alternative answers for Ninja Sense Mode ──
+// Each key is a reference word (lowercase); values are valid anagram alternatives.
+const WORD_SENSE_ALTERNATIVES = {
+  "ear":   ["are", "era"],
+  "nose":  ["eons", "ones", "noes"],
+  "bread": ["bared", "beard"],
+  "rose":  ["sore", "ores", "roes"],
+  "slide": ["idles", "sidle"],
+  "one":   ["eon"],
+  "ten":   ["net"],
+  "plate": ["leapt", "petal"],
+  "bowl":  ["blow"],
+  "car":   ["arc"],
+  "bus":   ["sub"],
+};
+
+const WORD_HINTS = {
+  "nose":           "You use it to smell things. It's in the middle of your face.",
+  "mouth":          "You use it to eat and talk. It opens and closes.",
+  "ear":            "You use it to hear sounds. There are two, one on each side of your head.",
+  "eye":            "You use it to see. It blinks!",
+  "head":           "It's the top part of your body. Your brain is inside.",
+  "rice":           "A white grain that Japanese people eat every day.",
+  "bread":          "A baked food made from flour. You can make toast with it.",
+  "noodles":        "Long, thin strips of food made from dough. Slurp!",
+  "ramen noodles":  "A popular Japanese noodle soup. It comes in a bowl with broth.",
+  "miso soup":      "A warm Japanese soup made from fermented soybean paste.",
+  "milk":           "A white drink that comes from cows. Good for your bones!",
+  "orange juice":   "A drink made by squeezing oranges. It's orange-coloured.",
+  "green tea":      "A popular Japanese hot drink made from tea leaves.",
+  "coffee":         "A dark, bitter drink made from roasted beans. Many adults love it.",
+  "cake":           "A sweet baked dessert, often eaten at birthday parties.",
+  "ice cream":      "A cold, sweet frozen dessert. It melts in the sun!",
+  "tangerine":      "A small, easy-to-peel orange citrus fruit.",
+  "watermelon":     "A large green fruit with red flesh and black seeds. Great in summer!",
+  "peach":          "A soft, fuzzy fruit that is orange-pink and very sweet.",
+  "grapes":         "Small, round fruits that grow in bunches on a vine.",
+  "strawberry":     "A small red fruit with tiny seeds on the outside. It's heart-shaped!",
+  "pineapple":      "A tropical fruit with a spiky outside and sweet yellow inside.",
+  "skiing":         "A winter sport where you slide down a snowy mountain on long boards.",
+  "skating":        "A sport where you glide on ice or pavement wearing special shoes.",
+  "tennis":         "A sport where two players hit a ball back and forth over a net.",
+  "karate":         "A Japanese martial art using punches and kicks.",
+  "swimming":       "A sport where you move through water using your arms and legs.",
+  "red":            "The colour of fire trucks, strawberries, and stop signs.",
+  "blue":           "The colour of the sky and the ocean.",
+  "green":          "The colour of grass and leaves.",
+  "yellow":         "The colour of the sun and bananas.",
+  "purple":         "A colour made by mixing red and blue.",
+  "lily":           "A tall flower that often smells very nice. White or colourful.",
+  "tulip":          "A cup-shaped spring flower that comes in many colours.",
+  "dandelion":      "A yellow wildflower whose seeds blow away in the wind like a puffball.",
+  "rose":           "A beautiful flower with thorns. Often given as a gift of love.",
+  "slide":          "A playground toy you climb up and then glide down.",
+  "swing":          "A playground seat that hangs from chains. You move back and forth.",
+  "seesaw":         "A playground toy where two people sit at opposite ends and go up and down.",
+  "jungle gym":     "A playground structure with bars and ladders to climb on.",
+  "television":     "A screen in your home that shows programmes and movies.",
+  "telephone":      "A device used to talk to someone far away.",
+  "camera":         "A device used to take photos or videos.",
+  "one":            "The number that comes before two. 1.",
+  "two":            "The number that comes after one. 2.",
+  "three":          "The number that comes after two. 3.",
+  "four":           "The number that comes after three. 4.",
+  "five":           "The number that comes after four. 5.",
+  "six":            "The number that comes after five. 6.",
+  "seven":          "The number that comes after six. 7.",
+  "eight":          "The number that comes after seven. 8.",
+  "nine":           "The number that comes after eight. 9.",
+  "ten":            "The number that comes after nine. 10.",
+  "pants":          "A piece of clothing that covers both legs. You wear it below your waist.",
+  "skirt":          "A piece of clothing that hangs from the waist and has no legs.",
+  "sweater":        "A warm knitted top that you pull over your head.",
+  "T-shirt":        "A casual short-sleeved top in the shape of a letter T.",
+  "handkerchief":   "A small square cloth you carry to wipe your nose or hands.",
+  "cap":            "A hat with a brim at the front. Often worn on sunny days.",
+  "toothbrush":     "You use it with toothpaste to clean your teeth every morning and night.",
+  "soap":           "You use it with water to wash your hands and body.",
+  "towel":          "A soft cloth you use to dry yourself after a bath or shower.",
+  "hairbrush":      "A tool with bristles used to tidy and smooth your hair.",
+  "mirror":         "A shiny surface that reflects your image back at you.",
+  "knife":          "A sharp blade used for cutting food at the table.",
+  "fork":           "A utensil with pointed prongs used to pick up food.",
+  "chopsticks":     "Two thin sticks used to pick up food, especially in Asia.",
+  "cup":            "A small container with a handle used for drinking hot drinks.",
+  "glass":          "A transparent container used for drinking cold drinks.",
+  "plate":          "A flat, round dish used to serve food at mealtimes.",
+  "dish":           "A container used to serve or cook food. Deeper than a plate.",
+  "bowl":           "A deep round container used for soup, rice, or cereal.",
+  "car":            "A four-wheeled vehicle powered by an engine. You drive it on roads.",
+  "bus":            "A large vehicle that carries many passengers along a fixed route.",
+  "motorcycle":     "A two-wheeled motor vehicle. Faster than a bicycle!",
+  "bicycle":        "A two-wheeled vehicle you power by pedalling with your legs.",
+  "tricycle":       "A three-wheeled vehicle often ridden by young children.",
+  "train":          "A vehicle that travels on rails and carries many passengers.",
+  "airplane":       "A winged vehicle that flies through the sky carrying passengers.",
+  "helicopter":     "A flying vehicle that uses spinning blades to go up and hover.",
+};
+
+const MAX_LIVES = 3;
+const SPEEDSTER_SECONDS = 20;
+const BLITZ_SECONDS = 20;
+
+let state = {
+  mode:'', round:0, score:0, words:[], currentWord:'',
+  shuffledLetters:[], userInput:[], avatar:'fox',
+  timer:null, showText:true, showImg:true, hintShown:false,
+  lives:MAX_LIVES,
+  speedsterTimeLeft:SPEEDSTER_SECONDS, speedsterInterval:null, speedsterTotal:0,
+  letterScore:0,
+  kbLocked:false,
+  blitzTimeLeft:BLITZ_SECONDS, blitzInterval:null,
+  senseAltAccepted:false, senseAltWord:'',
+  placedHistory:[]  // tracks {inputIdx, shuffleIdx, letter} for delete support
+};
+
+function playSfx(f){ new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
+function speak(w){ if(!w) return; new Audio(`audio/${w.replace(/\s+/g,'_')}.mp3`).play().catch(()=>{}); }
+function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }
+
+// ── Static alternative check for Ninja Sense Mode ──
+function checkWordSenseAlternative(playerWord, referenceWord) {
+  const alts = WORD_SENSE_ALTERNATIVES[referenceWord.toLowerCase()] || [];
+  return alts.some(a => a.toLowerCase() === playerWord.toLowerCase());
+}
+
+function rendersenseFooter(){
+  const hint = WORD_HINTS[state.currentWord.toLowerCase()] || WORD_HINTS[state.currentWord] || null;
+  const hasTap  = !!hint;
+  const tapAttr = hasTap ? ' onclick="toggleHint()" ' : '';
+  const mascotCls = 'footer-mascot-svg mascot-' + state.avatar + (hasTap ? ' tappable' : '');
+  let bubbleCls = 'mascot-bubble';
+  let msg = 'Use the Force! 🌌';
+  let subMsg = '';
+  if(hasTap && state.hintShown){
+    bubbleCls += ' hint-active';
+    msg = '💡 ' + hint;
+    subMsg = '<div class="mascot-tap-hint" onclick="toggleHint()" style="cursor:pointer">tap to hide</div>';
+  } else if(hasTap){
+    msg = '🐾 Tap me for a hint! (costs ❤️)';
+  }
+  return '<div class="footer-area">'
+    + '<div class="mascot-row">'
+    + '<div class="' + mascotCls + '"' + tapAttr + '>' + ANIMALS[state.avatar] + '</div>'
+    + '<div class="' + bubbleCls + '">' + msg + '</div>'
+    + '</div>'
+    + subMsg
+    + '<div class="brand-footer">ELKえいご王国</div>'
+    + '</div>';
+}
+
+function toggleHint(){
+  if(state.mode!=='sense') return;
+  state.hintShown=!state.hintShown;
+  if(state.hintShown){
+    state.lives=Math.max(0,state.lives-1);
+    if(state.lives<=0){
+      playSfx('wrong');
+      setTimeout(()=>renderGameOver(),600);
+      return;
+    }
+    playSfx('wrong');
+  }
+  render();
+}
+
+function getMascotEl(excited=false){ return `<div class="footer-mascot-svg mascot-${state.avatar}${excited?' mascot-excited':''}">${ANIMALS[state.avatar]}</div>`; }
+function getFooterHTML(msg,excited=false){
+  return `<div class="footer-area"><div class="mascot-row">${getMascotEl(excited)}<div class="mascot-bubble">${msg}</div></div><div class="brand-footer">ELKえいご王国</div></div>`;
+}
+
+// ── Delete last placed letter (Ninja Sense & Speedster) ──
+function deleteLastLetter(){
+  if(!state.placedHistory || !state.placedHistory.length) return;
+  const last = state.placedHistory.pop();
+  state.userInput[last.inputIdx] = undefined;
+  state.shuffledLetters[last.shuffleIdx] = last.letter;
+  // If we had accepted an alt word, reset that flag too
+  state.senseAltAccepted = false;
+  state.senseAltWord = '';
+  render();
+}
+
+// ─────────────────────────────────────────────────────
+// Blitz panel helpers (persistent DOM)
+// ─────────────────────────────────────────────────────
+function showBlitzPanel(){
+  document.getElementById('blitz-panel').classList.add('active');
+  document.getElementById('game-area').style.display='none';
+}
+function hideBlitzPanel(){
+  document.getElementById('blitz-panel').classList.remove('active');
+  document.getElementById('game-area').style.display='';
+}
+
+function blitzUpdateCard(){
+  const img = document.getElementById('blitz-word-img');
+  const frame = document.getElementById('blitz-image-frame');
+  const disp = document.getElementById('blitz-word-display');
+  if(img){
+    img.src = `images/${state.currentWord.replace(/\s+/g,'_')}.png`;
+    frame.style.display='flex';
+  }
+  if(disp) disp.textContent='???';
+  const pill = document.getElementById('blitz-score-pill');
+  if(pill) pill.textContent=`🥷 ${state.letterScore} chars`;
+  const hearts = document.getElementById('blitz-hearts');
+  if(hearts) hearts.innerHTML=getHeartsHTML();
+  const card = document.getElementById('blitz-word-card');
+  if(card) card.className='';
+}
+
+function blitzUpdateTimer(){
+  const bar   = document.getElementById('blitz-timer-bar');
+  const label = document.getElementById('blitz-timer-label');
+  if(!bar||!label) return;
+  const pct = Math.max(0,(state.blitzTimeLeft/BLITZ_SECONDS)*100);
+  bar.style.width=pct+'%';
+  label.textContent=`⏱ ${state.blitzTimeLeft}s`;
+  bar.style.background = pct>50?'#2DD368':pct>25?'#FFB000':'#E63946';
+}
+
+function startBlitzTimer(){
+  if(state.blitzInterval) clearInterval(state.blitzInterval);
+  state.blitzInterval=setInterval(()=>{
+    state.blitzTimeLeft--;
+    blitzUpdateTimer();
+    if(state.blitzTimeLeft<=0){
+      clearInterval(state.blitzInterval); state.blitzInterval=null;
+      const inp = document.getElementById('kb-input');
+      if(inp && inp.value.trim()){
+        const typed = inp.value.trim().toLowerCase();
+        const expected = state.currentWord.toLowerCase();
+        let partial = 0;
+        for(let i=0; i<Math.min(typed.length, expected.length); i++){
+          if(typed[i]===expected[i]) partial++; else break;
+        }
+        state.letterScore += partial;
+      }
+      renderBlitzEnd();
+    }
+  },1000);
+}
+function stopBlitzTimer(){
+  if(state.blitzInterval){ clearInterval(state.blitzInterval); state.blitzInterval=null; }
+}
+
+function blitzLoadNextWord(){
+  if(state.round >= state.words.length){
+    state.words=[...state.words,...shuffle(ALL_WORDS).slice(0,10)];
+  }
+  state.currentWord = state.words[state.round];
+  state.kbLocked = false;
+  blitzUpdateCard();
+  speak(state.currentWord);
+
+  const inp = document.getElementById('kb-input');
+  const fb  = document.getElementById('kb-fb');
+  if(inp){ inp.value=''; inp.className='kb-input'; }
+  if(fb)  fb.innerHTML='';
+}
+
+function blitzExit(){
+  stopBlitzTimer();
+  hideBlitzPanel();
+  renderWelcome();
+}
+
+// ─────────────────────────────────────────────────────
+// Ninja Type Blitz logic
+// ─────────────────────────────────────────────────────
+function onKbInput(){
+  if(state.kbLocked) return;
+  const inp=document.getElementById('kb-input');
+  if(!inp) return;
+  const typed=inp.value.toLowerCase();
+  const expected=state.currentWord.toLowerCase();
+  if(!typed){ inp.className='kb-input'; return; }
+  inp.className = expected.startsWith(typed) ? 'kb-input ok' : 'kb-input bad';
+}
+
+function checkKeyboard(){
+  if(state.kbLocked) return;
+  const inp=document.getElementById('kb-input');
+  const fb=document.getElementById('kb-fb');
+  if(!inp||!fb) return;
+  const typed=inp.value.trim().toLowerCase();
+  const expected=state.currentWord.toLowerCase();
+  if(!typed) return;
+
+  const card = document.getElementById('blitz-word-card');
+
+  if(typed===expected){
+    const charCount=state.currentWord.length;
+    state.letterScore+=charCount;
+    state.score++;
+    state.kbLocked=true;
+    playSfx('correct');
+    inp.className='kb-input done';
+    if(card) card.className='correct-frame';
+    const disp=document.getElementById('blitz-word-display');
+    if(disp) disp.textContent=state.currentWord;
+    fb.innerHTML=`<span style="color:#2DD368">✅ +${charCount} character${charCount!==1?'s':''}!</span>`;
+    const pill=document.getElementById('blitz-score-pill');
+    if(pill) pill.textContent=`🥷 ${state.letterScore} chars`;
+    state.round++;
+    setTimeout(()=>blitzLoadNextWord(), 600);
+  } else {
+    playSfx('wrong');
+    inp.className='kb-input bad';
+    if(card){ card.className='wrong-frame'; setTimeout(()=>{ card.className=''; },800); }
+    fb.innerHTML=`<span style="color:#E63946">❌ Answer: <em>${state.currentWord}</em></span>`;
+    state.lives--;
+    const hearts=document.getElementById('blitz-hearts');
+    if(hearts) hearts.innerHTML=getHeartsHTML();
+    if(state.lives<=0){
+      state.kbLocked=true;
+      stopBlitzTimer();
+      setTimeout(()=>renderBlitzEnd(),1200);
+    } else {
+      state.kbLocked=true;
+      state.round++;
+      setTimeout(()=>blitzLoadNextWord(), 1400);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// Welcome Screen
+// ─────────────────────────────────────────────────────
+function renderWelcome(){
+  hideBlitzPanel();
+  if(state.speedsterInterval){ clearInterval(state.speedsterInterval); state.speedsterInterval=null; }
+  if(state.timer){ clearTimeout(state.timer); state.timer=null; }
+  const keys=Object.keys(ANIMALS);
+  state.avatar=keys[Math.floor(Math.random()*keys.length)];
+  document.getElementById('game-area').innerHTML=`
+    <div class="start-screen">
+      <div style="font-size:50px;margin-bottom:5px">✍️</div>
+      <div class="welcome-title">Spelling Ninja</div>
+      <span class="vol-tag">Master the Letters</span>
+      <div class="level-box">
+        <button class="level-btn btn-easy"      onclick="initGame('easy')">Easy<span class="sub">Model word shown</span></button>
+        <button class="level-btn btn-normal"    onclick="initGame('normal')">Normal<span class="sub">Hides after ~3.5 sec</span></button>
+        <button class="level-btn btn-hard"      onclick="initGame('hard')">Hard<span class="sub">Hides after ~2.5 sec</span></button>
+        <button class="level-btn btn-vhard"     onclick="initGame('vhard')">Very Hard<span class="sub">Hides after ~1.3 sec</span></button>
+        <button class="level-btn btn-ninja"     onclick="initGame('ninja')">🥷 Ninja Mode<span class="sub">Listen only</span></button>
+        <button class="level-btn btn-phantom"   onclick="initGame('phantom')">👻 Phantom Mode<span class="sub">Picture only</span></button>
+        <button class="level-btn btn-sense"    onclick="initGame('sense')">🌌 Ninja Sense Mode<span class="sub">Letters only · Alt answers accepted</span></button>
+        <button class="level-btn btn-speedster" onclick="initGame('speedster')">⚡ Speedster Mode<span class="sub">20 sec letter rush!</span></button>
+        <button class="level-btn btn-blitz"     onclick="initGame('keyboard')">🥷 Ninja Type Blitz<span class="sub">Beat the clock · type for points!</span></button>
+      </div>
+      <div class="util-btn-row">
+        <button class="util-btn" onclick="openHow()">📖 How to Play</button>
+        <button class="util-btn links-btn" onclick="openLinks()">🎮 Other Games</button>
+      </div>
+    </div>
+    ${getFooterHTML("Pick your challenge!")}`;
+}
+
+// ─────────────────────────────────────────────────────
+// Init Game
+// ─────────────────────────────────────────────────────
+function initGame(mode){
+  state.mode=mode;
+  state.score=0; state.round=0; state.lives=MAX_LIVES;
+  state.letterScore=0; state.kbLocked=false;
+  state.senseAltAccepted=false; state.senseAltWord='';
+  state.placedHistory=[];
+  state.words=shuffle(ALL_WORDS).slice(0,10);
+
+  if(mode==='speedster'){
+    state.speedsterTimeLeft=SPEEDSTER_SECONDS;
+    state.speedsterTotal=0;
+    startSpeedsterTimer();
+    nextRound();
+  } else if(mode==='keyboard'){
+    showBlitzPanel();
+    state.blitzTimeLeft=BLITZ_SECONDS;
+    blitzUpdateTimer();
+    blitzLoadNextWord();
+    startBlitzTimer();
+    const inp=document.getElementById('kb-input');
+    if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
+  } else {
+    nextRound();
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// Speedster Timer
+// ─────────────────────────────────────────────────────
+function startSpeedsterTimer(){
+  if(state.speedsterInterval) clearInterval(state.speedsterInterval);
+  state.speedsterInterval=setInterval(()=>{
+    state.speedsterTimeLeft--;
+    updateSpeedsterBar();
+    if(state.speedsterTimeLeft<=0){
+      clearInterval(state.speedsterInterval);
+      state.speedsterInterval=null;
+      let partialScore = 0;
+      if(state.currentWord){
+        for(let i=0; i<state.currentWord.length; i++){
+          const c = state.currentWord[i];
+          if(/[a-zA-Z]/.test(c) && state.userInput[i] !== undefined){
+            partialScore++;
+          }
+        }
+      }
+      state.speedsterTotal += partialScore;
+      renderSpeedsterEnd();
+    }
+  },1000);
+}
+
+function updateSpeedsterBar(){
+  const bar=document.getElementById('speedster-bar');
+  const label=document.getElementById('speedster-label');
+  if(!bar||!label) return;
+  const pct=Math.max(0,(state.speedsterTimeLeft/SPEEDSTER_SECONDS)*100);
+  bar.style.width=pct+'%';
+  label.textContent=`⏱ ${state.speedsterTimeLeft}s`;
+  bar.className='timer-bar '+(pct>50?'green':pct>25?'yellow':'red');
+  const m=document.querySelector('.footer-mascot-svg');
+  if(m){ if(state.speedsterTimeLeft<=8) m.classList.add('mascot-excited'); else m.classList.remove('mascot-excited'); }
+}
+
+// ─────────────────────────────────────────────────────
+// Next Round (tap-letter modes)
+// ─────────────────────────────────────────────────────
+function nextRound(){
+  if(state.mode!=='speedster' && state.round>=10){ renderEnd(); return; }
+  if(state.mode==='speedster' && state.round>=state.words.length){
+    state.words=[...state.words,...shuffle(ALL_WORDS).slice(0,10)];
+  }
+  if(state.timer) clearTimeout(state.timer);
+
+  const keys=Object.keys(ANIMALS);
+  state.avatar=keys[Math.floor(Math.random()*keys.length)];
+  state.currentWord=state.words[state.round];
+  state.userInput=[];
+  state.kbLocked=false;
+  state.hintShown=false;
+  state.senseAltAccepted=false;
+  state.senseAltWord='';
+  state.placedHistory=[];
+
+  const issense = state.mode==='sense';
+  state.shuffledLetters=[...state.currentWord].filter(c=>/[a-zA-Z]/.test(c)).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+  state.showText = issense ? false : ['easy','normal','hard','vhard'].includes(state.mode);
+  state.showImg  = issense ? false : !['ninja','vhard'].includes(state.mode);
+  state.currentWord.split('').forEach((char,i)=>{ if(!/[a-zA-Z]/.test(char)) state.userInput[i]=char; });
+  if(['easy','normal'].includes(state.mode)){
+    const fc=state.currentWord[0];
+    if(/[a-zA-Z]/.test(fc)){
+      state.userInput[0]=fc;
+      const idx=state.shuffledLetters.indexOf(fc);
+      if(idx>-1) state.shuffledLetters.splice(idx,1);
+      // Pre-placed letters are NOT pushed to placedHistory
+    }
+  }
+  render();
+  if(!issense && state.mode!=='phantom') speak(state.currentWord);
+  if(state.mode==='normal')  state.timer=setTimeout(()=>{ state.showText=false; render(); },3500);
+  if(state.mode==='hard')    state.timer=setTimeout(()=>{ state.showText=false; render(); },2500);
+  if(state.mode==='vhard')   state.timer=setTimeout(()=>{ state.showText=false; state.showImg=false; render(); },1300);
+}
+
+// ─────────────────────────────────────────────────────
+// Tap Letter — with static alternative check for Ninja Sense
+// ─────────────────────────────────────────────────────
+function tapLetter(letter,index){
+  let targetIdx=0;
+  while(state.userInput[targetIdx]!==undefined && targetIdx<state.currentWord.length) targetIdx++;
+  const targetLetter=state.currentWord[targetIdx];
+
+  if(letter===targetLetter){
+    // ── Correct sequential tap ──
+    state.userInput[targetIdx]=letter;
+    state.shuffledLetters[index]=null;
+    state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
+    playSfx('correct_short');
+    const isDone=state.userInput.filter(x=>x!==undefined).length===state.currentWord.length;
+    if(isDone){
+      state.score++;
+      if(state.mode==='speedster') state.speedsterTotal+=state.currentWord.length;
+      playSfx('correct');
+      setTimeout(()=>{ state.round++; nextRound(); },state.mode==='speedster'?600:1200);
+    }
+    render();
+    if(state.mode==='speedster') updateSpeedsterBar();
+  } else {
+    // ── Wrong tap ──
+    const issense = state.mode === 'sense';
+    if(issense){
+      // In Ninja Sense mode: if the tapped letter is still in the pool,
+      // allow tentative placement (player may be spelling an alternative anagram word)
+      const remaining = state.shuffledLetters.filter(l => l !== null);
+      const tappedIsInPool = remaining.includes(letter);
+      if(tappedIsInPool){
+        state.userInput[targetIdx]=letter;
+        state.shuffledLetters[index]=null;
+        state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
+        playSfx('correct_short');
+        const isDone=state.userInput.filter(x=>x!==undefined).length===state.currentWord.length;
+        if(isDone){
+          const playerWord = state.userInput.join('');
+          // Check against static alternatives list
+          const accepted = checkWordSenseAlternative(playerWord, state.currentWord);
+          if(accepted){
+            state.senseAltAccepted = true;
+            state.senseAltWord = playerWord;
+            state.score++;
+            playSfx('correct');
+            render();
+            setTimeout(()=>{ state.round++; nextRound(); }, 1200);
+          } else {
+            playSfx('wrong');
+            state.lives--;
+            if(state.lives<=0){
+              render();
+              setTimeout(()=>renderGameOver(), 600);
+            } else {
+              const hr=document.getElementById('hearts-row');
+              if(hr){ hr.classList.remove('shake'); void hr.offsetWidth; hr.classList.add('shake'); }
+              // Reset current word attempt
+              state.userInput=[];
+              state.currentWord.split('').forEach((char,i)=>{ if(!/[a-zA-Z]/.test(char)) state.userInput[i]=char; });
+              state.shuffledLetters=[...state.currentWord].filter(c=>/[a-zA-Z]/.test(c)).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+              state.placedHistory=[];
+              render();
+            }
+          }
+        } else {
+          render();
+        }
+        return;
+      }
+    }
+
+    // Normal wrong tap: flash and penalise
+    playSfx('wrong');
+    const btn=document.querySelectorAll('.letter-btn')[index];
+    if(btn){ btn.classList.add('wrong-flash'); setTimeout(()=>btn.classList.remove('wrong-flash'),350); }
+    if(state.mode==='speedster'){
+      state.speedsterTimeLeft=Math.max(0,state.speedsterTimeLeft-1);
+      updateSpeedsterBar();
+      if(state.speedsterTimeLeft<=0){
+        clearInterval(state.speedsterInterval); state.speedsterInterval=null;
+        let partialScore = 0;
+        if(state.currentWord){
+          for(let i=0; i<state.currentWord.length; i++){
+            if(/[a-zA-Z]/.test(state.currentWord[i]) && state.userInput[i]!==undefined) partialScore++;
+          }
+        }
+        state.speedsterTotal += partialScore;
+        renderSpeedsterEnd();
+      }
+    } else {
+      state.lives--;
+      const hr=document.getElementById('hearts-row');
+      if(hr){ hr.classList.remove('shake'); void hr.offsetWidth; hr.classList.add('shake'); }
+      if(state.lives<=0){ if(state.timer) clearTimeout(state.timer); setTimeout(()=>renderGameOver(),500); }
+      else { if(hr) hr.innerHTML=getHeartsHTML(); }
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// Render (tap-letter modes)
+// ─────────────────────────────────────────────────────
+function render(){
+  const isSpeedster=state.mode==='speedster';
+  const issense=state.mode==='sense';
+  const displayWord=state.showText ? state.currentWord : '???';
+  const imgSection=state.showImg
+    ? `<div class="image-frame"><img src="images/${state.words[state.round].replace(/\s+/g,'_')}.png" class="word-img" onerror="this.parentElement.style.display='none'"></div>`
+    : '';
+  const pct=isSpeedster?(state.speedsterTimeLeft/SPEEDSTER_SECONDS)*100:0;
+  const barColor=pct>50?'green':pct>25?'yellow':'red';
+  const excited=isSpeedster && state.speedsterTimeLeft<=8;
+
+  let scorePill;
+  if(isSpeedster) scorePill=`<div class="score-pill">⚡ ${state.speedsterTotal} chars</div>`;
+  else            scorePill=`<div class="score-pill">⭐ ${state.score} | Stage ${state.round+1}</div>`;
+
+  const topExtra=isSpeedster
+    ? `<div class="timer-wrap">
+         <div class="timer-label" id="speedster-label">⏱ ${state.speedsterTimeLeft}s</div>
+         <div class="timer-track"><div class="timer-bar ${barColor}" id="speedster-bar" style="width:${pct}%"></div></div>
+       </div>
+       <div style="text-align:center;font-size:13px;font-weight:bold;color:#FF6B00;margin-bottom:4px">⚡ Characters: ${state.speedsterTotal}</div>`
+    : `<div class="hearts-row" id="hearts-row">${getHeartsHTML()}</div>`;
+
+  const listenBtn=(!issense && state.mode!=='phantom')
+    ? `<button style="margin-top:8px;font-size:14px;background:#E0F4FF;border:1px solid #7CC3F0;border-radius:999px;padding:5px 15px;cursor:pointer" onclick="speak('${state.currentWord.replace(/'/g,"\\'")}')">🔊 Listen</button>`
+    : '';
+
+  // Alt-accepted banner (static, no LLM)
+  let senseBanner = '';
+  if(issense && state.senseAltAccepted){
+    senseBanner = `<div class="sense-alt-banner">✅ Alternative accepted: <span class="sense-alt-badge">"${state.senseAltWord}"</span></div>`;
+  }
+
+  const wordDisplayCard = issense
+    ? `<div class="sense-card">
+         <span class="sense-label">🌌 Ninja Sense Mode — letters only</span>
+         <div class="sense-scramble">${[...state.currentWord].filter(c=>/[a-zA-Z]/.test(c)).sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase())).join(' ')}</div>
+       </div>
+       ${senseBanner}`
+    : `<div class="word-card">${imgSection}<div class="target-word-display">${displayWord}</div></div>`;
+
+  // Delete button — shown for Ninja Sense and Speedster modes
+  const showDelete = issense;
+  const canDelete  = showDelete && state.placedHistory && state.placedHistory.length > 0;
+  const deleteBtn  = showDelete
+    ? `<button class="delete-btn" onclick="deleteLastLetter()" ${canDelete?'':'disabled'}>⌫ Delete</button>`
+    : '';
+
+  const bottom=`
+    <div class="spelling-area">
+      ${state.currentWord.split('').map((char,i)=>{
+        const c=state.userInput[i]||'';
+        const sym=!/[a-zA-Z]/.test(char);
+        return `<div class="letter-slot" style="${sym?'border:none':''}">${c}</div>`;
+      }).join('')}
+    </div>
+    <div class="letters-grid">
+      ${state.shuffledLetters.map((l,i)=>l===null
+        ? `<div style="width:42px;height:42px"></div>`
+        : `<button class="letter-btn" onclick="tapLetter('${l.replace(/'/g,"\\'")}',${i})">${l}</button>`
+      ).join('')}
+    </div>
+    ${listenBtn}
+    ${deleteBtn}`;
+
+  document.getElementById('game-area').innerHTML=`
+    <div class="top-bar">
+      <button class="menu-btn" onclick="renderWelcome()">🏠 Menu</button>
+      ${scorePill}
+    </div>
+    ${topExtra}
+    <div class="target-section">
+      ${wordDisplayCard}
+    </div>
+    ${bottom}
+    ${issense ? rendersenseFooter() : getFooterHTML(isSpeedster?'Go go go! ⚡':'Spell correctly!',excited)}`;
+}
+
+// ─────────────────────────────────────────────────────
+// End Screens
+// ─────────────────────────────────────────────────────
+function renderGameOver(){
+  document.getElementById('game-area').innerHTML=`
+    <div class="gameover-screen">
+      <div style="font-size:70px;margin-bottom:10px">💔</div>
+      <div class="welcome-title" style="color:#E63946">Game Over!</div>
+      <p style="font-size:16px;color:#6c757d;margin:10px 0 5px">You ran out of lives on Stage ${state.round+1}</p>
+      <p style="font-size:24px;margin:10px 0 25px;font-weight:bold">Score: ${state.score} / 10</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="level-btn btn-hard" style="width:auto;padding:12px 28px" onclick="initGame('${state.mode}')">Try Again</button>
+        <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
+      </div>
+    </div>
+    ${getFooterHTML("Don't give up! 💪")}`;
+}
+
+function renderBlitzEnd(){
+  stopBlitzTimer();
+  hideBlitzPanel();
+  const n=state.letterScore;
+  const w=state.score;
+  const emoji=n>=40?'🏆':n>=30?'🥇':n>=20?'🥈':'🥷';
+  const msg=n>=40?'Blitz Master!':n>=30?'Spelling Star!':n>=15?'Nice typing!':'Keep going!';
+  document.getElementById('game-area').innerHTML=`
+    <div class="start-screen">
+      <div style="font-size:70px">${emoji}</div>
+      <div class="welcome-title">Time's up!</div>
+      <p style="font-size:14px;color:#adb5bd;font-weight:bold;margin:6px 0 4px">🥷 Ninja Type Blitz Results</p>
+      <p style="font-size:42px;font-weight:bold;color:#7C3AED;margin:8px 0 2px">${n}</p>
+      <p style="font-size:15px;color:#444;font-weight:bold;margin-bottom:4px">${n===1?'character':'characters'} spelled correctly!</p>
+      <p style="font-size:13px;color:#888;margin-bottom:18px">(${w} / 10 ${w===1?'word':'words'} correct)</p>
+      <p style="font-size:20px;font-weight:bold;color:#555;margin-bottom:20px">${msg}</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="level-btn btn-blitz" style="width:auto;padding:12px 28px" onclick="initGame('keyboard')">Blitz Again 🥷</button>
+        <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
+      </div>
+    </div>
+    ${getFooterHTML(msg)}`;
+}
+
+function renderSpeedsterEnd(){
+  if(state.timer) clearTimeout(state.timer);
+  const n=state.speedsterTotal;
+  const emoji=n>=25?'🏆':n>=15?'🥈':'⚡';
+  const msg=n>=25?'Ninja Speedster!':n>=15?'Swift Ninja!':'Keep training!';
+  document.getElementById('game-area').innerHTML=`
+    <div class="start-screen">
+      <div style="font-size:70px">${emoji}</div>
+      <div class="welcome-title">Time's Up!</div>
+      <p style="font-size:18px;color:#FF6B00;font-weight:bold;margin:8px 0">${msg}</p>
+      <p style="font-size:26px;margin:10px 0 25px;font-weight:bold">⚡ ${n} character${n!==1?'s':''} spelled!</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="level-btn btn-speedster" style="width:auto;padding:12px 28px" onclick="initGame('speedster')">Play Again</button>
+        <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
+      </div>
+    </div>
+    ${getFooterHTML("How many can YOU get? 🔥")}`;
+}
+
+function renderEnd(){
+  document.getElementById('game-area').innerHTML=`
+    <div class="start-screen">
+      <div style="font-size:70px">🏆</div>
+      <div class="welcome-title">Well Done!</div>
+      <p style="font-size:24px;margin:20px 0;font-weight:bold">Score: ${state.score} / 10</p>
+      <button class="level-btn btn-normal" style="width:auto;padding:12px 40px;margin:0 auto" onclick="renderWelcome()">Play Again</button>
+    </div>
+    ${getFooterHTML("You nailed the spelling!")}`;
+}
+
+renderWelcome();
+  </script>
+ </body>
+</html>
