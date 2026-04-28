@@ -581,7 +581,7 @@ function checkBlitz() {
     const charCount=countletters(G.currentSentence.en);
     G.score+=charCount;
     G.blitzLocked=true;
-    playSfx('correct');
+    playSfx('correctsound');
     inp.className='blitz-input correct';
     if(fb) fb.innerHTML=`<span class="fb-correct">✅ +${charCount} chars!</span>`;
     const scoreRow=document.getElementById('blitz-score-row');
@@ -590,7 +590,7 @@ function checkBlitz() {
     setTimeout(()=>blitzNextSentence(),500);
   } else {
     G.blitzLocked=true;
-    playSfx('wrong');
+    playSfx('wrongsound');
     inp.className='blitz-input wrong';
     if(fb) fb.innerHTML=`<span class="fb-wrong">❌ Answer: <em>${G.currentSentence.en}</em></span>`;
     G.round++;
@@ -886,16 +886,16 @@ function tapWord(word,idx) {
   const nextIdx=G.answer.length;
   if(nextIdx>=words.length) return;
   if(word===words[nextIdx]){
-    G.answer.push(word); G.usedWordIdxs.push(idx); playSfx('correct_short');
+    G.answer.push(word); G.usedWordIdxs.push(idx); playSfx('correctsound_short');
     if(G.answer.length===words.length){
       G.revealed=true; G.score++; showFeedback(true);
-      document.getElementById('answer-area').classList.add('correct'); playSfx('correct');
+      document.getElementById('answer-area').classList.add('correct'); playSfx('correctsound');
       setTimeout(()=>{ G.round++; nextRound(); },1100);
     } else { renderGame(); }
   } else {
     const chip=document.getElementById('wc-'+idx);
     if(chip){ chip.classList.add('wrong-flash'); setTimeout(()=>chip.classList.remove('wrong-flash'),400); }
-    playSfx('wrong'); handleWrong();
+    playSfx('wrongsound'); handleWrong();
   }
 }
 
@@ -951,13 +951,13 @@ function tapLetter(letter,idx) {
                 G.sixthAltAccepted=true;
                 G.sixthAltAnswer=builtAnswer;
                 G.score++;
-                playSfx('correct');
+                playSfx('correctsound');
                 renderGame();
                 document.getElementById('answer-area').classList.add('correct');
                 showFeedback(true);
                 setTimeout(()=>{ G.round++; nextRound(); },1800);
               } else {
-                playSfx('wrong');
+                playSfx('wrongsound');
                 renderGame();
                 document.getElementById('answer-area').classList.add('shake');
                 showFeedback(false);
@@ -970,7 +970,7 @@ function tapLetter(letter,idx) {
         else { G.score++; }
 
         if(!isSixth) {
-          playSfx('correct');
+          playSfx('correctsound');
           renderGame();
           document.getElementById('answer-area').classList.add('correct');
           showFeedback(true, isSpeedster);
@@ -983,7 +983,7 @@ function tapLetter(letter,idx) {
   } else {
     const chip=document.getElementById('lc-'+idx);
     if(chip){ chip.classList.add('wrong-flash'); setTimeout(()=>chip.classList.remove('wrong-flash'),400); }
-    playSfx('wrong'); handleWrong();
+    playSfx('wrongsound'); handleWrong();
   }
 }
 
