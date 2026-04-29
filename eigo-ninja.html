@@ -665,6 +665,136 @@ let state = {
   locked: false,
 };
 
+// ─── INFLECTION ENGINE ───────────────────────────────────
+const IRREGULARS = {
+  run:{past:'ran',ing:'running'},
+  begin:{past:'began',ing:'beginning'},
+  read:{past:'read',ing:'reading'},
+  go:{past:'went',ing:'going'},
+  come:{past:'came',ing:'coming'},
+  see:{past:'saw',ing:'seeing'},
+  give:{past:'gave',ing:'giving'},
+  take:{past:'took',ing:'taking'},
+  make:{past:'made',ing:'making'},
+  eat:{past:'ate',ing:'eating'},
+  swim:{past:'swam',ing:'swimming'},
+  sit:{past:'sat',ing:'sitting'},
+  catch:{past:'caught',ing:'catching'},
+  wear:{past:'wore',ing:'wearing'},
+  choose:{past:'chose',ing:'choosing'},
+  find:{past:'found',ing:'finding'},
+  keep:{past:'kept',ing:'keeping'},
+  tell:{past:'told',ing:'telling'},
+  bring:{past:'brought',ing:'bringing'},
+  buy:{past:'bought',ing:'buying'},
+  know:{past:'knew',ing:'knowing'},
+  think:{past:'thought',ing:'thinking'},
+  stand:{past:'stood',ing:'standing'},
+  feel:{past:'felt',ing:'feeling'},
+  forget:{past:'forgot',ing:'forgetting'},
+  write:{past:'wrote',ing:'writing'},
+  draw:{past:'drew',ing:'drawing'},
+  sing:{past:'sang',ing:'singing'},
+  speak:{past:'spoke',ing:'speaking'},
+  spend:{past:'spent',ing:'spending'},
+  put:{past:'put',ing:'putting'},
+  overcome:{past:'overcame',ing:'overcoming'},
+  prove:{past:'proved',ing:'proving'},
+  refer:{past:'referred',ing:'referring'},
+  prefer:{past:'preferred',ing:'preferring'},
+  occur:{past:'occurred',ing:'occurring'},
+  permit:{past:'permitted',ing:'permitting'},
+  commit:{past:'committed',ing:'committing'},
+  admit:{past:'admitted',ing:'admitting'},
+  omit:{past:'omitted',ing:'omitting'},
+  submit:{past:'submitted',ing:'submitting'},
+  control:{past:'controlled',ing:'controlling'},
+  excel:{past:'excelled',ing:'excelling'},
+  travel:{past:'traveled',ing:'traveling'},
+  cancel:{past:'canceled',ing:'canceling'},
+  offer:{past:'offered',ing:'offering'},
+  differ:{past:'differed',ing:'differing'},
+  suffer:{past:'suffered',ing:'suffering'},
+  consider:{past:'considered',ing:'considering'},
+  deliver:{past:'delivered',ing:'delivering'},
+  discover:{past:'discovered',ing:'discovering'},
+  recover:{past:'recovered',ing:'recovering'},
+  wonder:{past:'wondered',ing:'wondering'},
+  enter:{past:'entered',ing:'entering'},
+  gather:{past:'gathered',ing:'gathering'},
+  remember:{past:'remembered',ing:'remembering'},
+  develop:{past:'developed',ing:'developing'},
+  happen:{past:'happened',ing:'happening'},
+  open:{past:'opened',ing:'opening'},
+  listen:{past:'listened',ing:'listening'},
+  visit:{past:'visited',ing:'visiting'},
+  benefit:{past:'benefited',ing:'benefiting'},
+  limit:{past:'limited',ing:'limiting'},
+  focus:{past:'focused',ing:'focusing'},
+  bias:{past:'biased',ing:'biasing'},
+};
+
+function countSyllables(w) {
+  return (w.toLowerCase().match(/[aeiou]+/g) || []).length;
+}
+
+function shouldDouble(w) {
+  w = w.toLowerCase();
+  if (w.length < 3) return false;
+  if (/[aeiouywxh]$/.test(w)) return false;
+  if (!/[aeiou]/.test(w[w.length - 2])) return false;
+  if (/[aeiou]/.test(w[w.length - 3])) return false;
+  const syl = countSyllables(w);
+  if (syl === 1) return true;
+  if (syl === 2 && /(?:fer|cur|mit|gin|pel|cel|zel|rol|trol|bel)$/.test(w)) return true;
+  return false;
+}
+
+function makeForms(word) {
+  const w = word.toLowerCase();
+  const irr = IRREGULARS[w] || {};
+  let past, sg3, ing;
+  if (irr.past) {
+    past = irr.past;
+  } else if (/e$/.test(w) && !/ee$/.test(w)) {
+    past = word + 'd';
+  } else if (/[^aeiou]y$/.test(w)) {
+    past = word.slice(0, -1) + 'ied';
+  } else if (shouldDouble(word)) {
+    past = word + word.slice(-1) + 'ed';
+  } else {
+    past = word + 'ed';
+  }
+  if (/(?:s|x|z|ch|sh)$/.test(w)) {
+    sg3 = word + 'es';
+  } else if (/[^aeiou]y$/.test(w)) {
+    sg3 = word.slice(0, -1) + 'ies';
+  } else {
+    sg3 = word + 's';
+  }
+  if (irr.ing) {
+    ing = irr.ing;
+  } else if (/ie$/.test(w)) {
+    ing = word.slice(0, -2) + 'ying';
+  } else if (/e$/.test(w) && !/ee$/.test(w)) {
+    ing = word.slice(0, -1) + 'ing';
+  } else if (shouldDouble(word)) {
+    ing = word + word.slice(-1) + 'ing';
+  } else {
+    ing = word + 'ing';
+  }
+  return { base: word, past, '3sg': sg3, ing };
+}
+
+function getInflectionType(base, inflected) {
+  const f = makeForms(base);
+  const il = inflected.toLowerCase();
+  if (il === f.past.toLowerCase())   return 'past';
+  if (il === f['3sg'].toLowerCase()) return '3sg';
+  if (il === f.ing.toLowerCase())    return 'ing';
+  return 'base';
+}
+
 // ─── UTILITIES ───────────────────────────────────────────
 function shuffle(arr) {
   const a = [...arr];
@@ -679,72 +809,35 @@ function allWords() {
   return Object.values(wordStock).flat();
 }
 
-function applyInflection(baseWord, suffix) {
-  if (!suffix) return baseWord;
-  const s = suffix.toLowerCase();
-  if (s === 'ing') {
-    // drop final silent e before -ing, double consonant if needed
-    if (/[^aeiou]e$/.test(baseWord)) return baseWord.slice(0, -1) + 'ing';
-    if (/[aeiou][^aeiou]$/.test(baseWord) && !/[wxhy]$/.test(baseWord)) return baseWord + baseWord.slice(-1) + 'ing';
-    return baseWord + 'ing';
-  }
-  if (s === 'ed' || s === 'd') {
-    if (/e$/.test(baseWord)) return baseWord + 'd';
-    if (/[^aeiou]y$/.test(baseWord)) return baseWord.slice(0, -1) + 'ied';
-    if (/[aeiou][^aeiou]$/.test(baseWord) && !/[wxhy]$/.test(baseWord)) return baseWord + baseWord.slice(-1) + 'ed';
-    return baseWord + 'ed';
-  }
-  if (s === 's' || s === 'es') {
-    if (/[sxzh]$/.test(baseWord) || /ch$/.test(baseWord)) return baseWord + 'es';
-    if (/[^aeiou]y$/.test(baseWord)) return baseWord.slice(0, -1) + 'ies';
-    return baseWord + 's';
-  }
-  // default: just append suffix
-  return baseWord + suffix;
-}
-
-function getInflectionSuffix(base, inflected) {
-  const b = base.toLowerCase(), i = inflected.toLowerCase();
-  if (b === i) return '';
-  if (i.endsWith('ing') && !b.endsWith('ing')) return 'ing';
-  if (i.endsWith('ied')) return 'ed';
-  if (i.endsWith('ed')) return 'ed';
-  if (i.endsWith('d') && b.endsWith('e')) return 'd';
-  if (i.endsWith('es')) return 'es';
-  if (i.endsWith('s')) return 's';
-  return '';
-}
-
 function generateOptions(correct, field) {
   if (field === '_fillAns') {
-    // correct is the inflected form; determine the base word and suffix
-    // Find the base word by looking up in allWords
-    const correctBase = correct; // we'll handle via suffix logic
-    // Extract suffix from correct vs the base word stored in current word's .word
-    // We need to work with allWords pool
+    // correct is the inflected form used in the sentence.
+    // Find which word entry it belongs to, determine the inflection type,
+    // then apply the same inflection to wrong-answer candidates.
     const pool = allWords();
-    // Get the base word for correct answer
     const correctEntry = pool.find(w => {
       const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const m = (w.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
       return m && m[0].toLowerCase() === correct.toLowerCase();
     });
-    const suffix = correctEntry ? getInflectionSuffix(correctEntry.word, correct) : '';
+    const itype = correctEntry ? getInflectionType(correctEntry.word, correct) : 'base';
 
-    // Build wrong choices from other words, applying same suffix pattern
-    const wrongPool = pool
-      .filter(w => {
-        const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const m = (w.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
-        const thisInflected = m ? m[0] : w.word;
-        return thisInflected.toLowerCase() !== correct.toLowerCase();
-      })
-      .map(w => applyInflection(w.word, suffix));
+    const wrongChoices = shuffle(
+      pool
+        .filter(w => {
+          const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const m = (w.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
+          const thisInflected = m ? m[0] : w.word;
+          return thisInflected.toLowerCase() !== correct.toLowerCase();
+        })
+        .map(w => {
+          const f = makeForms(w.word);
+          return itype === 'base' ? w.word : f[itype];
+        })
+        .filter((v, i, a) => v && a.indexOf(v) === i && v.toLowerCase() !== correct.toLowerCase())
+    ).slice(0, 3);
 
-    const uniqueWrong = [...new Set(wrongPool)].filter(v => v.toLowerCase() !== correct.toLowerCase());
-    const choices = shuffle(uniqueWrong).slice(0, 3);
-    choices.push(correct);
-    return shuffle(choices);
+    return shuffle([...wrongChoices, correct]);
   }
 
   const pool = allWords()
@@ -1059,12 +1152,11 @@ function renderQuestion() {
     case 2: {
       const esc   = current.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blank = `<span class="blank-word">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
-      // Extract the actual inflected form used in the sentence (e.g. "decided", "produces")
+      // Extract the actual inflected form used in the sentence
       const inflMatch = current.ex.match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
       const inflectedForm = inflMatch ? inflMatch[0] : current.word;
       const blanked = current.ex.replace(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'), blank);
       qText = blanked;
-      // Store inflected form so options are shown and checked using the same form
       current._fillAns = inflectedForm;
       field = '_fillAns'; cardClass = 'fill-card'; break;
     }
