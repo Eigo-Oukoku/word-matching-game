@@ -172,7 +172,7 @@
       animation: popIn 0.25s ease;
     }
     .quiz-card.vocab-card  { border-color: #c8e6c9; background: #f1fff5; }
-    .quiz-card.fill-card   { border-color: #bbdefb; background: #f0f8ff; font-size: 20px; line-height: 1.5; }
+    .quiz-card.fill-card   { border-color: #bbdefb; background: #f0f8ff; font-size: 20px; line-height: 1.5; display: block; text-align: left; padding: 24px 20px; }
     .quiz-card.syn-card    { border-color: #ffe082; background: #fffde7; }
     .quiz-card.def-card    { border-color: #e1bee7; background: #fdf5ff; font-size: 17px; line-height: 1.6; }
     .blank-word { display: inline-block; background: #dee2e6; border-radius: 6px; padding: 0 10px; color: #333; }
@@ -434,7 +434,7 @@ const wordStock = {
     { word: "traditional",  jp: "伝統的な",       syn: "old-style",    ex: "Kyoto has many traditional buildings.",      def: "following customs passed down from long ago" },
     { word: "reduce",       jp: "〜を減らす",     syn: "decrease",     ex: "We should reduce our use of plastic.",       def: "to make something smaller or less in amount" },
     { word: "advice",       jp: "助言",          syn: "suggestion",   ex: "Ask your teacher for advice.",               def: "an opinion given to help someone decide" },
-    { word: "find",         jp: "〜を見つける",   syn: "discover",     ex: "I found my key under the desk.",             def: "to locate something you are looking for" },
+    { word: "find",         jp: "〜を見つける",   syn: "discover",     ex: "It is hard to find a quiet place to study.",         def: "to locate something you are looking for" },
     { word: "decide",       jp: "〜を決める",     syn: "determine",    ex: "I decided to join the tennis club.",         def: "to make a choice after thinking" },
     { word: "believe",      jp: "〜を信じる",     syn: "trust",        ex: "I believe you can do it.",                   def: "to think that something is true" },
     { word: "understand",   jp: "〜を理解する",   syn: "comprehend",   ex: "Do you understand the lesson?",              def: "to know the meaning of something" },
@@ -450,7 +450,7 @@ const wordStock = {
     { word: "introduce",    jp: "〜を紹介する",   syn: "present",      ex: "Let me introduce my classmate.",             def: "to tell people about someone or something new" },
     { word: "express",      jp: "〜を表す",       syn: "show",         ex: "It is hard to express my feelings in words.", def: "to show an idea or feeling clearly" },
     { word: "prepare",      jp: "〜を準備する",   syn: "get ready",    ex: "Prepare for your presentation carefully.",   def: "to make something ready before you need it" },
-    { word: "increase",     jp: "増加する",       syn: "grow",         ex: "The number of electric cars is increasing.", def: "to become greater in number or amount" },
+    { word: "increase",     jp: "増加する",       syn: "grow",         ex: "Regular exercise can increase your energy levels.", def: "to become greater in number or amount" },
     { word: "continue",     jp: "〜を続ける",     syn: "carry on",     ex: "Continue practicing every day.",             def: "to keep doing something without stopping" },
     { word: "compare",      jp: "〜を比べる",     syn: "contrast",     ex: "Compare life in the city and the countryside.", def: "to look at how things are similar or different" },
     { word: "protect",      jp: "〜を守る",       syn: "guard",        ex: "We should protect endangered animals.",      def: "to keep something or someone safe from harm" },
@@ -523,7 +523,7 @@ const wordStock = {
     { word: "establish",    jp: "〜を設立する",   syn: "found",        ex: "The school was established in 1950.",       def: "to start an organization or set up a system" },
     { word: "evaluate",     jp: "〜を評価する",   syn: "assess",       ex: "Evaluate your progress at the end of each week.", def: "to judge the quality or value of something" },
     { word: "expand",       jp: "〜を広げる",     syn: "extend",       ex: "The company plans to expand its business overseas.", def: "to make something larger or wider" },
-    { word: "investigate",  jp: "〜を調査する",   syn: "research",     ex: "Scientists are investigating the cause of the disease.", def: "to study something carefully to find out the truth" },
+    { word: "investigate",  jp: "〜を調査する",   syn: "research",     ex: "The police will investigate the cause of the accident.", def: "to study something carefully to find out the truth" },
     { word: "maintain",     jp: "〜を維持する",   syn: "keep up",      ex: "It is hard to maintain a healthy lifestyle.", def: "to keep something in its current state" },
     { word: "obtain",       jp: "〜を得る",       syn: "acquire",      ex: "You can obtain a travel visa online.",      def: "to get something, especially through effort" },
     { word: "participate",  jp: "〜に参加する",   syn: "take part in", ex: "Participate actively in class discussions.", def: "to take part in an activity or event" },
@@ -572,7 +572,7 @@ const wordStock = {
   "2": [
     { word: "significant",  jp: "重要な",         syn: "important",   ex: "There is a significant difference between the two.", def: "large or important enough to be noticed" },
     { word: "consequence",  jp: "結果",          syn: "result",      ex: "Consider the consequences of your actions.", def: "something that happens as a result of an action" },
-    { word: "negotiate",    jp: "〜を交渉する",   syn: "bargain",     ex: "They are negotiating the price of the deal.", def: "to try to reach an agreement through discussion" },
+    { word: "negotiate",    jp: "〜を交渉する",   syn: "bargain",     ex: "We need to negotiate a fair price for the product.", def: "to try to reach an agreement through discussion" },
     { word: "contribute",   jp: "〜に貢献する",   syn: "donate",      ex: "He contributed greatly to the research.",   def: "to give something to help achieve something" },
     { word: "precious",     jp: "貴重な",         syn: "valuable",    ex: "Clean water is a precious resource.",       def: "of great value because it is rare or costly" },
     { word: "analyze",      jp: "〜を分析する",   syn: "examine",     ex: "We need to analyze the data carefully.",    def: "to examine something in detail to understand it" },
@@ -585,7 +585,7 @@ const wordStock = {
     { word: "encourage",    jp: "〜を促す",       syn: "inspire",     ex: "The results encouraged more research.",     def: "to give someone the confidence to try something" },
     { word: "decline",      jp: "衰退する",       syn: "decrease",    ex: "Sales declined sharply last year.",         def: "to become less, smaller, or worse over time" },
     { word: "require",      jp: "〜を必要とする", syn: "need",        ex: "This job requires a lot of patience.",      def: "to need something as essential or compulsory" },
-    { word: "overcome",     jp: "〜を克服する",   syn: "conquer",     ex: "She overcame many difficulties to succeed.", def: "to succeed in dealing with a problem or obstacle" },
+    { word: "overcome",     jp: "〜を克服する",   syn: "conquer",     ex: "Hard work will help you overcome any challenge.", def: "to succeed in dealing with a problem or obstacle" },
     { word: "reject",       jp: "〜を拒絶する",   syn: "refuse",      ex: "He rejected the offer without hesitation.", def: "to refuse to accept or agree to something" },
     { word: "calculate",    jp: "〜を計算する",   syn: "compute",     ex: "Calculate the total cost, including tax.",  def: "to find a number or amount using mathematics" },
     { word: "differ",       jp: "異なる",        syn: "vary",        ex: "Customs differ from country to country.",   def: "to be different from something else" },
@@ -679,7 +679,74 @@ function allWords() {
   return Object.values(wordStock).flat();
 }
 
+function applyInflection(baseWord, suffix) {
+  if (!suffix) return baseWord;
+  const s = suffix.toLowerCase();
+  if (s === 'ing') {
+    // drop final silent e before -ing, double consonant if needed
+    if (/[^aeiou]e$/.test(baseWord)) return baseWord.slice(0, -1) + 'ing';
+    if (/[aeiou][^aeiou]$/.test(baseWord) && !/[wxhy]$/.test(baseWord)) return baseWord + baseWord.slice(-1) + 'ing';
+    return baseWord + 'ing';
+  }
+  if (s === 'ed' || s === 'd') {
+    if (/e$/.test(baseWord)) return baseWord + 'd';
+    if (/[^aeiou]y$/.test(baseWord)) return baseWord.slice(0, -1) + 'ied';
+    if (/[aeiou][^aeiou]$/.test(baseWord) && !/[wxhy]$/.test(baseWord)) return baseWord + baseWord.slice(-1) + 'ed';
+    return baseWord + 'ed';
+  }
+  if (s === 's' || s === 'es') {
+    if (/[sxzh]$/.test(baseWord) || /ch$/.test(baseWord)) return baseWord + 'es';
+    if (/[^aeiou]y$/.test(baseWord)) return baseWord.slice(0, -1) + 'ies';
+    return baseWord + 's';
+  }
+  // default: just append suffix
+  return baseWord + suffix;
+}
+
+function getInflectionSuffix(base, inflected) {
+  const b = base.toLowerCase(), i = inflected.toLowerCase();
+  if (b === i) return '';
+  if (i.endsWith('ing') && !b.endsWith('ing')) return 'ing';
+  if (i.endsWith('ied')) return 'ed';
+  if (i.endsWith('ed')) return 'ed';
+  if (i.endsWith('d') && b.endsWith('e')) return 'd';
+  if (i.endsWith('es')) return 'es';
+  if (i.endsWith('s')) return 's';
+  return '';
+}
+
 function generateOptions(correct, field) {
+  if (field === '_fillAns') {
+    // correct is the inflected form; determine the base word and suffix
+    // Find the base word by looking up in allWords
+    const correctBase = correct; // we'll handle via suffix logic
+    // Extract suffix from correct vs the base word stored in current word's .word
+    // We need to work with allWords pool
+    const pool = allWords();
+    // Get the base word for correct answer
+    const correctEntry = pool.find(w => {
+      const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const m = (w.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
+      return m && m[0].toLowerCase() === correct.toLowerCase();
+    });
+    const suffix = correctEntry ? getInflectionSuffix(correctEntry.word, correct) : '';
+
+    // Build wrong choices from other words, applying same suffix pattern
+    const wrongPool = pool
+      .filter(w => {
+        const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const m = (w.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
+        const thisInflected = m ? m[0] : w.word;
+        return thisInflected.toLowerCase() !== correct.toLowerCase();
+      })
+      .map(w => applyInflection(w.word, suffix));
+
+    const uniqueWrong = [...new Set(wrongPool)].filter(v => v.toLowerCase() !== correct.toLowerCase());
+    const choices = shuffle(uniqueWrong).slice(0, 3);
+    choices.push(correct);
+    return shuffle(choices);
+  }
+
   const pool = allWords()
     .map(w => w[field])
     .filter((v, i, a) => a.indexOf(v) === i && v !== correct);
@@ -989,13 +1056,18 @@ function renderQuestion() {
     case 1:
       qText = `<strong>${current.word}</strong>`;
       field = 'jp'; cardClass = 'vocab-card'; break;
-    case 2:
-      const blanked = current.ex.replace(
-        new RegExp('\\b' + current.word + '\\b', 'i'),
-        `<span class="blank-word">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`
-      );
+    case 2: {
+      const esc   = current.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const blank = `<span class="blank-word">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+      // Extract the actual inflected form used in the sentence (e.g. "decided", "produces")
+      const inflMatch = current.ex.match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
+      const inflectedForm = inflMatch ? inflMatch[0] : current.word;
+      const blanked = current.ex.replace(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'), blank);
       qText = blanked;
-      field = 'word'; cardClass = 'fill-card'; break;
+      // Store inflected form so options are shown and checked using the same form
+      current._fillAns = inflectedForm;
+      field = '_fillAns'; cardClass = 'fill-card'; break;
+    }
     case 3:
       qText = `<strong>${current.word}</strong>`;
       field = 'syn'; cardClass = 'syn-card'; break;
