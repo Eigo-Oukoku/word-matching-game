@@ -1,1 +1,1149 @@
+<!doctype html>
+<html lang="ja" translate="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="google" content="notranslate">
+  <title>Eigo-Ninja - ELKえいご王国</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1a2e;
+      --red: #E63946;
+      --green: #2DD368;
+      --yellow: #FFB000;
+      --purple: #8E44AD;
+      --elk: #6A5ACD;
+      --blue: #3A8EE8;
+      --bg: #f5f5f0;
+      --card: #ffffff;
+      --border: #e0ddd5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Nunito', sans-serif;
+      overflow-x: hidden;
+    }
+    #game-root {
+      max-width: 460px;
+      margin: 0 auto;
+      padding: 12px 14px 30px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    #game-area { width: 100%; flex: 1; display: flex; flex-direction: column; }
 
+    @keyframes fadeUp    { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes popIn     { 0%{transform:scale(0.75);opacity:0} 70%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
+    @keyframes shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+    @keyframes starBurst { 0%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.3) rotate(15deg)} 100%{transform:scale(1) rotate(0deg)} }
+    @keyframes bob       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes shimmer   { 0%{background-position:200% center} 100%{background-position:-200% center} }
+
+    .screen { animation: fadeUp 0.3s ease; width: 100%; }
+
+    .home-header { text-align: center; padding: 18px 0 20px; }
+    .brand-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6A5ACD; margin-bottom: 4px; }
+    .game-title {
+      font-family: 'Bangers', cursive;
+      font-size: 64px; letter-spacing: 3px; line-height: 1;
+      color: var(--ink);
+      text-shadow: 4px 4px 0 rgba(0,0,0,0.08);
+    }
+    .game-title span { color: var(--red); }
+    .ninja-mascot { font-size: 48px; display: block; margin: 6px auto; animation: bob 2.5s ease-in-out infinite; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase; color: #999; text-align: center;
+      margin: 18px 0 10px;
+    }
+    .level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+    .level-btn {
+      border: none; border-radius: 18px; padding: 18px 8px; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+      color: white; display: flex; flex-direction: column; align-items: center;
+      gap: 4px; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.1s;
+    }
+    .level-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .level-btn .sub   { font-size: 10px; font-weight: 600; opacity: 0.85; line-height: 1.3; text-align: center; }
+    .lb-4   { background: var(--green); box-shadow: 0 5px 0 #1a9647; }
+    .lb-3   { background: var(--blue);  box-shadow: 0 5px 0 #2060b0; }
+    .lb-p2  { background: var(--yellow); box-shadow: 0 5px 0 #b07a00; }
+    .lb-2   { background: var(--red);   box-shadow: 0 5px 0 #a02030; }
+
+    .util-row { display: flex; gap: 10px; width: 100%; margin-top: 12px; }
+    .util-btn {
+      flex: 1; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+      background: white; border: 2px solid var(--border);
+      border-radius: 12px; padding: 11px 6px; cursor: pointer;
+      color: var(--ink); box-shadow: 0 3px 0 var(--border); transition: 0.1s;
+      text-align: center;
+    }
+    .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
+
+    .mode-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+    .mode-btn {
+      border: none; border-radius: 16px; padding: 20px 18px; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+      color: white; text-align: left; display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.18); transition: 0.1s; width: 100%;
+    }
+    .mode-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+    .mode-btn .mode-icon { font-size: 28px; flex-shrink: 0; }
+    .mode-btn .mode-text { display: flex; flex-direction: column; gap: 2px; }
+    .mode-btn .mode-name { font-size: 17px; }
+    .mode-btn .mode-desc { font-size: 11px; font-weight: 600; opacity: 0.85; }
+    .mb-vocab     { background: var(--ink);    box-shadow: 0 5px 0 #0a0a1a; }
+    .mb-fill      { background: var(--blue);   box-shadow: 0 5px 0 #2060b0; }
+    .mb-syn       { background: var(--yellow); box-shadow: 0 5px 0 #b07a00; }
+    .mb-def       { background: var(--purple); box-shadow: 0 5px 0 #5a2880; }
+    .mb-challenge {
+      background: linear-gradient(135deg, #E63946 0%, #8E44AD 100%);
+      box-shadow: 0 5px 0 #6a0050;
+      background-size: 200% auto;
+    }
+    .challenge-tag {
+      display: inline-block; background: #FFB000; color: #1a1a2e;
+      border-radius: 999px; padding: 1px 7px; font-size: 9px;
+      font-weight: 900; letter-spacing: 0.5px; margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── Challenge Mode Toggle ── */
+    .mode-toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 8px; }
+    .mode-toggle {
+      border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px;
+      font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
+      background: white; color: #aaa; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      box-shadow: 0 3px 0 var(--border); transition: 0.15s;
+    }
+    .mode-toggle .mt-icon { font-size: 22px; }
+    .mode-toggle.active {
+      background: linear-gradient(135deg, #E63946 0%, #8E44AD 100%);
+      border-color: #8E44AD; color: white;
+      box-shadow: 0 3px 0 #6a0050;
+    }
+    .mode-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
+    .mode-toggle.active:active { box-shadow: 0 1px 0 #6a0050; }
+    .challenge-info {
+      background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 14px;
+      padding: 10px 14px; font-size: 12px; font-weight: 700; color: #7a5800;
+      text-align: center; margin-bottom: 4px;
+    }
+
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; margin-bottom: 10px;
+    }
+    .menu-btn {
+      font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+      background: white; border: 2px solid var(--border); border-radius: 10px;
+      padding: 5px 12px; cursor: pointer; color: #666;
+      box-shadow: 0 2px 0 var(--border);
+    }
+    .progress-pill {
+      font-size: 12px; font-weight: 800;
+      background: #FFF3B0; color: #9B5E00;
+      border-radius: 999px; padding: 4px 12px;
+      border: 2px solid var(--yellow);
+    }
+
+    .progress-track {
+      width: 100%; height: 10px; background: #e8e5de;
+      border-radius: 999px; margin-bottom: 12px; overflow: hidden;
+    }
+    .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.4s ease; }
+
+    .quiz-card {
+      width: 100%; background: white;
+      border: 2.5px solid var(--border); border-radius: 22px;
+      padding: 28px 20px; text-align: center;
+      font-size: 28px; font-weight: 900; color: var(--ink);
+      box-shadow: 0 6px 0 var(--border);
+      margin-bottom: 16px; line-height: 1.4;
+      min-height: 100px; display: flex; align-items: center; justify-content: center;
+      animation: popIn 0.25s ease;
+    }
+    .quiz-card.vocab-card  { border-color: #c8e6c9; background: #f1fff5; }
+    .quiz-card.fill-card   { border-color: #bbdefb; background: #f0f8ff; font-size: 20px; line-height: 1.5; }
+    .quiz-card.syn-card    { border-color: #ffe082; background: #fffde7; }
+    .quiz-card.def-card    { border-color: #e1bee7; background: #fdf5ff; font-size: 17px; line-height: 1.6; }
+    .blank-word { display: inline-block; background: #dee2e6; border-radius: 6px; padding: 0 10px; color: #333; }
+    .mode-badge {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+      background: rgba(0,0,0,0.07); border-radius: 6px;
+      padding: 2px 7px; color: #666; margin-bottom: 6px; display: inline-block;
+    }
+
+    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
+    .choice-btn {
+      background: white; border: 2.5px solid var(--border);
+      border-radius: 16px; padding: 16px 8px;
+      font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800;
+      color: var(--ink); cursor: pointer; min-height: 66px;
+      box-shadow: 0 4px 0 var(--border); transition: 0.1s;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; line-height: 1.3;
+    }
+    .choice-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--border); }
+    .choice-btn.correct {
+      background: #E8FFF2; border-color: var(--green);
+      box-shadow: 0 4px 0 #1a9647; color: #0a5c2d;
+      animation: popIn 0.2s ease;
+    }
+    .choice-btn.wrong {
+      background: #FFE5E7; border-color: var(--red);
+      box-shadow: 0 4px 0 #a02030; color: var(--red);
+      animation: shake 0.35s ease;
+    }
+
+    .feedback-row { text-align: center; min-height: 28px; margin-top: 10px; font-size: 18px; font-weight: 900; }
+    .fb-ok  { color: var(--green); animation: popIn 0.2s ease; }
+    .fb-bad { color: var(--red);   animation: shake 0.3s ease; }
+
+    .result-screen { text-align: center; width: 100%; animation: fadeUp 0.4s ease; }
+    .result-medal  { font-size: 80px; margin: 10px 0; animation: starBurst 0.5s ease; }
+    .result-title  { font-family: 'Bangers', cursive; font-size: 40px; letter-spacing: 2px; color: var(--ink); margin-bottom: 4px; }
+    .result-score  { font-size: 56px; font-weight: 900; color: var(--red); margin: 8px 0; }
+    .result-sub    { font-size: 14px; color: #888; margin-bottom: 20px; font-weight: 700; }
+
+    .review-header-row { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 10px; }
+    .review-header {
+      font-family: 'Bangers', cursive; font-size: 22px; letter-spacing: 1px;
+      color: var(--red); text-align: left; margin: 0;
+    }
+    .export-btns   { display: flex; gap: 8px; }
+    .export-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      border: none; border-radius: 10px; padding: 7px 12px;
+      font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800;
+      cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 rgba(0,0,0,0.15); color: white;
+    }
+    .export-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
+    .eb-csv  { background: #2DD368; box-shadow: 0 3px 0 #1a9647; }
+    .eb-copy { background: #6A5ACD; box-shadow: 0 3px 0 #4a3aad; }
+    .copy-toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: white; border-radius: 999px;
+      padding: 10px 22px; font-size: 13px; font-weight: 800;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      animation: popIn 0.2s ease; z-index: 9999; white-space: nowrap;
+    }
+
+    .review-wrap   { overflow-x: auto; border-radius: 14px; border: 2px solid var(--border); }
+    .review-table  { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; }
+    .review-table th { background: #f8f7f3; padding: 9px 10px; border-bottom: 2px solid var(--border); text-align: left; font-weight: 800; color: #555; font-size: 11px; letter-spacing: 0.5px; }
+    .review-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); line-height: 1.4; vertical-align: top; }
+    .review-table tr:last-child td { border-bottom: none; }
+    .review-table .word-cell { font-weight: 900; color: var(--ink); }
+    .review-table .def-cell  { color: #555; font-style: italic; }
+
+    .action-btn {
+      width: 100%; border: none; border-radius: 14px; padding: 18px;
+      font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+      color: white; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.15);
+      margin-top: 12px; transition: 0.1s;
+    }
+    .action-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .ab-primary   { background: var(--ink); box-shadow: 0 5px 0 #0a0a1a; }
+    .ab-retry     { background: var(--blue); box-shadow: 0 5px 0 #2060b0; }
+    .ab-challenge { background: linear-gradient(135deg, #E63946 0%, #8E44AD 100%); box-shadow: 0 5px 0 #6a0050; }
+    .ab-menu      { background: #8d99ae; box-shadow: 0 5px 0 #5a6070; }
+
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; padding: 16px;
+    }
+    .modal-box {
+      background: white; border-radius: 22px; padding: 24px 20px;
+      max-width: 400px; width: 100%;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+      animation: popIn 0.25s ease;
+    }
+    .modal-title { font-family: 'Bangers', cursive; font-size: 26px; letter-spacing: 1px; color: var(--red); margin-bottom: 14px; text-align: center; }
+    .how-item { margin-bottom: 12px; }
+    .how-item-title { font-size: 14px; font-weight: 900; color: var(--ink); margin-bottom: 3px; }
+    .how-item-desc { font-size: 12px; color: #555; line-height: 1.55; padding-left: 8px; border-left: 3px solid var(--yellow); }
+    .modal-note { font-size: 11px; color: #999; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; line-height: 1.5; }
+    .modal-close {
+      width: 100%; margin-top: 16px; padding: 13px; font-size: 15px;
+      font-weight: 900; font-family: 'Nunito', sans-serif;
+      background: var(--red); color: white; border: none; border-radius: 12px;
+      cursor: pointer; box-shadow: 0 4px 0 #a02030;
+    }
+
+    .hint-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #FFF8E1; border: 2px solid #FFD54F;
+      border-radius: 999px; padding: 7px 16px;
+      font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800;
+      color: #7a5800; cursor: pointer; box-shadow: 0 3px 0 #FFD54F;
+      transition: 0.1s; margin: 0 auto 4px; display: block; width: fit-content;
+    }
+    .hint-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #FFD54F; }
+    .hint-bubble {
+      background: #FFFDE7; border: 2px solid #FFD54F; border-radius: 14px;
+      padding: 10px 16px; text-align: center; font-size: 16px; font-weight: 800;
+      color: #5a4000; margin: 6px 0 2px;
+      animation: popIn 0.2s ease;
+    }
+
+    .footer-strip { text-align: center; padding: 18px 0 4px; font-size: 15px; font-weight: 700; color: #6A5ACD; letter-spacing: 1px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: white; border: 2px solid var(--border);
+      border-radius: 10px; padding: 7px 14px; font-size: 13px;
+      font-weight: 700; font-family: 'Nunito', sans-serif;
+      color: #666; cursor: pointer; margin-bottom: 14px;
+      box-shadow: 0 2px 0 var(--border);
+    }
+    .back-btn:active { transform: translateY(2px); box-shadow: none; }
+    .copy-modal-ta {
+      width: 100%; height: 180px; font-family: monospace; font-size: 11px;
+      border: 2px solid var(--border); border-radius: 10px; padding: 10px;
+      resize: none; margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+<div id="game-root">
+  <div id="game-area"></div>
+</div>
+
+<div id="how-modal" style="display:none;" class="overlay">
+  <div class="modal-box">
+    <div class="modal-title">🥷 遊びかた (How To Play)</div>
+    <div class="how-item">
+      <div class="how-item-title">📖 1. Vocabulary (英→日)</div>
+      <div class="how-item-desc">英単語を見て、正しい日本語の意味を4択から選ぼう！</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">✏️ 2. Fill in the Blank (穴埋め)</div>
+      <div class="how-item-desc">英文の空所に当てはまる単語を推測して選ぼう！ヒントで日本語訳も確認できるよ！</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🔗 3. Synonym (類義語)</div>
+      <div class="how-item-desc">表示された単語と「同じ意味」の英単語を選ぼう！</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🔍 4. Definition (英英定義)</div>
+      <div class="how-item-desc">英語の説明文を読んで、どの単語のことか当てよう！</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🏆 5. 100問チャレンジ</div>
+      <div class="how-item-desc">使いたいモードを自由に選んでMIX！そのグレードの全単語から最大100問に挑戦！</div>
+    </div>
+    <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！</p>
+    <button class="modal-close" onclick="toggleModal(false)">わかった！ Let's go! 🥷</button>
+  </div>
+</div>
+
+<script>
+// ─── WORD DATABASE ───────────────────────────────────────────────────────────
+const wordStock = {
+  "4": [
+    { word: "cousin",   jp: "いとこ",        syn: "relative",  ex: "I have a cousin in Canada.",            def: "the child of your aunt or uncle" },
+    { word: "future",   jp: "未来",          syn: "later time",ex: "What is your dream for the future?",    def: "the time that will come after now" },
+    { word: "healthy",  jp: "健康な",         syn: "well",      ex: "Vegetables are healthy for you.",       def: "in good physical condition" },
+    { word: "schedule", jp: "予定",          syn: "plan",      ex: "Check your school schedule.",           def: "a list of times when things will happen" },
+    { word: "uniform",  jp: "制服",          syn: "outfit",    ex: "I wear a blue uniform to school.",      def: "special clothes worn by members of a group" },
+    { word: "mistake",  jp: "間違い",         syn: "error",     ex: "Don't be afraid of making a mistake.",  def: "something that is not correct" },
+    { word: "foreign",  jp: "外国の",         syn: "overseas",  ex: "I want to visit foreign countries.",    def: "from a country that is not your own" },
+    { word: "neighbor", jp: "近所の人",       syn: "local",     ex: "Our neighbor is very kind.",            def: "a person living near you" },
+    { word: "useful",   jp: "役に立つ",       syn: "handy",     ex: "This map is very useful.",              def: "helping you to do or get what you want" },
+    { word: "hospital", jp: "病院",          syn: "clinic",    ex: "My mother works at the hospital.",      def: "a place where sick people are treated" },
+    { word: "read",     jp: "〜を読む",       syn: "peruse",    ex: "I read the book last night.",           def: "to look at and understand written words" },
+    { word: "watch",    jp: "〜を見る",       syn: "observe",   ex: "I watch TV after dinner.",              def: "to look at something for a period of time" },
+    { word: "help",     jp: "〜を手伝う",     syn: "assist",    ex: "Help me with this problem, please.",    def: "to make it easier for someone to do something" },
+    { word: "buy",      jp: "〜を買う",       syn: "purchase",  ex: "I want to buy a new bag.",              def: "to get something by paying money" },
+    { word: "use",      jp: "〜を使う",       syn: "utilize",   ex: "I use a dictionary every day.",         def: "to do something with a tool or object" },
+    { word: "write",    jp: "〜を書く",       syn: "compose",   ex: "Write your name on the paper.",         def: "to make letters or words on paper" },
+    { word: "sleep",    jp: "眠る",           syn: "rest",      ex: "I sleep for eight hours a night.",      def: "to rest with your eyes closed" },
+    { word: "go",       jp: "行く",           syn: "move",      ex: "I go to school by bike.",               def: "to move from one place to another" },
+    { word: "eat",      jp: "〜を食べる",     syn: "consume",   ex: "I eat rice for breakfast every day.",   def: "to put food in your mouth and swallow it" },
+    { word: "swim",     jp: "泳ぐ",           syn: "paddle",    ex: "I swim in the pool on Sundays.",        def: "to move through water" },
+    { word: "walk",     jp: "歩く",           syn: "stroll",    ex: "I walk to school every day.",           def: "to move at a normal speed on foot" },
+    { word: "run",      jp: "走る",           syn: "sprint",    ex: "She runs in the park every morning.",   def: "to move fast on foot" },
+    { word: "talk",     jp: "話す",           syn: "speak",     ex: "Let's talk after class.",               def: "to say words to communicate with someone" },
+    { word: "play",     jp: "〜をする・遊ぶ", syn: "enjoy",     ex: "I play basketball after school.",       def: "to take part in a sport or game" },
+    { word: "make",     jp: "〜を作る",       syn: "build",     ex: "Let's make sandwiches together.",       def: "to produce something by working" },
+    { word: "come",     jp: "来る",           syn: "arrive",    ex: "Come to my house on Sunday.",           def: "to move toward a place or person" },
+    { word: "give",     jp: "〜を渡す",       syn: "hand",      ex: "Give me a pencil, please.",             def: "to pass something to someone" },
+    { word: "see",      jp: "〜が見える",     syn: "notice",    ex: "I can see the mountains from here.",    def: "to notice something with your eyes" },
+    { word: "know",     jp: "〜を知っている", syn: "be aware",  ex: "Do you know her phone number?",         def: "to have information in your mind" },
+    { word: "think",    jp: "〜と思う",       syn: "believe",   ex: "I think this answer is correct.",       def: "to use your mind to form an idea" },
+    { word: "want",     jp: "〜が欲しい",     syn: "wish for",  ex: "I want a new bicycle.",                 def: "to feel you would like to have something" },
+    { word: "try",      jp: "〜を試す",       syn: "attempt",   ex: "Try this food — it is delicious!",      def: "to make an effort to do something" },
+    { word: "keep",     jp: "〜を保つ",       syn: "hold",      ex: "Keep your room tidy.",                  def: "to continue to have something without losing it" },
+    { word: "show",     jp: "〜を見せる",     syn: "display",   ex: "Show me your drawing.",                 def: "to let someone see something" },
+    { word: "tell",     jp: "〜に言う",       syn: "inform",    ex: "Tell me your name.",                    def: "to give information to someone in words" },
+    { word: "bring",    jp: "〜を持ってくる", syn: "carry here",ex: "Bring your textbook to class tomorrow.", def: "to take something with you to a place" },
+    { word: "take",     jp: "〜を持って行く", syn: "carry",     ex: "Take an umbrella — it may rain.",        def: "to move something from one place to another" },
+    { word: "put",      jp: "〜を置く",       syn: "place",     ex: "Put your shoes by the door.",           def: "to move something into a position" },
+    { word: "wait",     jp: "待つ",           syn: "stay",      ex: "Wait for me at the station.",           def: "to stay somewhere until something happens" },
+    { word: "sit",      jp: "座る",           syn: "be seated", ex: "Sit down and open your textbook.",      def: "to rest with your bottom on a chair or seat" },
+    { word: "stand",    jp: "立つ",           syn: "rise",      ex: "Stand up when you answer in class.",    def: "to be upright on your feet" },
+    { word: "cook",     jp: "〜を料理する",   syn: "prepare",   ex: "My father cooks dinner on Fridays.",    def: "to prepare food by using heat" },
+    { word: "sing",     jp: "〜を歌う",       syn: "perform",   ex: "We sing songs in music class.",         def: "to make music with your voice" },
+    { word: "dance",    jp: "踊る",           syn: "move",      ex: "She loves to dance at parties.",        def: "to move your body to music" },
+    { word: "draw",     jp: "〜を描く",       syn: "sketch",    ex: "Draw a picture of your family.",        def: "to make a picture with a pencil or pen" },
+    { word: "catch",    jp: "〜をつかむ",     syn: "grab",      ex: "Catch the ball!",                       def: "to take and hold something that is moving" },
+    { word: "wash",     jp: "〜を洗う",       syn: "rinse",     ex: "Wash your hands before eating.",        def: "to clean something with water" },
+    { word: "wear",     jp: "〜を着る",       syn: "put on",    ex: "I wear a uniform to school.",           def: "to have clothing on your body" },
+    { word: "stop",     jp: "止まる",         syn: "halt",      ex: "The bus stops at this corner.",         def: "to no longer move or continue" },
+    { word: "start",    jp: "〜を始める",     syn: "begin",     ex: "The movie starts at seven.",            def: "to do the first part of something" },
+    { word: "finish",   jp: "〜を終える",     syn: "complete",  ex: "Finish your lunch before going out.",   def: "to come to the end of a task" },
+    { word: "open",     jp: "〜を開ける",     syn: "unlock",    ex: "Open the window — it is hot!",          def: "to move something so it is no longer closed" },
+    { word: "close",    jp: "〜を閉める",     syn: "shut",      ex: "Close the door gently, please.",        def: "to move something so there is no opening" },
+    { word: "clean",    jp: "〜を掃除する",   syn: "tidy",      ex: "I clean my room every Sunday.",         def: "to make a place free from dirt" },
+    { word: "enjoy",    jp: "〜を楽しむ",     syn: "have fun",  ex: "I enjoy playing with my cat.",          def: "to get pleasure from an activity" },
+    { word: "listen",   jp: "〜を聞く",       syn: "hear",      ex: "Listen to your teacher carefully.",     def: "to give attention to what you can hear" },
+    { word: "ask",      jp: "〜に尋ねる",     syn: "question",  ex: "Ask your teacher if you need help.",    def: "to say something to get an answer" },
+    { word: "answer",   jp: "〜に答える",     syn: "reply",     ex: "Answer in a full sentence, please.",    def: "to say or write something in response" },
+    { word: "like",     jp: "〜が好きだ",     syn: "enjoy",     ex: "I like orange juice.",                  def: "to find something pleasant" },
+    { word: "love",     jp: "〜が大好きだ",   syn: "adore",     ex: "I love spending time with my friends.", def: "to like something very much" },
+    { word: "visit",    jp: "〜を訪れる",     syn: "go to",     ex: "I want to visit Okinawa next summer.",  def: "to go and spend time in a place" },
+    { word: "live",     jp: "住む",           syn: "reside",    ex: "I live near the station.",              def: "to have your home in a place" },
+    { word: "stay",     jp: "滞在する",       syn: "remain",    ex: "We stayed at a hotel in Tokyo.",        def: "to be in a place for a period of time" },
+    { word: "change",   jp: "〜を変える",     syn: "switch",    ex: "Let's change the plan.",                def: "to make something different" },
+    { word: "carry",    jp: "〜を運ぶ",       syn: "transport", ex: "Can you carry this bag for me?",        def: "to hold something and move it from place to place" },
+    { word: "practice", jp: "〜を練習する",   syn: "train",     ex: "Practice the piano every day.",         def: "to do something many times to get better" },
+    { word: "learn",    jp: "〜を学ぶ",       syn: "study",     ex: "I want to learn French.",               def: "to gain knowledge or a new skill" },
+    { word: "big",      jp: "大きい",         syn: "large",     ex: "That is a big dog!",                    def: "of more than normal size" },
+    { word: "fast",     jp: "速い",           syn: "quick",     ex: "Cheetahs are very fast animals.",       def: "moving or able to move with great speed" },
+    { word: "kind",     jp: "親切な",         syn: "caring",    ex: "Our teacher is very kind.",             def: "helpful and friendly to others" },
+    { word: "busy",     jp: "忙しい",         syn: "occupied",  ex: "I am busy with homework tonight.",      def: "having a lot of things to do" },
+  ],
+
+  "3": [
+    { word: "environment",  jp: "環境",          syn: "nature",       ex: "We must protect the environment.",           def: "the natural world in which people live" },
+    { word: "actually",     jp: "実は",          syn: "in fact",      ex: "Actually, I have been to London.",           def: "used to emphasize what is real or true" },
+    { word: "convenient",   jp: "便利な",         syn: "easy to use",  ex: "Online shopping is very convenient.",        def: "fitting in well with your plans or needs" },
+    { word: "experience",   jp: "経験",          syn: "knowledge",    ex: "I had a wonderful experience in Spain.",     def: "the things you have done or seen in your life" },
+    { word: "interview",    jp: "面接",          syn: "meeting",      ex: "I had an interview for the job.",            def: "a formal meeting to ask someone questions" },
+    { word: "produce",      jp: "〜を生産する",   syn: "make",         ex: "This factory produces about 500 cars a day.", def: "to make or create something in large amounts" },
+    { word: "reason",       jp: "理由",          syn: "cause",        ex: "Tell me the reason why you were late.",      def: "the cause or explanation for something" },
+    { word: "traditional",  jp: "伝統的な",       syn: "old-style",    ex: "Kyoto has many traditional buildings.",      def: "following customs passed down from long ago" },
+    { word: "reduce",       jp: "〜を減らす",     syn: "decrease",     ex: "We should reduce our use of plastic.",       def: "to make something smaller or less in amount" },
+    { word: "advice",       jp: "助言",          syn: "suggestion",   ex: "Ask your teacher for advice.",               def: "an opinion given to help someone decide" },
+    { word: "find",         jp: "〜を見つける",   syn: "discover",     ex: "I found my key under the desk.",             def: "to locate something you are looking for" },
+    { word: "decide",       jp: "〜を決める",     syn: "determine",    ex: "I decided to join the tennis club.",         def: "to make a choice after thinking" },
+    { word: "believe",      jp: "〜を信じる",     syn: "trust",        ex: "I believe you can do it.",                   def: "to think that something is true" },
+    { word: "understand",   jp: "〜を理解する",   syn: "comprehend",   ex: "Do you understand the lesson?",              def: "to know the meaning of something" },
+    { word: "remember",     jp: "〜を覚えている", syn: "recall",       ex: "Do you remember his name?",                  def: "to bring something back to mind" },
+    { word: "discover",     jp: "〜を発見する",   syn: "find",         ex: "He discovered a new planet.",                def: "to find or learn something for the first time" },
+    { word: "imagine",      jp: "〜を想像する",   syn: "visualize",    ex: "Imagine you are on a beach.",                def: "to form a picture or idea in your mind" },
+    { word: "forget",       jp: "〜を忘れる",     syn: "overlook",     ex: "Don't forget to bring your umbrella.",       def: "to fail to remember something" },
+    { word: "happen",       jp: "起こる",        syn: "occur",        ex: "What happened at school today?",             def: "to take place, often by chance" },
+    { word: "seem",         jp: "〜のように見える",syn: "appear",      ex: "You seem tired today.",                      def: "to give the impression of being something" },
+    { word: "communicate",  jp: "〜を伝え合う",   syn: "exchange",     ex: "We communicate with friends by message.",    def: "to share information or feelings with others" },
+    { word: "improve",      jp: "〜を向上させる", syn: "develop",      ex: "I try to improve my English every day.",     def: "to become or make something better" },
+    { word: "explain",      jp: "〜を説明する",   syn: "describe",     ex: "Explain the meaning of this word.",          def: "to make something clear by talking about it" },
+    { word: "introduce",    jp: "〜を紹介する",   syn: "present",      ex: "Let me introduce my classmate.",             def: "to tell people about someone or something new" },
+    { word: "express",      jp: "〜を表す",       syn: "show",         ex: "It is hard to express my feelings in words.", def: "to show an idea or feeling clearly" },
+    { word: "prepare",      jp: "〜を準備する",   syn: "get ready",    ex: "Prepare for your presentation carefully.",   def: "to make something ready before you need it" },
+    { word: "increase",     jp: "増加する",       syn: "grow",         ex: "The number of electric cars is increasing.", def: "to become greater in number or amount" },
+    { word: "continue",     jp: "〜を続ける",     syn: "carry on",     ex: "Continue practicing every day.",             def: "to keep doing something without stopping" },
+    { word: "compare",      jp: "〜を比べる",     syn: "contrast",     ex: "Compare life in the city and the countryside.", def: "to look at how things are similar or different" },
+    { word: "protect",      jp: "〜を守る",       syn: "guard",        ex: "We should protect endangered animals.",      def: "to keep something or someone safe from harm" },
+    { word: "support",      jp: "〜を支援する",   syn: "back up",      ex: "My family always supports my dreams.",       def: "to help or encourage someone" },
+    { word: "expect",       jp: "〜を期待する",   syn: "hope for",     ex: "I expect to do well on the test.",           def: "to think that something is likely to happen" },
+    { word: "solve",        jp: "〜を解決する",   syn: "fix",          ex: "She solved the problem on her own.",         def: "to find the answer to a problem" },
+    { word: "volunteer",    jp: "ボランティアをする",syn: "help out",  ex: "I volunteer at a local animal shelter.",     def: "to do work without being paid" },
+    { word: "travel",       jp: "旅行する",       syn: "journey",      ex: "I want to travel around Southeast Asia.",    def: "to go from one place to another, often far away" },
+    { word: "waste",        jp: "〜を無駄にする", syn: "throw away",   ex: "Don't waste food or water.",                 def: "to use more of something than is necessary" },
+    { word: "save",         jp: "〜を節約する",   syn: "preserve",     ex: "We need to save energy at home.",            def: "to use less of something or to keep for later" },
+    { word: "share",        jp: "〜を共有する",   syn: "divide",       ex: "Please share your ideas with the group.",    def: "to give part of something to others" },
+    { word: "choose",       jp: "〜を選ぶ",       syn: "pick",         ex: "Choose one topic for your report.",          def: "to decide which one you want" },
+    { word: "collect",      jp: "〜を集める",     syn: "gather",       ex: "I collect stamps from different countries.", def: "to bring things together" },
+    { word: "respect",      jp: "〜を尊重する",   syn: "honor",        ex: "Always respect the opinions of others.",     def: "to treat someone or something with care and politeness" },
+    { word: "connect",      jp: "〜をつなぐ",     syn: "link",         ex: "Social media connects people around the world.", def: "to join two things or people together" },
+    { word: "develop",      jp: "〜を発展させる", syn: "grow",         ex: "This town is developing quickly.",           def: "to grow or make something more advanced" },
+    { word: "treat",        jp: "〜を扱う",       syn: "handle",       ex: "Treat all people with kindness.",            def: "to behave toward someone in a certain way" },
+    { word: "join",         jp: "〜に参加する",   syn: "enter",        ex: "I want to join the English club.",           def: "to become part of a group or activity" },
+    { word: "fail",         jp: "失敗する",       syn: "lose",         ex: "Don't be afraid to fail — learn from it.",  def: "to not succeed at something you tried" },
+    { word: "guess",        jp: "〜を推測する",   syn: "estimate",     ex: "Guess the answer before you check.",         def: "to think of an answer without being sure" },
+    { word: "mention",      jp: "〜について述べる",syn: "bring up",    ex: "She mentioned the problem in class.",        def: "to briefly talk about something" },
+    { word: "spend",        jp: "〜を費やす",     syn: "use",          ex: "I spend two hours on homework each day.",    def: "to use time or money on something" },
+    { word: "invite",       jp: "〜を招待する",   syn: "ask over",     ex: "I invited my friends to my birthday party.", def: "to ask someone to come somewhere or do something" },
+    { word: "plan",         jp: "〜を計画する",   syn: "arrange",      ex: "We planned a trip to Hiroshima.",            def: "to decide what you will do and how" },
+    { word: "refuse",       jp: "〜を断る",       syn: "decline",      ex: "She refused to give up.",                   def: "to say no to something you have been asked" },
+    { word: "miss",         jp: "〜を恋しく思う", syn: "long for",     ex: "I miss my friends from elementary school.", def: "to feel sad because you are away from someone" },
+    { word: "prove",        jp: "〜を証明する",   syn: "show",         ex: "Prove that you studied hard.",               def: "to show that something is true or correct" },
+    { word: "offer",        jp: "〜を申し出る",   syn: "propose",      ex: "He offered to help me with my bags.",        def: "to say you are willing to give or do something" },
+    { word: "cause",        jp: "〜を引き起こす", syn: "lead to",      ex: "Pollution can cause health problems.",       def: "to make something happen, usually something bad" },
+    { word: "important",    jp: "重要な",         syn: "key",          ex: "It is important to exercise every day.",     def: "having great value or meaning" },
+    { word: "popular",      jp: "人気のある",      syn: "well-liked",   ex: "Soccer is very popular in Japan.",           def: "liked or enjoyed by many people" },
+    { word: "different",    jp: "異なった",        syn: "unlike",       ex: "Our opinions are very different.",           def: "not the same as something else" },
+    { word: "necessary",    jp: "必要な",         syn: "needed",       ex: "Exercise is necessary for good health.",     def: "that must be done or that is needed" },
+    { word: "comfortable",  jp: "快適な",         syn: "relaxing",     ex: "This chair is very comfortable.",            def: "feeling pleasant and at ease" },
+    { word: "culture",      jp: "文化",          syn: "tradition",    ex: "I want to learn about American culture.",    def: "the ideas, customs, and art of a group of people" },
+    { word: "education",    jp: "教育",          syn: "schooling",    ex: "Education is very important for the future.", def: "the process of learning at school or college" },
+    { word: "opinion",      jp: "意見",          syn: "view",         ex: "In my opinion, homework should be shorter.", def: "what you personally think about something" },
+    { word: "energy",       jp: "エネルギー",     syn: "power",        ex: "We should use less energy at home.",         def: "power from electricity or other sources" },
+    { word: "effort",       jp: "努力",          syn: "attempt",      ex: "Put your best effort into everything you do.", def: "hard work done to achieve something" },
+    { word: "habit",        jp: "習慣",          syn: "routine",      ex: "Reading every night is a healthy habit.",    def: "something you do regularly, often without thinking" },
+    { word: "goal",         jp: "目標",          syn: "aim",          ex: "My goal is to pass the English exam.",       def: "something you work hard to achieve" },
+    { word: "skill",        jp: "技能",          syn: "ability",      ex: "Communication is an important life skill.",  def: "the ability to do something well" },
+    { word: "generation",   jp: "世代",          syn: "age group",    ex: "Young people of my generation use social media.", def: "all the people born at about the same time" },
+  ],
+
+  "Pre2": [
+    { word: "opportunity",  jp: "機会",          syn: "chance",       ex: "Studying abroad is a great opportunity.",   def: "a time when it is possible to do something" },
+    { word: "artificial",   jp: "人工的な",       syn: "man-made",     ex: "Do you prefer fresh or artificial flowers?", def: "made by people, not occurring naturally" },
+    { word: "effective",    jp: "効果的な",       syn: "successful",   ex: "This is an effective method of studying.",  def: "successful in producing the result you want" },
+    { word: "creative",     jp: "創造的な",       syn: "imaginative",  ex: "She is a very creative artist.",            def: "having the ability to make original things" },
+    { word: "describe",     jp: "〜を説明する",   syn: "explain",      ex: "Describe your favorite place in Japan.",    def: "to say what someone or something is like" },
+    { word: "situation",    jp: "状況",          syn: "condition",    ex: "The situation is changing quickly.",        def: "the set of things happening at a particular time" },
+    { word: "adventure",    jp: "冒険",          syn: "exploration",  ex: "They went on an adventure in the jungle.",  def: "an exciting or unusual experience" },
+    { word: "efficient",    jp: "効率的な",       syn: "productive",   ex: "The new machine is very efficient.",        def: "working well without wasting time or energy" },
+    { word: "encourage",    jp: "〜を励ます",     syn: "support",      ex: "My teacher encouraged me to keep trying.",  def: "to give someone hope or confidence to do something" },
+    { word: "quality",      jp: "品質",          syn: "standard",     ex: "We focus on the quality of our products.",  def: "how good or bad something is" },
+    { word: "achieve",      jp: "〜を達成する",   syn: "accomplish",   ex: "I achieved my goal of reading 20 books.",   def: "to successfully complete something" },
+    { word: "affect",       jp: "〜に影響を与える",syn: "influence",   ex: "Lack of sleep affects your concentration.", def: "to cause a change in someone or something" },
+    { word: "avoid",        jp: "〜を避ける",     syn: "shun",         ex: "Avoid using your phone at the dinner table.", def: "to stay away from someone or something" },
+    { word: "consider",     jp: "〜を検討する",   syn: "think over",   ex: "Consider all your options before deciding.", def: "to think carefully about something" },
+    { word: "create",       jp: "〜を創造する",   syn: "produce",      ex: "He created a website for the school.",      def: "to make something new that did not exist before" },
+    { word: "improve",      jp: "〜を改善する",   syn: "better",       ex: "Exercise will improve your health.",        def: "to make something better than it was before" },
+    { word: "allow",        jp: "〜を許可する",   syn: "permit",       ex: "The teacher allowed us to use dictionaries.", def: "to let someone do something" },
+    { word: "accept",       jp: "〜を受け入れる", syn: "receive",      ex: "Accept the gift with a thank-you.",         def: "to agree to take or receive something" },
+    { word: "agree",        jp: "〜に同意する",   syn: "consent",      ex: "I agree with your opinion.",               def: "to have the same opinion as someone else" },
+    { word: "suggest",      jp: "〜を提案する",   syn: "propose",      ex: "She suggested a new idea for the project.", def: "to put forward an idea for others to consider" },
+    { word: "appreciate",   jp: "〜に感謝する",   syn: "be grateful",  ex: "I really appreciate your help.",            def: "to recognize and be thankful for something" },
+    { word: "concentrate",  jp: "〜に集中する",   syn: "focus on",     ex: "Concentrate on one task at a time.",        def: "to give all your attention to something" },
+    { word: "demonstrate",  jp: "〜を示す",       syn: "show",         ex: "The results demonstrate the value of exercise.", def: "to show clearly how something works or is true" },
+    { word: "establish",    jp: "〜を設立する",   syn: "found",        ex: "The school was established in 1950.",       def: "to start an organization or set up a system" },
+    { word: "evaluate",     jp: "〜を評価する",   syn: "assess",       ex: "Evaluate your progress at the end of each week.", def: "to judge the quality or value of something" },
+    { word: "expand",       jp: "〜を広げる",     syn: "extend",       ex: "The company plans to expand its business overseas.", def: "to make something larger or wider" },
+    { word: "investigate",  jp: "〜を調査する",   syn: "research",     ex: "Scientists are investigating the cause of the disease.", def: "to study something carefully to find out the truth" },
+    { word: "maintain",     jp: "〜を維持する",   syn: "keep up",      ex: "It is hard to maintain a healthy lifestyle.", def: "to keep something in its current state" },
+    { word: "obtain",       jp: "〜を得る",       syn: "acquire",      ex: "You can obtain a travel visa online.",      def: "to get something, especially through effort" },
+    { word: "participate",  jp: "〜に参加する",   syn: "take part in", ex: "Participate actively in class discussions.", def: "to take part in an activity or event" },
+    { word: "promote",      jp: "〜を促進する",   syn: "encourage",    ex: "Regular exercise promotes good mental health.", def: "to help something develop or become more common" },
+    { word: "recognize",    jp: "〜を認識する",   syn: "identify",     ex: "I recognized her from across the room.",    def: "to know who or what someone or something is" },
+    { word: "replace",      jp: "〜を取り替える", syn: "swap",         ex: "We need to replace the old computer.",      def: "to put something new in place of something old" },
+    { word: "resolve",      jp: "〜を解決する",   syn: "settle",       ex: "They resolved the argument quickly.",       def: "to find a solution to a problem or disagreement" },
+    { word: "respond",      jp: "〜に応じる",     syn: "reply",        ex: "Please respond to my email by Friday.",     def: "to say or do something in reaction to something" },
+    { word: "reveal",       jp: "〜を明らかにする",syn: "show",        ex: "The report revealed some surprising results.", def: "to make something known that was hidden or secret" },
+    { word: "struggle",     jp: "苦労する",       syn: "fight",        ex: "I sometimes struggle with math problems.",  def: "to try hard to do something that is difficult" },
+    { word: "appropriate",  jp: "適切な",         syn: "suitable",     ex: "Please use appropriate language in class.", def: "right or correct for a particular situation" },
+    { word: "capable",      jp: "〜ができる",     syn: "skilled",      ex: "I believe you are capable of passing this.", def: "having the ability or quality needed to do something" },
+    { word: "complex",      jp: "複雑な",         syn: "complicated",  ex: "Climate change is a very complex problem.", def: "made up of many connected and difficult parts" },
+    { word: "consistent",   jp: "一貫した",        syn: "steady",       ex: "Be consistent in your daily study habits.", def: "always behaving or performing in the same way" },
+    { word: "current",      jp: "現在の",         syn: "present",      ex: "What is the current situation in the world?", def: "happening or existing right now" },
+    { word: "flexible",     jp: "柔軟な",         syn: "adaptable",    ex: "Try to be flexible when plans change.",     def: "able to change easily to suit new conditions" },
+    { word: "global",       jp: "世界的な",       syn: "worldwide",    ex: "Climate change is a global challenge.",     def: "relating to the whole world" },
+    { word: "independent",  jp: "独立した",        syn: "self-reliant", ex: "She is a very independent thinker.",        def: "able to act or decide without needing others" },
+    { word: "obvious",      jp: "明らかな",        syn: "clear",        ex: "The answer is obvious once you think about it.", def: "easy to see or understand" },
+    { word: "practical",    jp: "実用的な",        syn: "useful",       ex: "Give practical advice, not just theory.",   def: "relating to real situations rather than ideas" },
+    { word: "reasonable",   jp: "合理的な",        syn: "fair",         ex: "That is a reasonable request.",             def: "based on good judgment and fair thinking" },
+    { word: "reliable",     jp: "信頼できる",      syn: "dependable",   ex: "She is a reliable and honest friend.",      def: "can be trusted to do what is needed" },
+    { word: "sufficient",   jp: "十分な",         syn: "enough",       ex: "Is one hour sufficient to finish the test?", def: "enough for the purpose needed" },
+    { word: "typical",      jp: "典型的な",        syn: "usual",        ex: "A typical Japanese breakfast includes rice and miso soup.", def: "being a normal or usual example of something" },
+    { word: "valuable",     jp: "価値ある",        syn: "precious",     ex: "This experience will be very valuable.",    def: "worth a lot of money or very useful" },
+    { word: "various",      jp: "様々な",         syn: "different",    ex: "Various countries joined the event.",       def: "several different types of things" },
+    { word: "community",    jp: "地域社会",        syn: "neighborhood", ex: "I want to help my local community.",        def: "a group of people living in the same area" },
+    { word: "contribution", jp: "貢献",          syn: "donation",     ex: "She made a great contribution to the team.", def: "something you give or do to help achieve something" },
+    { word: "debate",       jp: "討論",          syn: "argument",     ex: "We had a class debate about the environment.", def: "a formal discussion of different opinions on a topic" },
+    { word: "decision",     jp: "決断",          syn: "choice",       ex: "It was a difficult decision to make.",      def: "a choice you make after thinking carefully" },
+    { word: "demand",       jp: "需要",          syn: "request",      ex: "There is a high demand for English teachers.", def: "the need or desire for something" },
+    { word: "evidence",     jp: "証拠",          syn: "proof",        ex: "We need evidence to support the argument.", def: "facts that prove something is true" },
+    { word: "factor",       jp: "要因",          syn: "element",      ex: "Diet is an important factor in good health.", def: "one of several things that causes or affects a result" },
+    { word: "feature",      jp: "特徴",          syn: "characteristic",ex: "One feature of Japanese culture is respect.", def: "an important or interesting quality of something" },
+    { word: "impact",       jp: "影響",          syn: "effect",       ex: "Social media has a big impact on young people.", def: "the strong effect that something has" },
+    { word: "issue",        jp: "問題",          syn: "concern",      ex: "Pollution is a serious environmental issue.", def: "an important topic that people discuss or worry about" },
+    { word: "method",       jp: "方法",          syn: "approach",     ex: "A good method for studying is to make notes.", def: "a planned way of doing something" },
+    { word: "perspective",  jp: "視点",          syn: "point of view", ex: "Try to see things from another perspective.", def: "a particular way of thinking about something" },
+    { word: "policy",       jp: "方針",          syn: "rule",         ex: "The school has a strict no-phone policy.",  def: "a set of rules or plans made by an organization" },
+    { word: "potential",    jp: "可能性",         syn: "possibility",  ex: "Every student has great potential.",        def: "the ability to develop or succeed in the future" },
+    { word: "purpose",      jp: "目的",          syn: "aim",          ex: "What is the purpose of this activity?",     def: "the reason why something is done" },
+    { word: "solution",     jp: "解決策",         syn: "answer",       ex: "What is the best solution to this problem?", def: "a way of solving a problem" },
+    { word: "awareness",    jp: "意識",          syn: "knowledge",    ex: "We need to raise awareness about climate change.", def: "knowledge or understanding of a topic or situation" },
+  ],
+
+  "2": [
+    { word: "significant",  jp: "重要な",         syn: "important",   ex: "There is a significant difference between the two.", def: "large or important enough to be noticed" },
+    { word: "consequence",  jp: "結果",          syn: "result",      ex: "Consider the consequences of your actions.", def: "something that happens as a result of an action" },
+    { word: "negotiate",    jp: "〜を交渉する",   syn: "bargain",     ex: "They are negotiating the price of the deal.", def: "to try to reach an agreement through discussion" },
+    { word: "contribute",   jp: "〜に貢献する",   syn: "donate",      ex: "He contributed greatly to the research.",   def: "to give something to help achieve something" },
+    { word: "precious",     jp: "貴重な",         syn: "valuable",    ex: "Clean water is a precious resource.",       def: "of great value because it is rare or costly" },
+    { word: "analyze",      jp: "〜を分析する",   syn: "examine",     ex: "We need to analyze the data carefully.",    def: "to examine something in detail to understand it" },
+    { word: "benefit",      jp: "利益",          syn: "advantage",   ex: "There are many benefits to regular exercise.", def: "an advantage or good effect" },
+    { word: "essential",    jp: "不可欠な",        syn: "necessary",   ex: "Sleep is essential for good health.",       def: "completely necessary or extremely important" },
+    { word: "advantage",    jp: "利点",          syn: "benefit",     ex: "Living near school is a big advantage.",    def: "a condition that helps you be more successful" },
+    { word: "involved",     jp: "関与している",    syn: "connected",   ex: "She is deeply involved in the project.",    def: "taking part in an activity or situation" },
+    { word: "estimate",     jp: "〜を見積もる",   syn: "calculate",   ex: "The cost was estimated at one million yen.", def: "to judge the amount or value of something roughly" },
+    { word: "provide",      jp: "〜を提供する",   syn: "supply",      ex: "Plants provide the oxygen we breathe.",     def: "to give something that is needed or wanted" },
+    { word: "encourage",    jp: "〜を促す",       syn: "inspire",     ex: "The results encouraged more research.",     def: "to give someone the confidence to try something" },
+    { word: "decline",      jp: "衰退する",       syn: "decrease",    ex: "Sales declined sharply last year.",         def: "to become less, smaller, or worse over time" },
+    { word: "require",      jp: "〜を必要とする", syn: "need",        ex: "This job requires a lot of patience.",      def: "to need something as essential or compulsory" },
+    { word: "overcome",     jp: "〜を克服する",   syn: "conquer",     ex: "She overcame many difficulties to succeed.", def: "to succeed in dealing with a problem or obstacle" },
+    { word: "reject",       jp: "〜を拒絶する",   syn: "refuse",      ex: "He rejected the offer without hesitation.", def: "to refuse to accept or agree to something" },
+    { word: "calculate",    jp: "〜を計算する",   syn: "compute",     ex: "Calculate the total cost, including tax.",  def: "to find a number or amount using mathematics" },
+    { word: "differ",       jp: "異なる",        syn: "vary",        ex: "Customs differ from country to country.",   def: "to be different from something else" },
+    { word: "sustain",      jp: "〜を維持する",   syn: "maintain",    ex: "It is hard to sustain this level of effort.", def: "to keep something going over a long period" },
+    { word: "accumulate",   jp: "〜を蓄積する",   syn: "build up",    ex: "Debt can accumulate very quickly.",         def: "to gradually gather or increase over time" },
+    { word: "anticipate",   jp: "〜を予期する",   syn: "expect",      ex: "We anticipate a rise in temperatures.",     def: "to expect something and prepare for it" },
+    { word: "clarify",      jp: "〜を明確にする", syn: "explain",     ex: "Could you clarify what you mean by that?",  def: "to make something easier to understand" },
+    { word: "compensate",   jp: "〜を補う",       syn: "make up for", ex: "Exercise can compensate for a bad diet.",   def: "to balance out or make up for a loss or problem" },
+    { word: "compromise",   jp: "妥協する",       syn: "give and take",ex: "We compromised on the final plan.",        def: "to reach an agreement by both sides accepting less" },
+    { word: "criticize",    jp: "〜を批判する",   syn: "judge",       ex: "Don't criticize without offering a solution.", def: "to point out what is wrong or bad about something" },
+    { word: "diminish",     jp: "〜を減少させる", syn: "reduce",      ex: "The problem diminished over time.",         def: "to make or become smaller or less important" },
+    { word: "eliminate",    jp: "〜を排除する",   syn: "remove",      ex: "The goal is to eliminate poverty worldwide.", def: "to remove something completely" },
+    { word: "enforce",      jp: "〜を施行する",   syn: "apply",       ex: "The police enforce traffic laws strictly.", def: "to make sure that rules or laws are obeyed" },
+    { word: "generate",     jp: "〜を生み出す",   syn: "produce",     ex: "Solar panels generate clean electricity.",  def: "to produce or create something" },
+    { word: "implement",    jp: "〜を実施する",   syn: "carry out",   ex: "The new policy was implemented last April.", def: "to put a plan or decision into action" },
+    { word: "indicate",     jp: "〜を示す",       syn: "suggest",     ex: "The data indicates a rise in temperature.", def: "to show or point to something as likely or true" },
+    { word: "modify",       jp: "〜を修正する",   syn: "change",      ex: "We need to modify our original approach.",  def: "to make small changes to improve something" },
+    { word: "monitor",      jp: "〜を監視する",   syn: "track",       ex: "Scientists monitor ocean temperatures daily.", def: "to watch and check something over a period of time" },
+    { word: "perceive",     jp: "〜を認識する",   syn: "sense",       ex: "How do you perceive this social problem?",  def: "to notice or become aware of something" },
+    { word: "prioritize",   jp: "〜を優先する",   syn: "rank first",  ex: "Prioritize the most important tasks first.", def: "to decide that something is more important than other things" },
+    { word: "prohibit",     jp: "〜を禁止する",   syn: "ban",         ex: "Smoking is prohibited in this building.",   def: "to officially say that something is not allowed" },
+    { word: "reinforce",    jp: "〜を強化する",   syn: "strengthen",  ex: "Repetition reinforces memory.",             def: "to make something stronger or more effective" },
+    { word: "restrict",     jp: "〜を制限する",   syn: "limit",       ex: "Screen time for children should be restricted.", def: "to put limits on something" },
+    { word: "stimulate",    jp: "〜を刺激する",   syn: "encourage",   ex: "Reading stimulates the imagination.",       def: "to make something more active or excited" },
+    { word: "transform",    jp: "〜を変革する",   syn: "convert",     ex: "Technology has transformed communication.",  def: "to change something completely" },
+    { word: "undermine",    jp: "〜を弱める",     syn: "weaken",      ex: "Lack of sleep undermines your performance.", def: "to gradually weaken or damage something" },
+    { word: "utilize",      jp: "〜を活用する",   syn: "use",         ex: "Utilize every opportunity to practice.",    def: "to use something in a practical and effective way" },
+    { word: "verify",       jp: "〜を確認する",   syn: "check",       ex: "Always verify information before sharing it.", def: "to make sure that something is true or correct" },
+    { word: "adequate",     jp: "十分な",         syn: "sufficient",  ex: "The budget is not adequate for this project.", def: "enough for a particular purpose or need" },
+    { word: "ambiguous",    jp: "曖昧な",         syn: "unclear",     ex: "The instructions were ambiguous.",          def: "having more than one possible meaning" },
+    { word: "coherent",     jp: "一貫性のある",    syn: "logical",     ex: "The essay was well-organized and coherent.", def: "clear and logical, with ideas that connect well" },
+    { word: "comprehensive",jp: "包括的な",        syn: "complete",    ex: "Write a comprehensive report on the issue.", def: "including all or most parts of something" },
+    { word: "controversial",jp: "論争を呼ぶ",      syn: "debatable",   ex: "The new policy is quite controversial.",    def: "causing disagreement or strong debate" },
+    { word: "convincing",   jp: "説得力のある",    syn: "persuasive",  ex: "Your argument is very convincing.",         def: "able to make someone believe that something is true" },
+    { word: "deliberate",   jp: "意図的な",        syn: "intentional", ex: "It was a deliberate choice, not an accident.", def: "done on purpose, not by accident" },
+    { word: "diverse",      jp: "多様な",         syn: "varied",      ex: "Japan has diverse landscapes and climates.", def: "including many different types of things or people" },
+    { word: "dominant",     jp: "支配的な",        syn: "leading",     ex: "English is the dominant language in science.", def: "more powerful or noticeable than others" },
+    { word: "explicit",     jp: "明確な",         syn: "clear",       ex: "Please give explicit instructions.",        def: "clearly stated and leaving nothing unclear" },
+    { word: "fundamental",  jp: "基本的な",        syn: "basic",       ex: "Trust is fundamental in any relationship.", def: "the most important or basic part of something" },
+    { word: "inevitable",   jp: "避けられない",     syn: "certain",     ex: "Change is inevitable in any society.",      def: "certain to happen and impossible to avoid" },
+    { word: "innovative",   jp: "革新的な",        syn: "creative",    ex: "We need innovative solutions to old problems.", def: "using new and original ideas and methods" },
+    { word: "logical",      jp: "論理的な",        syn: "rational",    ex: "Think in a clear and logical way.",         def: "based on clear and sensible thinking" },
+    { word: "assumption",   jp: "思い込み",        syn: "presumption", ex: "Don't make assumptions without checking.",  def: "something you believe to be true without proof" },
+    { word: "circumstance", jp: "状況",          syn: "condition",   ex: "We adapted to the changing circumstances.", def: "the conditions or facts connected to an event" },
+    { word: "constraint",   jp: "制約",          syn: "limitation",  ex: "Budget constraints affected the whole plan.", def: "a factor that limits what you can do" },
+    { word: "dilemma",      jp: "ジレンマ",       syn: "problem",     ex: "I face a dilemma about which path to take.", def: "a difficult choice between two options" },
+    { word: "framework",    jp: "枠組み",         syn: "structure",   ex: "We need a new policy framework.",           def: "a system of rules or ideas used as a base" },
+    { word: "hypothesis",   jp: "仮説",          syn: "theory",      ex: "The scientist's hypothesis turned out to be correct.", def: "an idea proposed to explain something, not yet proven" },
+    { word: "implication",  jp: "含意",          syn: "meaning",     ex: "What are the implications of this change?",  def: "what something suggests or causes indirectly" },
+    { word: "initiative",   jp: "取り組み",       syn: "effort",      ex: "The government launched a new environmental initiative.", def: "a plan or action aimed at solving a problem" },
+    { word: "legislation",  jp: "法律",          syn: "law",         ex: "New legislation was introduced to protect wildlife.", def: "a law or set of laws made by a government" },
+    { word: "mechanism",    jp: "仕組み",         syn: "system",      ex: "What is the mechanism behind inflation?",   def: "the way something works or the process that causes it" },
+    { word: "phenomenon",   jp: "現象",          syn: "event",       ex: "Globalization is a modern economic phenomenon.", def: "something that happens or exists in the world" },
+    { word: "transition",   jp: "移行",          syn: "change",      ex: "The transition to renewable energy takes time.", def: "the process of changing from one state to another" },
+  ]
+};
+
+// Grade display labels
+const gradeLabels = {
+  "4":    { name: "Grade 4",     sub: "初級・Basic level" },
+  "3":    { name: "Grade 3",     sub: "中級への入口" },
+  "Pre2": { name: "Grade Pre-2", sub: "中上級・Pre-Advanced" },
+  "2":    { name: "Grade 2",     sub: "上級・Advanced level" },
+};
+
+// ─── STATE ───────────────────────────────────────────────
+let state = {
+  screen: 'home',
+  level: '4',
+  mode: 1,
+  score: 0,
+  currentIndex: 0,
+  mistakes: [],
+  sessionWords: [],
+  challengeModes: [],
+  selectedChallengeModes: [1, 2, 3, 4],
+  locked: false,
+};
+
+// ─── UTILITIES ───────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function allWords() {
+  return Object.values(wordStock).flat();
+}
+
+function generateOptions(correct, field) {
+  const pool = allWords()
+    .map(w => w[field])
+    .filter((v, i, a) => a.indexOf(v) === i && v !== correct);
+  const choices = shuffle(pool).slice(0, 3);
+  choices.push(correct);
+  return shuffle(choices);
+}
+
+function toggleModal(show) {
+  document.getElementById('how-modal').style.display = show ? 'flex' : 'none';
+}
+
+// ─── EXPORT ──────────────────────────────────────────────
+function getMistakeRows() {
+  return state.mistakes.map(m => ({ word: m.word, jp: m.jp, syn: m.syn, ex: m.ex, def: m.def }));
+}
+
+function exportCSV() {
+  if (!state.mistakes.length) return;
+  const header = ['word', '意味 (jp)', 'synonym', 'example', 'definition'];
+  const rows = getMistakeRows().map(r =>
+    [r.word, r.jp, r.syn, `"${r.ex}"`, `"${r.def}"`].join(',')
+  );
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `NinjaTrainingScroll_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('⬇ CSVをダウンロードしました！');
+}
+
+async function copyToClipboard() {
+  if (!state.mistakes.length) return;
+  const lines = ['🥷 Ninja Training Scroll — Eigo-Ninja', ''];
+  getMistakeRows().forEach((r, i) => {
+    lines.push(`${i + 1}. ${r.word}　${r.jp}`);
+    lines.push(`   synonym: ${r.syn}`);
+    lines.push(`   ex: ${r.ex}`);
+    lines.push(`   def: ${r.def}`);
+    lines.push('');
+  });
+  const text = lines.join('\n');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('📋 クリップボードにコピーしました！');
+      return;
+    } catch (e) { /* fall through */ }
+  }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) { showToast('📋 クリップボードにコピーしました！'); return; }
+  } catch (e) { /* fall through */ }
+
+  showCopyModal(text);
+}
+
+function showCopyModal(text) {
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title">📋 テキストをコピー</div>
+      <p style="font-size:12px;color:#666;text-align:center;margin-bottom:4px;">テキストを選択して手動でコピーしてください</p>
+      <textarea class="copy-modal-ta" id="copy-modal-ta">${text.replace(/</g,'&lt;')}</textarea>
+      <button class="modal-close" onclick="this.closest('.overlay').remove()">閉じる</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    const ta = document.getElementById('copy-modal-ta');
+    if (ta) { ta.focus(); ta.select(); }
+  }, 80);
+}
+
+function showToast(msg) {
+  const existing = document.querySelector('.copy-toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'copy-toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
+// ─── HOME SCREEN ─────────────────────────────────────────
+function renderHome() {
+  state.screen = 'home';
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <div class="home-header">
+        <div class="game-title">Eigo-<span>Ninja</span></div>
+        <span class="ninja-mascot">🥷</span>
+      </div>
+      <div class="section-label">レベルを選択 / Choose Grade</div>
+      <div class="level-grid">
+        <button class="level-btn lb-4"  onclick="selectLevel('4')">
+          <span>📗</span><span>Grade 4</span>
+          <span class="sub">初級・Basic</span>
+        </button>
+        <button class="level-btn lb-3"  onclick="selectLevel('3')">
+          <span>📘</span><span>Grade 3</span>
+          <span class="sub">中級・Intermediate</span>
+        </button>
+        <button class="level-btn lb-p2" onclick="selectLevel('Pre2')">
+          <span>📙</span><span>Grade Pre-2</span>
+          <span class="sub">準2級・Pre-Advanced</span>
+        </button>
+        <button class="level-btn lb-2"  onclick="selectLevel('2')">
+          <span>📕</span><span>Grade 2</span>
+          <span class="sub">上級・Advanced</span>
+        </button>
+      </div>
+      <div class="util-row">
+        <button class="util-btn" onclick="toggleModal(true)">❓ 遊びかた</button>
+      </div>
+      <div class="footer-strip">ELKえいご王国</div>
+    </div>
+  `;
+}
+
+// ─── MODE SELECT ─────────────────────────────────────────
+function selectLevel(lv) {
+  state.level = lv;
+  renderModeSelect();
+}
+
+function renderModeSelect() {
+  state.screen = 'mode';
+  const gl = gradeLabels[state.level];
+  const total = (wordStock[state.level] || []).length;
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <button class="back-btn" onclick="renderHome()">← Back</button>
+      <div class="home-header" style="padding-top:0;">
+        <div class="brand-label">${gl.name} &mdash; ${gl.sub}</div>
+        <div class="game-title" style="font-size:48px;">Choose<br><span>Mode</span></div>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-btn mb-vocab" onclick="startQuiz(1)">
+          <span class="mode-icon">📖</span>
+          <span class="mode-text">
+            <span class="mode-name">Vocabulary</span>
+            <span class="mode-desc">英単語 → 日本語の意味</span>
+          </span>
+        </button>
+        <button class="mode-btn mb-fill" onclick="startQuiz(2)">
+          <span class="mode-icon">✏️</span>
+          <span class="mode-text">
+            <span class="mode-name">Fill in the Blank</span>
+            <span class="mode-desc">英文の空所に単語を当てはめよう</span>
+          </span>
+        </button>
+        <button class="mode-btn mb-syn" onclick="startQuiz(3)">
+          <span class="mode-icon">🔗</span>
+          <span class="mode-text">
+            <span class="mode-name">Synonym</span>
+            <span class="mode-desc">同じ意味の英単語を選ぼう</span>
+          </span>
+        </button>
+        <button class="mode-btn mb-def" onclick="startQuiz(4)">
+          <span class="mode-icon">🔍</span>
+          <span class="mode-text">
+            <span class="mode-name">Definition</span>
+            <span class="mode-desc">英語の定義文から単語を当てよう</span>
+          </span>
+        </button>
+        <button class="mode-btn mb-challenge" onclick="renderChallengeSetup()" style="grid-column:1/-1;">
+          <span class="mode-icon">🏆</span>
+          <span class="mode-text">
+            <span class="mode-name">100問チャレンジ <span class="challenge-tag">MIX</span></span>
+            <span class="mode-desc">モードを選んでMIX！全${total}語から最大100問に挑戦！</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ─── CHALLENGE SETUP ────────────────────────────────────
+function renderChallengeSetup() {
+  state.screen = 'challenge-setup';
+  // Reset to all modes selected if coming fresh
+  if (!state.selectedChallengeModes || state.selectedChallengeModes.length === 0) {
+    state.selectedChallengeModes = [1, 2, 3, 4];
+  }
+  const gl = gradeLabels[state.level];
+  const total = (wordStock[state.level] || []).length;
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <button class="back-btn" onclick="renderModeSelect()">← Back</button>
+      <div class="home-header" style="padding-top:0;">
+        <div class="brand-label">${gl.name} &mdash; 100問チャレンジ</div>
+        <div class="game-title" style="font-size:44px;">🏆 <span>Challenge</span></div>
+      </div>
+      <div class="section-label">出題するモードを選ぼう（複数OK）</div>
+      <div class="mode-toggle-grid">
+        <button class="mode-toggle ${state.selectedChallengeModes.includes(1)?'active':''}" id="mt-1" onclick="toggleChallengeMode(1)">
+          <span class="mt-icon">📖</span>
+          <span>Vocabulary</span>
+        </button>
+        <button class="mode-toggle ${state.selectedChallengeModes.includes(2)?'active':''}" id="mt-2" onclick="toggleChallengeMode(2)">
+          <span class="mt-icon">✏️</span>
+          <span>Fill in Blank</span>
+        </button>
+        <button class="mode-toggle ${state.selectedChallengeModes.includes(3)?'active':''}" id="mt-3" onclick="toggleChallengeMode(3)">
+          <span class="mt-icon">🔗</span>
+          <span>Synonym</span>
+        </button>
+        <button class="mode-toggle ${state.selectedChallengeModes.includes(4)?'active':''}" id="mt-4" onclick="toggleChallengeMode(4)">
+          <span class="mt-icon">🔍</span>
+          <span>Definition</span>
+        </button>
+      </div>
+      <div class="challenge-info" id="challenge-info">
+        ${getChallengeInfoText(total)}
+      </div>
+      <button class="action-btn ab-challenge" onclick="startChallenge()">
+        🥷 スタート！
+      </button>
+    </div>
+  `;
+}
+
+function getChallengeInfoText(total) {
+  const sel = state.selectedChallengeModes;
+  const count = Math.min(100, (wordStock[state.level]||[]).length);
+  if (sel.length === 0) return '⚠️ 1つ以上のモードを選んでください';
+  const modeNames = {1:'📖 Vocabulary', 2:'✏️ Fill in Blank', 3:'🔗 Synonym', 4:'🔍 Definition'};
+  const names = sel.map(m => modeNames[m]).join('・');
+  return `${names}<br><span style="font-size:11px;opacity:0.8;">全${total}語からランダム ${count}問</span>`;
+}
+
+function toggleChallengeMode(mode) {
+  const idx = state.selectedChallengeModes.indexOf(mode);
+  if (idx >= 0) {
+    // Prevent deselecting if only 1 mode remains
+    if (state.selectedChallengeModes.length <= 1) {
+      showToast('⚠️ 最低1つ選んでね！');
+      return;
+    }
+    state.selectedChallengeModes.splice(idx, 1);
+    document.getElementById(`mt-${mode}`).classList.remove('active');
+  } else {
+    state.selectedChallengeModes.push(mode);
+    document.getElementById(`mt-${mode}`).classList.add('active');
+  }
+  const infoEl = document.getElementById('challenge-info');
+  if (infoEl) infoEl.innerHTML = getChallengeInfoText();
+}
+
+// ─── QUIZ ────────────────────────────────────────────────
+function startQuiz(mode) {
+  state.mode = mode;
+  state.score = 0;
+  state.currentIndex = 0;
+  state.mistakes = [];
+  state.locked = false;
+  state.challengeModes = [];
+  const all = wordStock[state.level] || [];
+  state.sessionWords = shuffle(all).slice(0, 20);
+  renderQuestion();
+}
+
+function startChallenge() {
+  if (state.selectedChallengeModes.length === 0) {
+    showToast('⚠️ 1つ以上のモードを選んでね！');
+    return;
+  }
+  state.mode = 5;
+  state.score = 0;
+  state.currentIndex = 0;
+  state.mistakes = [];
+  state.locked = false;
+  const all = wordStock[state.level] || [];
+  const count = Math.min(100, all.length);
+  state.sessionWords = shuffle(all).slice(0, count);
+  const modes = state.selectedChallengeModes;
+  state.challengeModes = state.sessionWords.map(() => modes[Math.floor(Math.random() * modes.length)]);
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (state.currentIndex >= state.sessionWords.length) {
+    renderResults();
+    return;
+  }
+
+  state.locked = false;
+  const current = state.sessionWords[state.currentIndex];
+  const effectiveMode = state.mode === 5 ? state.challengeModes[state.currentIndex] : state.mode;
+
+  let qText, field, cardClass;
+  switch (effectiveMode) {
+    case 1:
+      qText = `<strong>${current.word}</strong>`;
+      field = 'jp'; cardClass = 'vocab-card'; break;
+    case 2:
+      const blanked = current.ex.replace(
+        new RegExp('\\b' + current.word + '\\b', 'i'),
+        `<span class="blank-word">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`
+      );
+      qText = blanked;
+      field = 'word'; cardClass = 'fill-card'; break;
+    case 3:
+      qText = `<strong>${current.word}</strong>`;
+      field = 'syn'; cardClass = 'syn-card'; break;
+    case 4:
+      qText = current.def;
+      field = 'word'; cardClass = 'def-card'; break;
+  }
+
+  const correctAns = current[field];
+  const options = generateOptions(correctAns, field);
+  const total = state.sessionWords.length;
+  const pct = (state.currentIndex / total) * 100;
+
+  const modeNames = ['','Vocabulary','Fill in Blank','Synonym','Definition'];
+  const modeEmoji = ['','📖','✏️','🔗','🔍'];
+  const modeLabel = state.mode === 5
+    ? `🏆 Challenge &nbsp;·&nbsp; ${modeEmoji[effectiveMode]} ${modeNames[effectiveMode]}`
+    : modeNames[state.mode];
+
+  const hintHTML = effectiveMode === 2
+    ? `<div style="text-align:center; margin-bottom:8px;">
+         <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 ヒント (hint)</button>
+         <div id="hint-bubble" style="display:none;" class="hint-bubble">${current.jp}</div>
+       </div>`
+    : '';
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <div class="top-bar">
+        <button class="menu-btn" onclick="renderHome()">🏠 Menu</button>
+        <span class="mode-badge">${modeLabel}</span>
+        <div class="progress-pill">⭐ ${state.score} &nbsp;|&nbsp; ${state.currentIndex + 1}/${total}</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="quiz-card ${cardClass}">${qText}</div>
+      ${hintHTML}
+      <div class="choices-grid">
+        ${options.map((opt, i) => `
+          <button class="choice-btn" id="cb-${i}"
+            onclick="checkAnswer(this, '${opt.replace(/'/g,"\\'")}','${correctAns.replace(/'/g,"\\'")}')">
+            ${opt}
+          </button>`).join('')}
+      </div>
+      <div class="feedback-row" id="feedback-row"></div>
+    </div>
+  `;
+}
+
+function showHint() {
+  const btn = document.getElementById('hint-btn');
+  const bubble = document.getElementById('hint-bubble');
+  if (!bubble) return;
+  bubble.style.display = 'block';
+  if (btn) btn.style.display = 'none';
+}
+
+function checkAnswer(btn, selected, correct) {
+  if (state.locked) return;
+  state.locked = true;
+
+  const allBtns = document.querySelectorAll('.choice-btn');
+  allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+  const fb = document.getElementById('feedback-row');
+  if (selected === correct) {
+    btn.classList.add('correct');
+    state.score++;
+    const msgs = ['Great! 🌟', 'Amazing! ⭐', 'Correct! 🎉', 'Nice! 🔥', 'Yes! 💪'];
+    if (fb) fb.innerHTML = `<span class="fb-ok">${msgs[Math.floor(Math.random()*msgs.length)]}</span>`;
+  } else {
+    btn.classList.add('wrong');
+    state.mistakes.push(state.sessionWords[state.currentIndex]);
+    allBtns.forEach(b => { if (b.textContent.trim() === correct) b.classList.add('correct'); });
+    const msgs = ['Keep going! 💪', 'Almost! 🤗', 'Good try! 🌸'];
+    if (fb) fb.innerHTML = `<span class="fb-bad">${msgs[Math.floor(Math.random()*msgs.length)]}</span>`;
+  }
+
+  setTimeout(() => { state.currentIndex++; renderQuestion(); }, 900);
+}
+
+// ─── RESULTS ─────────────────────────────────────────────
+function renderResults() {
+  const total = state.sessionWords.length;
+  const pct = Math.round((state.score / total) * 100);
+  let medal = '🥉', msg = 'Keep practicing!';
+  if (pct === 100)    { medal = '🥷'; msg = 'Perfect Ninja! 🎊'; }
+  else if (pct >= 80) { medal = '🏆'; msg = 'Excellent work!'; }
+  else if (pct >= 60) { medal = '🥇'; msg = 'Well done!'; }
+  else if (pct >= 40) { medal = '🥈'; msg = 'Good try!'; }
+
+  let reviewHTML = '';
+  if (state.mistakes.length > 0) {
+    reviewHTML = `
+      <div class="review-header-row">
+        <div class="review-header">🥷 Ninja Training Scroll</div>
+        <div class="export-btns">
+          <button class="export-btn eb-csv"  onclick="exportCSV()">⬇ CSV</button>
+          <button class="export-btn eb-copy" onclick="copyToClipboard()">📋 Copy</button>
+        </div>
+      </div>
+      <div class="review-wrap">
+        <table class="review-table">
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>意味</th>
+              <th>Synonym</th>
+              <th>Example</th>
+              <th>Definition</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.mistakes.map(m => `
+              <tr>
+                <td class="word-cell">${m.word}</td>
+                <td>${m.jp}</td>
+                <td>${m.syn}</td>
+                <td>${m.ex}</td>
+                <td class="def-cell">${m.def}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  const isChallenge = state.mode === 5;
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="result-screen">
+      <div class="result-medal">${medal}</div>
+      <div class="result-title">${msg}</div>
+      <div class="result-score">${state.score} <span style="font-size:28px;color:#999;">/ ${total}</span></div>
+      <div class="result-sub">${pct}% correct &nbsp;·&nbsp; ${state.mistakes.length} mistake${state.mistakes.length !== 1 ? 's' : ''}</div>
+      ${reviewHTML}
+      ${isChallenge
+        ? `<button class="action-btn ab-challenge" onclick="renderChallengeSetup()" style="margin-top:24px;">🏆 もう一度チャレンジ</button>`
+        : `<button class="action-btn ab-retry" onclick="startQuiz(${state.mode})" style="margin-top:24px;">🔄 もう一度 (Try Again)</button>`
+      }
+      <button class="action-btn ab-primary" onclick="renderModeSelect()">🎯 Change Mode</button>
+      <button class="action-btn ab-menu" onclick="renderHome()">🏠 Top Menu</button>
+    </div>
+  `;
+}
+
+// ─── BOOT ────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
