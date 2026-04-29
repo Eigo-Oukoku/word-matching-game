@@ -176,6 +176,19 @@
     .quiz-card.syn-card    { border-color: #ffe082; background: #fffde7; }
     .quiz-card.def-card    { border-color: #e1bee7; background: #fdf5ff; font-size: 17px; line-height: 1.6; }
     .blank-word { display: inline-block; background: #dee2e6; border-radius: 6px; padding: 0 10px; color: #333; }
+
+    /* ── Challenge category strip ── */
+    .cat-strip {
+      width: 100%; border-radius: 12px; padding: 7px 14px;
+      font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 900;
+      letter-spacing: 0.5px; text-align: center; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      animation: popIn 0.2s ease;
+    }
+    .cat-vocab { background: #e8fff2; color: #0a5c2d; border: 2px solid var(--green); }
+    .cat-fill  { background: #e8f3ff; color: #1a4a80; border: 2px solid var(--blue); }
+    .cat-syn   { background: #fff8e0; color: #7a5400; border: 2px solid var(--yellow); }
+    .cat-def   { background: #f5eaff; color: #5a2880; border: 2px solid var(--purple); }
     .mode-badge {
       font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
       background: rgba(0,0,0,0.07); border-radius: 6px;
@@ -339,7 +352,7 @@
     </div>
     <div class="how-item">
       <div class="how-item-title">🏆 5. 100問チャレンジ</div>
-      <div class="how-item-desc">使いたいモードを自由に選んでMIX！そのグレードの全単語から最大100問に挑戦！</div>
+      <div class="how-item-desc">使いたいモードを自由に選んでMIX！１００問に挑戦！</div>
     </div>
     <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！</p>
     <button class="modal-close" onclick="toggleModal(false)">わかった！ Let's go! 🥷</button>
@@ -450,7 +463,7 @@ const wordStock = {
     { word: "introduce",    jp: "〜を紹介する",   syn: "present",      ex: "Let me introduce my classmate.",             def: "to tell people about someone or something new" },
     { word: "express",      jp: "〜を表す",       syn: "show",         ex: "It is hard to express my feelings in words.", def: "to show an idea or feeling clearly" },
     { word: "prepare",      jp: "〜を準備する",   syn: "get ready",    ex: "Prepare for your presentation carefully.",   def: "to make something ready before you need it" },
-    { word: "increase",     jp: "増加する",       syn: "grow",         ex: "Regular exercise can increase your energy levels.", def: "to become greater in number or amount" },
+    { word: "increase",     jp: "増える",         syn: "grow",         ex: "Regular exercise can increase your energy levels.", def: "to become greater in number or amount" },
     { word: "continue",     jp: "〜を続ける",     syn: "carry on",     ex: "Continue practicing every day.",             def: "to keep doing something without stopping" },
     { word: "compare",      jp: "〜を比べる",     syn: "contrast",     ex: "Compare life in the city and the countryside.", def: "to look at how things are similar or different" },
     { word: "protect",      jp: "〜を守る",       syn: "guard",        ex: "We should protect endangered animals.",      def: "to keep something or someone safe from harm" },
@@ -478,73 +491,81 @@ const wordStock = {
     { word: "refuse",       jp: "〜を断る",       syn: "decline",      ex: "She refused to give up.",                   def: "to say no to something you have been asked" },
     { word: "miss",         jp: "〜を恋しく思う", syn: "long for",     ex: "I miss my friends from elementary school.", def: "to feel sad because you are away from someone" },
     { word: "prove",        jp: "〜を証明する",   syn: "show",         ex: "Prove that you studied hard.",               def: "to show that something is true or correct" },
-    { word: "offer",        jp: "〜を申し出る",   syn: "propose",      ex: "He offered to help me with my bags.",        def: "to say you are willing to give or do something" },
-    { word: "cause",        jp: "〜を引き起こす", syn: "lead to",      ex: "Pollution can cause health problems.",       def: "to make something happen, usually something bad" },
-    { word: "important",    jp: "重要な",         syn: "key",          ex: "It is important to exercise every day.",     def: "having great value or meaning" },
-    { word: "popular",      jp: "人気のある",      syn: "well-liked",   ex: "Soccer is very popular in Japan.",           def: "liked or enjoyed by many people" },
-    { word: "different",    jp: "異なった",        syn: "unlike",       ex: "Our opinions are very different.",           def: "not the same as something else" },
-    { word: "necessary",    jp: "必要な",         syn: "needed",       ex: "Exercise is necessary for good health.",     def: "that must be done or that is needed" },
-    { word: "comfortable",  jp: "快適な",         syn: "relaxing",     ex: "This chair is very comfortable.",            def: "feeling pleasant and at ease" },
-    { word: "culture",      jp: "文化",          syn: "tradition",    ex: "I want to learn about American culture.",    def: "the ideas, customs, and art of a group of people" },
-    { word: "education",    jp: "教育",          syn: "schooling",    ex: "Education is very important for the future.", def: "the process of learning at school or college" },
-    { word: "opinion",      jp: "意見",          syn: "view",         ex: "In my opinion, homework should be shorter.", def: "what you personally think about something" },
-    { word: "energy",       jp: "エネルギー",     syn: "power",        ex: "We should use less energy at home.",         def: "power from electricity or other sources" },
-    { word: "effort",       jp: "努力",          syn: "attempt",      ex: "Put your best effort into everything you do.", def: "hard work done to achieve something" },
-    { word: "habit",        jp: "習慣",          syn: "routine",      ex: "Reading every night is a healthy habit.",    def: "something you do regularly, often without thinking" },
-    { word: "goal",         jp: "目標",          syn: "aim",          ex: "My goal is to pass the English exam.",       def: "something you work hard to achieve" },
-    { word: "skill",        jp: "技能",          syn: "ability",      ex: "Communication is an important life skill.",  def: "the ability to do something well" },
-    { word: "generation",   jp: "世代",          syn: "age group",    ex: "Young people of my generation use social media.", def: "all the people born at about the same time" },
+    { word: "offer",        jp: "〜を申し出る",   syn: "propose",      ex: "I had not much to do at work, so I offered Bob some help.",          def: "to say you are willing to give or do something" },
+    { word: "cause",        jp: "〜を引き起こす", syn: "lead to",      ex: "Pollution can cause serious health problems.",                       def: "to make something happen, usually something bad" },
+    { word: "important",    jp: "重要な",         syn: "key",          ex: "It is important to exercise every day.",                             def: "having great value or meaning" },
+    { word: "popular",      jp: "人気のある",      syn: "well-liked",   ex: "Soccer is very popular in Japan.",                                   def: "liked or enjoyed by many people" },
+    { word: "different",    jp: "異なった",        syn: "unlike",       ex: "Our opinions are very different.",                                   def: "not the same as something else" },
+    { word: "necessary",    jp: "必要な",         syn: "needed",       ex: "Is it really necessary to ask such questions about my private life?", def: "that must be done or that is needed" },
+    { word: "comfortable",  jp: "快適な",         syn: "relaxing",     ex: "The chair was so comfortable that I fell asleep.",                   def: "feeling pleasant and at ease" },
+    { word: "culture",      jp: "文化",          syn: "tradition",    ex: "I want to learn about American culture.",                            def: "the ideas, customs, and art of a group of people" },
+    { word: "education",    jp: "教育",          syn: "schooling",    ex: "Education is very important for the future.",                        def: "the process of learning at school or college" },
+    { word: "opinion",      jp: "意見",          syn: "view",         ex: "In my opinion, homework should be shorter.",                         def: "what you personally think about something" },
+    { word: "energy",       jp: "エネルギー",     syn: "power",        ex: "We should use less energy at home.",                                 def: "power from electricity or other sources" },
+    { word: "effort",       jp: "努力",          syn: "attempt",      ex: "I didn't want to fail the exam, so I made a lot of effort for the past three months.", def: "hard work done to achieve something" },
+    { word: "habit",        jp: "習慣",          syn: "routine",      ex: "Reading every night is a healthy habit.",                            def: "something you do regularly, often without thinking" },
+    { word: "goal",         jp: "目標",          syn: "aim",          ex: "My goal is to pass the English exam.",                               def: "something you work hard to achieve" },
+    { word: "skill",        jp: "技能",          syn: "ability",      ex: "Communication is an important life skill.",                          def: "the ability to do something well" },
+    { word: "generation",   jp: "世代",          syn: "age group",    ex: "Young people of my generation use social media.",                    def: "all the people born at about the same time" },
+    { word: "promise",      jp: "約束",          syn: "commitment",   ex: "My boyfriend often breaks his promise.",                             def: "an agreement to do or not do something" },
+    { word: "hold",         jp: "〜を開催する",   syn: "organize",     ex: "The Greens are going to hold a big party for their son's birthday.", def: "to organize or have an event" },
+    { word: "reach",        jp: "〜にたどり着く", syn: "arrive at",    ex: "It will take ten more minutes to reach our destination.",            def: "to arrive at a place after traveling" },
+    { word: "follow",       jp: "〜についていく", syn: "go after",     ex: "I didn't know where the station was, so I followed my classmates.",  def: "to go in the same direction as someone" },
+    { word: "include",      jp: "〜を含む",       syn: "contain",      ex: "Tax is included in the price.",                                     def: "to have something as a part of a whole" },
+    { word: "exchange",     jp: "〜を交換する",   syn: "swap",         ex: "Could you exchange this for a larger size, please?",                def: "to give something and receive something similar in return" },
+    { word: "celebrate",    jp: "〜を祝う",       syn: "mark",         ex: "We celebrated our 50th wedding anniversary.",                       def: "to do something enjoyable on a special occasion" },
+    { word: "search",       jp: "〜を捜す",       syn: "look for",     ex: "The police searched for a missing child for a week.",               def: "to try to find someone or something" },
+    { word: "disaster",     jp: "災害",          syn: "catastrophe",  ex: "Many disasters hit Japan last year.",                               def: "a sudden event that causes great damage or suffering" },
+    { word: "ordinary",     jp: "普通の",         syn: "normal",       ex: "She is no ordinary singer — she is truly gifted.",                  def: "not unusual or special in any way" },
   ],
 
   "Pre2": [
-    { word: "opportunity",  jp: "機会",          syn: "chance",       ex: "Studying abroad is a great opportunity.",   def: "a time when it is possible to do something" },
+    { word: "opportunity",  jp: "機会・チャンス",  syn: "chance",       ex: "Studying abroad is a great opportunity.",   def: "a time when it is possible to do something" },
     { word: "artificial",   jp: "人工的な",       syn: "man-made",     ex: "Do you prefer fresh or artificial flowers?", def: "made by people, not occurring naturally" },
     { word: "effective",    jp: "効果的な",       syn: "successful",   ex: "This is an effective method of studying.",  def: "successful in producing the result you want" },
     { word: "creative",     jp: "創造的な",       syn: "imaginative",  ex: "She is a very creative artist.",            def: "having the ability to make original things" },
     { word: "describe",     jp: "〜を説明する",   syn: "explain",      ex: "Describe your favorite place in Japan.",    def: "to say what someone or something is like" },
     { word: "situation",    jp: "状況",          syn: "condition",    ex: "The situation is changing quickly.",        def: "the set of things happening at a particular time" },
     { word: "adventure",    jp: "冒険",          syn: "exploration",  ex: "They went on an adventure in the jungle.",  def: "an exciting or unusual experience" },
-    { word: "efficient",    jp: "効率的な",       syn: "productive",   ex: "The new machine is very efficient.",        def: "working well without wasting time or energy" },
+    { word: "efficient",    jp: "むだのない",     syn: "productive",   ex: "The new machine is very efficient.",        def: "working well without wasting time or energy" },
     { word: "encourage",    jp: "〜を励ます",     syn: "support",      ex: "My teacher encouraged me to keep trying.",  def: "to give someone hope or confidence to do something" },
     { word: "quality",      jp: "品質",          syn: "standard",     ex: "We focus on the quality of our products.",  def: "how good or bad something is" },
     { word: "achieve",      jp: "〜を達成する",   syn: "accomplish",   ex: "I achieved my goal of reading 20 books.",   def: "to successfully complete something" },
-    { word: "affect",       jp: "〜に影響を与える",syn: "influence",   ex: "Lack of sleep affects your concentration.", def: "to cause a change in someone or something" },
     { word: "avoid",        jp: "〜を避ける",     syn: "shun",         ex: "Avoid using your phone at the dinner table.", def: "to stay away from someone or something" },
-    { word: "consider",     jp: "〜を検討する",   syn: "think over",   ex: "Consider all your options before deciding.", def: "to think carefully about something" },
+    { word: "consider",     jp: "〜をよく考える", syn: "think over",   ex: "Consider all your options before deciding.", def: "to think carefully about something" },
     { word: "create",       jp: "〜を創造する",   syn: "produce",      ex: "He created a website for the school.",      def: "to make something new that did not exist before" },
-    { word: "improve",      jp: "〜を改善する",   syn: "better",       ex: "Exercise will improve your health.",        def: "to make something better than it was before" },
     { word: "allow",        jp: "〜を許可する",   syn: "permit",       ex: "The teacher allowed us to use dictionaries.", def: "to let someone do something" },
     { word: "accept",       jp: "〜を受け入れる", syn: "receive",      ex: "Accept the gift with a thank-you.",         def: "to agree to take or receive something" },
     { word: "agree",        jp: "〜に同意する",   syn: "consent",      ex: "I agree with your opinion.",               def: "to have the same opinion as someone else" },
     { word: "suggest",      jp: "〜を提案する",   syn: "propose",      ex: "She suggested a new idea for the project.", def: "to put forward an idea for others to consider" },
     { word: "appreciate",   jp: "〜に感謝する",   syn: "be grateful",  ex: "I really appreciate your help.",            def: "to recognize and be thankful for something" },
     { word: "concentrate",  jp: "〜に集中する",   syn: "focus on",     ex: "Concentrate on one task at a time.",        def: "to give all your attention to something" },
-    { word: "demonstrate",  jp: "〜を示す",       syn: "show",         ex: "The results demonstrate the value of exercise.", def: "to show clearly how something works or is true" },
+    { word: "demonstrate",  jp: "〜をはっきり示す",syn: "show",        ex: "The results demonstrate the value of exercise.", def: "to show clearly how something works or is true" },
     { word: "establish",    jp: "〜を設立する",   syn: "found",        ex: "The school was established in 1950.",       def: "to start an organization or set up a system" },
-    { word: "evaluate",     jp: "〜を評価する",   syn: "assess",       ex: "Evaluate your progress at the end of each week.", def: "to judge the quality or value of something" },
+    { word: "evaluate",     jp: "〜を判断する",   syn: "assess",       ex: "Evaluate your progress at the end of each week.", def: "to judge the quality or value of something" },
     { word: "expand",       jp: "〜を広げる",     syn: "extend",       ex: "The company plans to expand its business overseas.", def: "to make something larger or wider" },
     { word: "investigate",  jp: "〜を調査する",   syn: "research",     ex: "The police will investigate the cause of the accident.", def: "to study something carefully to find out the truth" },
-    { word: "maintain",     jp: "〜を維持する",   syn: "keep up",      ex: "It is hard to maintain a healthy lifestyle.", def: "to keep something in its current state" },
+    { word: "maintain",     jp: "〜を保つ",       syn: "keep up",      ex: "It is hard to maintain a healthy lifestyle.", def: "to keep something in its current state" },
     { word: "obtain",       jp: "〜を得る",       syn: "acquire",      ex: "You can obtain a travel visa online.",      def: "to get something, especially through effort" },
     { word: "participate",  jp: "〜に参加する",   syn: "take part in", ex: "Participate actively in class discussions.", def: "to take part in an activity or event" },
-    { word: "promote",      jp: "〜を促進する",   syn: "encourage",    ex: "Regular exercise promotes good mental health.", def: "to help something develop or become more common" },
-    { word: "recognize",    jp: "〜を認識する",   syn: "identify",     ex: "I recognized her from across the room.",    def: "to know who or what someone or something is" },
+    { word: "promote",      jp: "〜を進める・広める",syn: "encourage", ex: "Regular exercise promotes good mental health.", def: "to help something develop or become more common" },
+    { word: "recognize",    jp: "〜に気づく・わかる",syn: "identify",  ex: "I recognized her from across the room.",    def: "to know who or what someone or something is" },
     { word: "replace",      jp: "〜を取り替える", syn: "swap",         ex: "We need to replace the old computer.",      def: "to put something new in place of something old" },
     { word: "resolve",      jp: "〜を解決する",   syn: "settle",       ex: "They resolved the argument quickly.",       def: "to find a solution to a problem or disagreement" },
-    { word: "respond",      jp: "〜に応じる",     syn: "reply",        ex: "Please respond to my email by Friday.",     def: "to say or do something in reaction to something" },
+    { word: "respond",      jp: "〜に答える・対応する",syn: "reply",   ex: "Please respond to my email by Friday.",     def: "to say or do something in reaction to something" },
     { word: "reveal",       jp: "〜を明らかにする",syn: "show",        ex: "The report revealed some surprising results.", def: "to make something known that was hidden or secret" },
     { word: "struggle",     jp: "苦労する",       syn: "fight",        ex: "I sometimes struggle with math problems.",  def: "to try hard to do something that is difficult" },
-    { word: "appropriate",  jp: "適切な",         syn: "suitable",     ex: "Please use appropriate language in class.", def: "right or correct for a particular situation" },
+    { word: "appropriate",  jp: "ふさわしい",     syn: "suitable",     ex: "Please use appropriate language in class.", def: "right or correct for a particular situation" },
     { word: "capable",      jp: "〜ができる",     syn: "skilled",      ex: "I believe you are capable of passing this.", def: "having the ability or quality needed to do something" },
     { word: "complex",      jp: "複雑な",         syn: "complicated",  ex: "Climate change is a very complex problem.", def: "made up of many connected and difficult parts" },
-    { word: "consistent",   jp: "一貫した",        syn: "steady",       ex: "Be consistent in your daily study habits.", def: "always behaving or performing in the same way" },
+    { word: "consistent",   jp: "ぶれない・一定の",syn: "steady",      ex: "Be consistent in your daily study habits.", def: "always behaving or performing in the same way" },
     { word: "current",      jp: "現在の",         syn: "present",      ex: "What is the current situation in the world?", def: "happening or existing right now" },
     { word: "flexible",     jp: "柔軟な",         syn: "adaptable",    ex: "Try to be flexible when plans change.",     def: "able to change easily to suit new conditions" },
     { word: "global",       jp: "世界的な",       syn: "worldwide",    ex: "Climate change is a global challenge.",     def: "relating to the whole world" },
     { word: "independent",  jp: "独立した",        syn: "self-reliant", ex: "She is a very independent thinker.",        def: "able to act or decide without needing others" },
     { word: "obvious",      jp: "明らかな",        syn: "clear",        ex: "The answer is obvious once you think about it.", def: "easy to see or understand" },
     { word: "practical",    jp: "実用的な",        syn: "useful",       ex: "Give practical advice, not just theory.",   def: "relating to real situations rather than ideas" },
-    { word: "reasonable",   jp: "合理的な",        syn: "fair",         ex: "That is a reasonable request.",             def: "based on good judgment and fair thinking" },
+    { word: "reasonable",   jp: "筋の通った",      syn: "fair",         ex: "That is a reasonable request.",             def: "based on good judgment and fair thinking" },
     { word: "reliable",     jp: "信頼できる",      syn: "dependable",   ex: "She is a reliable and honest friend.",      def: "can be trusted to do what is needed" },
     { word: "sufficient",   jp: "十分な",         syn: "enough",       ex: "Is one hour sufficient to finish the test?", def: "enough for the purpose needed" },
     { word: "typical",      jp: "典型的な",        syn: "usual",        ex: "A typical Japanese breakfast includes rice and miso soup.", def: "being a normal or usual example of something" },
@@ -554,9 +575,9 @@ const wordStock = {
     { word: "contribution", jp: "貢献",          syn: "donation",     ex: "She made a great contribution to the team.", def: "something you give or do to help achieve something" },
     { word: "debate",       jp: "討論",          syn: "argument",     ex: "We had a class debate about the environment.", def: "a formal discussion of different opinions on a topic" },
     { word: "decision",     jp: "決断",          syn: "choice",       ex: "It was a difficult decision to make.",      def: "a choice you make after thinking carefully" },
-    { word: "demand",       jp: "需要",          syn: "request",      ex: "There is a high demand for English teachers.", def: "the need or desire for something" },
+    { word: "demand",       jp: "需要・必要とされること",syn: "request",ex: "There is a high demand for English teachers.", def: "the need or desire for something" },
     { word: "evidence",     jp: "証拠",          syn: "proof",        ex: "We need evidence to support the argument.", def: "facts that prove something is true" },
-    { word: "factor",       jp: "要因",          syn: "element",      ex: "Diet is an important factor in good health.", def: "one of several things that causes or affects a result" },
+    { word: "factor",       jp: "要因・原因",     syn: "element",      ex: "Diet is an important factor in good health.", def: "one of several things that causes or affects a result" },
     { word: "feature",      jp: "特徴",          syn: "characteristic",ex: "One feature of Japanese culture is respect.", def: "an important or interesting quality of something" },
     { word: "impact",       jp: "影響",          syn: "effect",       ex: "Social media has a big impact on young people.", def: "the strong effect that something has" },
     { word: "issue",        jp: "問題",          syn: "concern",      ex: "Pollution is a serious environmental issue.", def: "an important topic that people discuss or worry about" },
@@ -566,7 +587,22 @@ const wordStock = {
     { word: "potential",    jp: "可能性",         syn: "possibility",  ex: "Every student has great potential.",        def: "the ability to develop or succeed in the future" },
     { word: "purpose",      jp: "目的",          syn: "aim",          ex: "What is the purpose of this activity?",     def: "the reason why something is done" },
     { word: "solution",     jp: "解決策",         syn: "answer",       ex: "What is the best solution to this problem?", def: "a way of solving a problem" },
-    { word: "awareness",    jp: "意識",          syn: "knowledge",    ex: "We need to raise awareness about climate change.", def: "knowledge or understanding of a topic or situation" },
+    { word: "awareness",    jp: "意識・関心",     syn: "knowledge",    ex: "We need to raise awareness about climate change.",                      def: "knowledge or understanding of a topic or situation" },
+    { word: "recommend",    jp: "〜を薦める",     syn: "suggest",      ex: "What movie do you recommend?",                                          def: "to tell someone that something is good or useful" },
+    { word: "belong",       jp: "〜に属する",     syn: "be part of",   ex: "I belong to the tennis club at school.",                                 def: "to be a member of a group or organization" },
+    { word: "deadline",     jp: "締め切り",       syn: "due date",     ex: "I need to hand in a report in English, but I can't remember the deadline.", def: "the time by which something must be done" },
+    { word: "damage",       jp: "〜を傷つける",   syn: "harm",         ex: "The brand-new car was damaged in the accident.",                         def: "to cause physical harm to something" },
+    { word: "contain",      jp: "〜を含む",       syn: "include",      ex: "Strawberries actually contain more vitamin C than lemons.",              def: "to have something inside, or as a part" },
+    { word: "delay",        jp: "〜を遅らせる",   syn: "postpone",     ex: "The train was delayed because of the earthquake.",                       def: "to make something happen later than planned" },
+    { word: "polite",       jp: "礼儀正しい",     syn: "well-mannered",ex: "Always be polite when speaking to your elders.",                        def: "behaving in a way that is respectful and kind" },
+    { word: "familiar",     jp: "よく知っている・なじみの",syn: "well-known",ex: "The voice on the phone sounded familiar.",                      def: "well known to you or easy to recognize" },
+    { word: "successful",   jp: "成功した",        syn: "thriving",     ex: "Steve never graduated from university, but he became very successful.",  def: "achieving what you wanted or planned" },
+    { word: "retire",       jp: "退職する",       syn: "quit work",    ex: "I want to live in the countryside after I retire.",                     def: "to stop working permanently, usually due to age" },
+    { word: "graduate",     jp: "〜を卒業する",   syn: "finish school",ex: "She graduated from a famous university in Tokyo.",                      def: "to successfully complete a course of study" },
+    { word: "advertise",    jp: "〜を宣伝する",   syn: "promote",      ex: "The company advertised its new product on social media.",                def: "to make something known to the public to attract buyers" },
+    { word: "attention",    jp: "注意・注目",     syn: "focus",        ex: "We need to pay attention to every word she says — she is our boss.",    def: "careful thought or listening given to something" },
+    { word: "possible",     jp: "可能な",         syn: "achievable",   ex: "Will it be possible to travel into space in the years ahead?",          def: "able to be done or likely to happen" },
+    { word: "rely",         jp: "〜を頼る",       syn: "depend on",    ex: "Students should rely on their teachers if they have problems at school.", def: "to trust or depend on someone or something" },
   ],
 
   "2": [
@@ -577,50 +613,49 @@ const wordStock = {
     { word: "precious",     jp: "貴重な",         syn: "valuable",    ex: "Clean water is a precious resource.",       def: "of great value because it is rare or costly" },
     { word: "analyze",      jp: "〜を分析する",   syn: "examine",     ex: "We need to analyze the data carefully.",    def: "to examine something in detail to understand it" },
     { word: "benefit",      jp: "利益",          syn: "advantage",   ex: "There are many benefits to regular exercise.", def: "an advantage or good effect" },
-    { word: "essential",    jp: "不可欠な",        syn: "necessary",   ex: "Sleep is essential for good health.",       def: "completely necessary or extremely important" },
+    { word: "essential",    jp: "なくてはならない",syn: "necessary",   ex: "Sleep is essential for good health.",       def: "completely necessary or extremely important" },
     { word: "advantage",    jp: "利点",          syn: "benefit",     ex: "Living near school is a big advantage.",    def: "a condition that helps you be more successful" },
-    { word: "involved",     jp: "関与している",    syn: "connected",   ex: "She is deeply involved in the project.",    def: "taking part in an activity or situation" },
+    { word: "involved",     jp: "関わっている",    syn: "connected",   ex: "She is deeply involved in the project.",    def: "taking part in an activity or situation" },
     { word: "estimate",     jp: "〜を見積もる",   syn: "calculate",   ex: "The cost was estimated at one million yen.", def: "to judge the amount or value of something roughly" },
     { word: "provide",      jp: "〜を提供する",   syn: "supply",      ex: "Plants provide the oxygen we breathe.",     def: "to give something that is needed or wanted" },
-    { word: "encourage",    jp: "〜を促す",       syn: "inspire",     ex: "The results encouraged more research.",     def: "to give someone the confidence to try something" },
     { word: "decline",      jp: "衰退する",       syn: "decrease",    ex: "Sales declined sharply last year.",         def: "to become less, smaller, or worse over time" },
     { word: "require",      jp: "〜を必要とする", syn: "need",        ex: "This job requires a lot of patience.",      def: "to need something as essential or compulsory" },
-    { word: "overcome",     jp: "〜を克服する",   syn: "conquer",     ex: "Hard work will help you overcome any challenge.", def: "to succeed in dealing with a problem or obstacle" },
+    { word: "overcome",     jp: "〜を乗り越える", syn: "conquer",     ex: "Hard work will help you overcome any challenge.", def: "to succeed in dealing with a problem or obstacle" },
     { word: "reject",       jp: "〜を拒絶する",   syn: "refuse",      ex: "He rejected the offer without hesitation.", def: "to refuse to accept or agree to something" },
     { word: "calculate",    jp: "〜を計算する",   syn: "compute",     ex: "Calculate the total cost, including tax.",  def: "to find a number or amount using mathematics" },
     { word: "differ",       jp: "異なる",        syn: "vary",        ex: "Customs differ from country to country.",   def: "to be different from something else" },
     { word: "sustain",      jp: "〜を維持する",   syn: "maintain",    ex: "It is hard to sustain this level of effort.", def: "to keep something going over a long period" },
-    { word: "accumulate",   jp: "〜を蓄積する",   syn: "build up",    ex: "Debt can accumulate very quickly.",         def: "to gradually gather or increase over time" },
-    { word: "anticipate",   jp: "〜を予期する",   syn: "expect",      ex: "We anticipate a rise in temperatures.",     def: "to expect something and prepare for it" },
-    { word: "clarify",      jp: "〜を明確にする", syn: "explain",     ex: "Could you clarify what you mean by that?",  def: "to make something easier to understand" },
+    { word: "accumulate",   jp: "〜をためる・積み重ねる",syn: "build up",ex: "Debt can accumulate very quickly.",      def: "to gradually gather or increase over time" },
+    { word: "anticipate",   jp: "〜を予想する",   syn: "expect",      ex: "We anticipate a rise in temperatures.",     def: "to expect something and prepare for it" },
+    { word: "clarify",      jp: "〜をはっきりさせる",syn: "explain",  ex: "Could you clarify what you mean by that?",  def: "to make something easier to understand" },
     { word: "compensate",   jp: "〜を補う",       syn: "make up for", ex: "Exercise can compensate for a bad diet.",   def: "to balance out or make up for a loss or problem" },
-    { word: "compromise",   jp: "妥協する",       syn: "give and take",ex: "We compromised on the final plan.",        def: "to reach an agreement by both sides accepting less" },
+    { word: "compromise",   jp: "お互いに譲り合う",syn: "give and take",ex: "We compromised on the final plan.",      def: "to reach an agreement by both sides accepting less" },
     { word: "criticize",    jp: "〜を批判する",   syn: "judge",       ex: "Don't criticize without offering a solution.", def: "to point out what is wrong or bad about something" },
-    { word: "diminish",     jp: "〜を減少させる", syn: "reduce",      ex: "The problem diminished over time.",         def: "to make or become smaller or less important" },
-    { word: "eliminate",    jp: "〜を排除する",   syn: "remove",      ex: "The goal is to eliminate poverty worldwide.", def: "to remove something completely" },
-    { word: "enforce",      jp: "〜を施行する",   syn: "apply",       ex: "The police enforce traffic laws strictly.", def: "to make sure that rules or laws are obeyed" },
+    { word: "diminish",     jp: "〜を減らす",     syn: "reduce",      ex: "The problem diminished over time.",         def: "to make or become smaller or less important" },
+    { word: "eliminate",    jp: "〜をなくす・取り除く",syn: "remove",  ex: "The goal is to eliminate poverty worldwide.", def: "to remove something completely" },
+    { word: "enforce",      jp: "〜を守らせる・実施する",syn: "apply", ex: "The police enforce traffic laws strictly.", def: "to make sure that rules or laws are obeyed" },
     { word: "generate",     jp: "〜を生み出す",   syn: "produce",     ex: "Solar panels generate clean electricity.",  def: "to produce or create something" },
     { word: "implement",    jp: "〜を実施する",   syn: "carry out",   ex: "The new policy was implemented last April.", def: "to put a plan or decision into action" },
     { word: "indicate",     jp: "〜を示す",       syn: "suggest",     ex: "The data indicates a rise in temperature.", def: "to show or point to something as likely or true" },
     { word: "modify",       jp: "〜を修正する",   syn: "change",      ex: "We need to modify our original approach.",  def: "to make small changes to improve something" },
     { word: "monitor",      jp: "〜を監視する",   syn: "track",       ex: "Scientists monitor ocean temperatures daily.", def: "to watch and check something over a period of time" },
-    { word: "perceive",     jp: "〜を認識する",   syn: "sense",       ex: "How do you perceive this social problem?",  def: "to notice or become aware of something" },
+    { word: "perceive",     jp: "〜に気づく・感じる",syn: "sense",    ex: "How do you perceive this social problem?",  def: "to notice or become aware of something" },
     { word: "prioritize",   jp: "〜を優先する",   syn: "rank first",  ex: "Prioritize the most important tasks first.", def: "to decide that something is more important than other things" },
     { word: "prohibit",     jp: "〜を禁止する",   syn: "ban",         ex: "Smoking is prohibited in this building.",   def: "to officially say that something is not allowed" },
     { word: "reinforce",    jp: "〜を強化する",   syn: "strengthen",  ex: "Repetition reinforces memory.",             def: "to make something stronger or more effective" },
     { word: "restrict",     jp: "〜を制限する",   syn: "limit",       ex: "Screen time for children should be restricted.", def: "to put limits on something" },
     { word: "stimulate",    jp: "〜を刺激する",   syn: "encourage",   ex: "Reading stimulates the imagination.",       def: "to make something more active or excited" },
-    { word: "transform",    jp: "〜を変革する",   syn: "convert",     ex: "Technology has transformed communication.",  def: "to change something completely" },
+    { word: "transform",    jp: "〜を大きく変える",syn: "convert",    ex: "Technology has transformed communication.",  def: "to change something completely" },
     { word: "undermine",    jp: "〜を弱める",     syn: "weaken",      ex: "Lack of sleep undermines your performance.", def: "to gradually weaken or damage something" },
     { word: "utilize",      jp: "〜を活用する",   syn: "use",         ex: "Utilize every opportunity to practice.",    def: "to use something in a practical and effective way" },
     { word: "verify",       jp: "〜を確認する",   syn: "check",       ex: "Always verify information before sharing it.", def: "to make sure that something is true or correct" },
     { word: "adequate",     jp: "十分な",         syn: "sufficient",  ex: "The budget is not adequate for this project.", def: "enough for a particular purpose or need" },
-    { word: "ambiguous",    jp: "曖昧な",         syn: "unclear",     ex: "The instructions were ambiguous.",          def: "having more than one possible meaning" },
-    { word: "coherent",     jp: "一貫性のある",    syn: "logical",     ex: "The essay was well-organized and coherent.", def: "clear and logical, with ideas that connect well" },
-    { word: "comprehensive",jp: "包括的な",        syn: "complete",    ex: "Write a comprehensive report on the issue.", def: "including all or most parts of something" },
-    { word: "controversial",jp: "論争を呼ぶ",      syn: "debatable",   ex: "The new policy is quite controversial.",    def: "causing disagreement or strong debate" },
+    { word: "ambiguous",    jp: "あいまいな",     syn: "unclear",     ex: "The instructions were ambiguous.",          def: "having more than one possible meaning" },
+    { word: "coherent",     jp: "筋が通った",     syn: "logical",     ex: "The essay was well-organized and coherent.", def: "clear and logical, with ideas that connect well" },
+    { word: "comprehensive",jp: "幅広い・全体的な",syn: "complete",   ex: "Write a comprehensive report on the issue.", def: "including all or most parts of something" },
+    { word: "controversial",jp: "賛否両論の",     syn: "debatable",   ex: "The new policy is quite controversial.",    def: "causing disagreement or strong debate" },
     { word: "convincing",   jp: "説得力のある",    syn: "persuasive",  ex: "Your argument is very convincing.",         def: "able to make someone believe that something is true" },
-    { word: "deliberate",   jp: "意図的な",        syn: "intentional", ex: "It was a deliberate choice, not an accident.", def: "done on purpose, not by accident" },
+    { word: "deliberate",   jp: "わざとの",       syn: "intentional", ex: "It was a deliberate choice, not an accident.", def: "done on purpose, not by accident" },
     { word: "diverse",      jp: "多様な",         syn: "varied",      ex: "Japan has diverse landscapes and climates.", def: "including many different types of things or people" },
     { word: "dominant",     jp: "支配的な",        syn: "leading",     ex: "English is the dominant language in science.", def: "more powerful or noticeable than others" },
     { word: "explicit",     jp: "明確な",         syn: "clear",       ex: "Please give explicit instructions.",        def: "clearly stated and leaving nothing unclear" },
@@ -630,16 +665,32 @@ const wordStock = {
     { word: "logical",      jp: "論理的な",        syn: "rational",    ex: "Think in a clear and logical way.",         def: "based on clear and sensible thinking" },
     { word: "assumption",   jp: "思い込み",        syn: "presumption", ex: "Don't make assumptions without checking.",  def: "something you believe to be true without proof" },
     { word: "circumstance", jp: "状況",          syn: "condition",   ex: "We adapted to the changing circumstances.", def: "the conditions or facts connected to an event" },
-    { word: "constraint",   jp: "制約",          syn: "limitation",  ex: "Budget constraints affected the whole plan.", def: "a factor that limits what you can do" },
-    { word: "dilemma",      jp: "ジレンマ",       syn: "problem",     ex: "I face a dilemma about which path to take.", def: "a difficult choice between two options" },
+    { word: "constraint",   jp: "制約・制限",     syn: "limitation",  ex: "Budget constraints affected the whole plan.", def: "a factor that limits what you can do" },
+    { word: "dilemma",      jp: "板挟み・ジレンマ",syn: "problem",    ex: "I face a dilemma about which path to take.", def: "a difficult choice between two options" },
     { word: "framework",    jp: "枠組み",         syn: "structure",   ex: "We need a new policy framework.",           def: "a system of rules or ideas used as a base" },
     { word: "hypothesis",   jp: "仮説",          syn: "theory",      ex: "The scientist's hypothesis turned out to be correct.", def: "an idea proposed to explain something, not yet proven" },
-    { word: "implication",  jp: "含意",          syn: "meaning",     ex: "What are the implications of this change?",  def: "what something suggests or causes indirectly" },
+    { word: "implication",  jp: "示唆",          syn: "suggestion",  ex: "His silence carried a clear implication that he disagreed.", def: "something suggested or hinted at indirectly" },
     { word: "initiative",   jp: "取り組み",       syn: "effort",      ex: "The government launched a new environmental initiative.", def: "a plan or action aimed at solving a problem" },
     { word: "legislation",  jp: "法律",          syn: "law",         ex: "New legislation was introduced to protect wildlife.", def: "a law or set of laws made by a government" },
     { word: "mechanism",    jp: "仕組み",         syn: "system",      ex: "What is the mechanism behind inflation?",   def: "the way something works or the process that causes it" },
     { word: "phenomenon",   jp: "現象",          syn: "event",       ex: "Globalization is a modern economic phenomenon.", def: "something that happens or exists in the world" },
-    { word: "transition",   jp: "移行",          syn: "change",      ex: "The transition to renewable energy takes time.", def: "the process of changing from one state to another" },
+    { word: "transition",   jp: "移り変わり",     syn: "change",      ex: "The transition to renewable energy takes time.",                       def: "the process of changing from one state to another" },
+    { word: "affect",       jp: "〜に影響を与える",syn: "influence",   ex: "Many people suffered from the flu this year — I hope it didn't affect students' exam prep.", def: "to cause a change in someone or something" },
+    { word: "acquire",      jp: "〜を身につける", syn: "gain",        ex: "She has acquired a good knowledge of English.",                          def: "to gain something through effort or experience" },
+    { word: "adapt",        jp: "〜に適応する",   syn: "adjust",      ex: "Animals had adapted to the environment over time.",                     def: "to change in order to deal with new conditions" },
+    { word: "distinguish",  jp: "〜を区別する",   syn: "tell apart",  ex: "It is not easy to distinguish male turtles from female ones.",          def: "to recognize the difference between two things" },
+    { word: "conduct",      jp: "〜を実施する",   syn: "carry out",   ex: "The research team carried out a survey about different blood types.",   def: "to organize and carry out a process or study" },
+    { word: "strengthen",   jp: "〜を強化する",   syn: "reinforce",   ex: "Regular exercise can strengthen our bones.",                           def: "to make something stronger or more powerful" },
+    { word: "donate",       jp: "〜を寄付する",   syn: "give",        ex: "If I won the lottery, I would donate half of the money.",              def: "to give something to help a cause or organization" },
+    { word: "extend",       jp: "〜を延ばす",     syn: "prolong",     ex: "Because of the heavy storm, I extended my stay in Washington D.C.",    def: "to make something longer or greater in scope" },
+    { word: "manufacture",  jp: "〜を製造する",   syn: "produce",     ex: "The company manufactures 2,000 cars per day.",                        def: "to make goods in large quantities using machinery" },
+    { word: "suspend",      jp: "〜を一時停止する",syn: "halt",       ex: "The game was suspended because of the bad weather.",                   def: "to officially stop something for a period of time" },
+    { word: "resist",       jp: "〜に抵抗する",   syn: "oppose",      ex: "I am on a diet, but I cannot resist that cake.",                      def: "to stop yourself from doing something you want to do" },
+    { word: "reflect",      jp: "〜を反映する",   syn: "represent",   ex: "The increase in sales reflects the values of today's consumer society.", def: "to show or be a sign of something" },
+    { word: "poverty",      jp: "貧困・貧しさ",   syn: "hardship",    ex: "What can we do for those who live in poverty?",                       def: "the state of being extremely poor" },
+    { word: "extinct",      jp: "絶滅した",        syn: "died out",    ex: "When did dinosaurs go extinct?",                                      def: "no longer existing as a species" },
+    { word: "welfare",      jp: "福祉・みんなの幸せ",syn: "well-being",ex: "The government set up a new program to improve public welfare.",      def: "the health, happiness, and safety of people" },
+    { word: "recession",    jp: "不況・景気の低下",syn: "downturn",   ex: "A recession is a period of temporary economic decline.",               def: "a period when economic activity slows significantly" },
   ]
 };
 
@@ -732,6 +783,35 @@ const IRREGULARS = {
   limit:{past:'limited',ing:'limiting'},
   focus:{past:'focused',ing:'focusing'},
   bias:{past:'biased',ing:'biasing'},
+  celebrate:{past:'celebrated',ing:'celebrating'},
+  exchange:{past:'exchanged',ing:'exchanging'},
+  manufacture:{past:'manufactured',ing:'manufacturing'},
+  distinguish:{past:'distinguished',ing:'distinguishing'},
+  strengthen:{past:'strengthened',ing:'strengthening'},
+  suspend:{past:'suspended',ing:'suspending'},
+  extend:{past:'extended',ing:'extending'},
+  donate:{past:'donated',ing:'donating'},
+  reflect:{past:'reflected',ing:'reflecting'},
+  resist:{past:'resisted',ing:'resisting'},
+  retire:{past:'retired',ing:'retiring'},
+  graduate:{past:'graduated',ing:'graduating'},
+  advertise:{past:'advertised',ing:'advertising'},
+  recommend:{past:'recommended',ing:'recommending'},
+  conduct:{past:'conducted',ing:'conducting'},
+  acquire:{past:'acquired',ing:'acquiring'},
+  adapt:{past:'adapted',ing:'adapting'},
+  promote:{past:'promoted',ing:'promoting'},
+  rely:{past:'relied',ing:'relying'},
+  search:{past:'searched',ing:'searching'},
+  include:{past:'included',ing:'including'},
+  hold:{past:'held',ing:'holding'},
+  reach:{past:'reached',ing:'reaching'},
+  follow:{past:'followed',ing:'following'},
+  promise:{past:'promised',ing:'promising'},
+  contain:{past:'contained',ing:'containing'},
+  delay:{past:'delayed',ing:'delaying'},
+  damage:{past:'damaged',ing:'damaging'},
+  belong:{past:'belonged',ing:'belonging'},
 };
 
 function countSyllables(w) {
@@ -811,9 +891,6 @@ function allWords() {
 
 function generateOptions(correct, field) {
   if (field === '_fillAns') {
-    // correct is the inflected form used in the sentence.
-    // Find which word entry it belongs to, determine the inflection type,
-    // then apply the same inflection to wrong-answer candidates.
     const pool = allWords();
     const correctEntry = pool.find(w => {
       const esc = w.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1022,7 +1099,7 @@ function renderModeSelect() {
           <span class="mode-icon">🏆</span>
           <span class="mode-text">
             <span class="mode-name">100問チャレンジ <span class="challenge-tag">MIX</span></span>
-            <span class="mode-desc">モードを選んでMIX！全${total}語から最大100問に挑戦！</span>
+            <span class="mode-desc">モードを選んでMIX！１００問に挑戦！</span>
           </span>
         </button>
       </div>
@@ -1033,7 +1110,6 @@ function renderModeSelect() {
 // ─── CHALLENGE SETUP ────────────────────────────────────
 function renderChallengeSetup() {
   state.screen = 'challenge-setup';
-  // Reset to all modes selected if coming fresh
   if (!state.selectedChallengeModes || state.selectedChallengeModes.length === 0) {
     state.selectedChallengeModes = [1, 2, 3, 4];
   }
@@ -1088,7 +1164,6 @@ function getChallengeInfoText(total) {
 function toggleChallengeMode(mode) {
   const idx = state.selectedChallengeModes.indexOf(mode);
   if (idx >= 0) {
-    // Prevent deselecting if only 1 mode remains
     if (state.selectedChallengeModes.length <= 1) {
       showToast('⚠️ 最低1つ選んでね！');
       return;
@@ -1152,7 +1227,6 @@ function renderQuestion() {
     case 2: {
       const esc   = current.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blank = `<span class="blank-word">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
-      // Extract the actual inflected form used in the sentence
       const inflMatch = current.ex.match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
       const inflectedForm = inflMatch ? inflMatch[0] : current.word;
       const blanked = current.ex.replace(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'), blank);
@@ -1179,6 +1253,11 @@ function renderQuestion() {
     ? `🏆 Challenge &nbsp;·&nbsp; ${modeEmoji[effectiveMode]} ${modeNames[effectiveMode]}`
     : modeNames[state.mode];
 
+  const catClasses = ['','cat-vocab','cat-fill','cat-syn','cat-def'];
+  const catStrip = state.mode === 5
+    ? `<div class="cat-strip ${catClasses[effectiveMode]}">${modeEmoji[effectiveMode]} ${modeNames[effectiveMode]}</div>`
+    : '';
+
   const hintHTML = effectiveMode === 2
     ? `<div style="text-align:center; margin-bottom:8px;">
          <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 ヒント (hint)</button>
@@ -1196,6 +1275,7 @@ function renderQuestion() {
       <div class="progress-track">
         <div class="progress-fill" style="width:${pct}%"></div>
       </div>
+      ${catStrip}
       <div class="quiz-card ${cardClass}">${qText}</div>
       ${hintHTML}
       <div class="choices-grid">
