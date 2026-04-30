@@ -185,6 +185,17 @@
   .mascot-excited { animation-duration: 0.45s !important; }
 
   .gameover-screen { text-align:center; padding:1rem; width:100%; }
+  /* ── Mute button ─────────────────────────────────────── */
+  .mute-btn { position:fixed; top:10px; right:10px; z-index:9000; background:white; border:2px solid #dee2e6; border-radius:50%; width:38px; height:38px; font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; transition:0.15s; padding:0; }
+  .mute-btn:active { transform:scale(0.9); }
+  .mute-btn.muted  { background:#FFE5E7; border-color:#E63946; }
+
+  /* ── Mistake review panel ─────────────────────────────── */
+  .sn-mistake-panel { width:100%; margin-top:18px; text-align:left; }
+  .sn-mistake-header { font-size:13px; font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; color:#E63946; margin-bottom:8px; text-align:center; }
+  .sn-mistake-item { background:#FFF5F5; border:1.5px solid #F4A9A8; border-radius:12px; padding:9px 14px; margin-bottom:7px; }
+  .sn-mistake-word { display:block; font-size:18px; font-weight:bold; color:#2b2d42; margin-bottom:3px; }
+  .sn-mistake-hint { display:block; font-size:12px; color:#666; line-height:1.4; }
 </style>
  </head>
  <body>
@@ -336,7 +347,24 @@ function openLinks() { document.getElementById('links-overlay').style.display='f
 function closeLinks(){ document.getElementById('links-overlay').style.display='none'; }
 
 // ── Click sound for menu/level/mode/link interactions ─────────────────
-function playClick() { try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(_){} }
+// ── Mute ──────────────────────────────────────────────────────────────
+let _muted = localStorage.getItem('ninja_muted') === '1';
+function toggleMute() {
+  _muted = !_muted;
+  localStorage.setItem('ninja_muted', _muted ? '1' : '0');
+  const btn = document.getElementById('mute-btn');
+  if (btn) { btn.textContent = _muted ? '🔇' : '🔊'; btn.classList.toggle('muted', _muted); }
+}
+(function() {
+  const btn = document.createElement('button');
+  btn.id = 'mute-btn'; btn.className = 'mute-btn' + (_muted ? ' muted' : '');
+  btn.textContent = _muted ? '🔇' : '🔊'; btn.title = 'Toggle sound';
+  btn.setAttribute('aria-label', 'Toggle mute');
+  btn.onclick = toggleMute;
+  document.body.appendChild(btn);
+})();
+
+function playClick() { if(_muted) return; try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(e){} }
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close, .kb-btn';
   if (ev.target.closest(sel)) playClick();
@@ -473,13 +501,29 @@ let state = {
   kbLocked:false,
   blitzTimeLeft:BLITZ_SECONDS, blitzInterval:null,
   senseAltAccepted:false, senseAltWord:'',
-  placedHistory:[]  // tracks {inputIdx, shuffleIdx, letter} for delete support
+  placedHistory:[],  // tracks {inputIdx, shuffleIdx, letter} for delete support
+  mistakes:[]        // words answered incorrectly
 };
 
-function playSfx(f){ new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
-function speak(w){ if(!w) return; new Audio(`audio/${w.replace(/\s+/g,'_')}.mp3`).play().catch(()=>{}); }
+function playSfx(f){ if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
+function speak(w){ if(_muted) return; if(!w) return; new Audio(`audio/${w.replace(/\s+/g,'_')}.mp3`).play().catch(()=>{}); }
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }
+function recordMistake(word){ if(word && !state.mistakes.includes(word)) state.mistakes.push(word); }
+
+function getSpellingMistakesHTML(){
+  if(!state.mistakes || state.mistakes.length===0) return '';
+  const hint=w=>WORD_HINTS[w.toLowerCase()]||WORD_HINTS[w]||'';
+  const items=state.mistakes.map(w=>`
+    <div class="sn-mistake-item">
+      <span class="sn-mistake-word">${w}</span>
+      ${hint(w)?`<span class="sn-mistake-hint">${hint(w)}</span>`:''}
+    </div>`).join('');
+  return `<div class="sn-mistake-panel">
+    <div class="sn-mistake-header">❌ ${state.mistakes.length} mistake${state.mistakes.length!==1?'s':''} — review &amp; remember!</div>
+    ${items}
+  </div>`;
+}
 
 // ── Static alternative check for Ninja Sense Mode ──
 function checkWordSenseAlternative(playerWord, referenceWord) {
@@ -673,6 +717,7 @@ function checkKeyboard(){
     inp.className='kb-input bad';
     if(card){ card.className='wrong-frame'; setTimeout(()=>{ card.className=''; },800); }
     fb.innerHTML=`<span style="color:#E63946">❌ Answer: <em>${state.currentWord}</em></span>`;
+    recordMistake(state.currentWord);
     state.lives--;
     const hearts=document.getElementById('blitz-hearts');
     if(hearts) hearts.innerHTML=getHeartsHTML();
@@ -729,7 +774,7 @@ function initGame(mode){
   state.score=0; state.round=0; state.lives=MAX_LIVES;
   state.letterScore=0; state.kbLocked=false;
   state.senseAltAccepted=false; state.senseAltWord='';
-  state.placedHistory=[];
+  state.placedHistory=[]; state.mistakes=[];
   state.words=shuffle(ALL_WORDS).slice(0,10);
 
   if(mode==='speedster'){
@@ -879,6 +924,7 @@ function tapLetter(letter,index){
             setTimeout(()=>{ state.round++; nextRound(); }, 1200);
           } else {
             playSfx('wrongsound');
+            recordMistake(state.currentWord);
             state.lives--;
             if(state.lives<=0){
               render();
@@ -920,6 +966,7 @@ function tapLetter(letter,index){
         renderSpeedsterEnd();
       }
     } else {
+      recordMistake(state.currentWord);
       state.lives--;
       const hr=document.getElementById('hearts-row');
       if(hr){ hr.classList.remove('shake'); void hr.offsetWidth; hr.classList.add('shake'); }
@@ -1024,6 +1071,7 @@ function renderGameOver(){
         <button class="level-btn btn-hard" style="width:auto;padding:12px 28px" onclick="initGame('${state.mode}')">Try Again</button>
         <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
       </div>
+      ${getSpellingMistakesHTML()}
     </div>
     ${getFooterHTML("Don't give up! 💪")}`;
 }
@@ -1048,6 +1096,7 @@ function renderBlitzEnd(){
         <button class="level-btn btn-blitz" style="width:auto;padding:12px 28px" onclick="initGame('keyboard')">Blitz Again 🥷</button>
         <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
       </div>
+      ${getSpellingMistakesHTML()}
     </div>
     ${getFooterHTML(msg)}`;
 }
@@ -1072,14 +1121,16 @@ function renderSpeedsterEnd(){
 }
 
 function renderEnd(){
+  const medal=state.score===10?'🏆':state.score>=7?'🥇':state.score>=5?'🥈':'🥉';
   document.getElementById('game-area').innerHTML=`
     <div class="start-screen">
-      <div style="font-size:70px">🏆</div>
+      <div style="font-size:70px">${medal}</div>
       <div class="welcome-title">Well Done!</div>
       <p style="font-size:24px;margin:20px 0;font-weight:bold">Score: ${state.score} / 10</p>
       <button class="level-btn btn-normal" style="width:auto;padding:12px 40px;margin:0 auto" onclick="renderWelcome()">Play Again</button>
+      ${getSpellingMistakesHTML()}
     </div>
-    ${getFooterHTML("You nailed the spelling!")}`;
+    ${getFooterHTML(state.score===10?"Perfect spelling! 🥷":"You nailed the spelling!")}`;
 }
 
 renderWelcome();

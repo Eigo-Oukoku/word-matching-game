@@ -126,6 +126,10 @@
   .mascot-excited { animation-duration: 0.4s !important; }
   .mascot-bubble { background: #f8f9fa !important; padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; color: #343a40 !important; border: 1px solid #dee2e6; animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .brand-footer { font-weight: bold; color: #6A5ACD !important; font-size: 24px; letter-spacing: 1px; }
+  /* ── Mute button ─────────────────────────────────────── */
+  .mute-btn { position:fixed; top:10px; right:10px; z-index:9000; background:white; border:2px solid #dee2e6; border-radius:50%; width:38px; height:38px; font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; transition:0.15s; padding:0; }
+  .mute-btn:active { transform:scale(0.9); }
+  .mute-btn.muted  { background:#FFE5E7; border-color:#E63946; }
 </style>
 </head>
 <body>
@@ -189,7 +193,24 @@ function openLinks() { document.getElementById('links-overlay').style.display='f
 function closeLinks(){ document.getElementById('links-overlay').style.display='none'; }
 
 // ── Click sound for menu/level/mode/link interactions ─────────────────
-function playClick() { try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(_){} }
+// ── Mute ──────────────────────────────────────────────────────────────
+let _muted = localStorage.getItem('ninja_muted') === '1';
+function toggleMute() {
+  _muted = !_muted;
+  localStorage.setItem('ninja_muted', _muted ? '1' : '0');
+  const btn = document.getElementById('mute-btn');
+  if (btn) { btn.textContent = _muted ? '🔇' : '🔊'; btn.classList.toggle('muted', _muted); }
+}
+(function() {
+  const btn = document.createElement('button');
+  btn.id = 'mute-btn'; btn.className = 'mute-btn' + (_muted ? ' muted' : '');
+  btn.textContent = _muted ? '🔇' : '🔊'; btn.title = 'Toggle sound';
+  btn.setAttribute('aria-label', 'Toggle mute');
+  btn.onclick = toggleMute;
+  document.body.appendChild(btn);
+})();
+
+function playClick() { if(_muted) return; try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(e){} }
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close';
   if (ev.target.closest(sel)) playClick();
@@ -213,8 +234,8 @@ let state = {
 };
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
-function playSfx(f) { new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
-function speak(w)   { if(!w) return; new Audio(`audio/${getFileKey(w)}.mp3`).play().catch(()=>{}); }
+function playSfx(f) { if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
+function speak(w)   { if(_muted) return; if(!w) return; new Audio(`audio/${getFileKey(w)}.mp3`).play().catch(()=>{}); }
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 
 function pickRandomMascot() {
