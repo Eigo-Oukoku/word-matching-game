@@ -205,7 +205,7 @@
    <div class="links-box">
     <div class="links-title">
      🎮 Other Games
-    </div><!-- ↓↓ リンクをここに入れてください ↓↓ --> <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a> <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a> <!-- ↑↑ リンクをここに入れてください ↑↑ --> <button class="links-close" onclick="closeLinks()">Close</button>
+    </div><!-- ↓↓ リンクをここに入れてください ↓↓ --> <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a> <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a> <a class="game-link-btn link-sn" href="https://eigo-oukoku.github.io/Eigo-Ninja/sentence-ninja" style="background:#FF8FA3 !important;">💬 Sentence Ninja</a> <a class="game-link-btn link-en" href="https://eigo-oukoku.github.io/Eigo-Ninja/eigo-ninja" style="background:#6A5ACD !important;">📚 Eigo-Ninja (Vocab Quiz)</a> <!-- ↑↑ リンクをここに入れてください ↑↑ --> <button class="links-close" onclick="closeLinks()">Close</button>
    </div>
   </div>
   <script>
@@ -213,6 +213,13 @@ function openHow()   { document.getElementById('how-overlay').style.display='fle
 function closeHow()  { document.getElementById('how-overlay').style.display='none'; }
 function openLinks() { document.getElementById('links-overlay').style.display='flex'; }
 function closeLinks(){ document.getElementById('links-overlay').style.display='none'; }
+
+// ── Click sound for menu/level/mode/link interactions ─────────────────
+function playClick() { try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(_){} }
+document.addEventListener('click', function(ev){
+  const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close';
+  if (ev.target.closest(sel)) playClick();
+}, true);
 
 const ANIMALS = {
   fox: `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,

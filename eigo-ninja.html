@@ -170,6 +170,18 @@
   <div id="game-area"></div>
 </div>
 
+<!-- Other Games Overlay -->
+<div id="links-modal" style="display:none;" class="overlay" onclick="if(event.target===this)toggleLinks(false)">
+  <div class="modal-box">
+    <div class="modal-title" style="color:#3d5a80;">🎮 Other Games</div>
+    <a class="action-btn" style="background:#2b2d42 !important; box-shadow:0 5px 0 #0a0a1a !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a>
+    <a class="action-btn" style="background:#3d5a80 !important; box-shadow:0 5px 0 #243a55 !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/game2">🥷 Word Ninja Vol. 2</a>
+    <a class="action-btn" style="background:#2DD368 !important; box-shadow:0 5px 0 #1a9647 !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a>
+    <a class="action-btn" style="background:#FF8FA3 !important; box-shadow:0 5px 0 #c95f78 !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/sentence-ninja">💬 Sentence Ninja</a>
+    <button class="modal-close" onclick="toggleLinks(false)" style="margin-top:14px;">Close</button>
+  </div>
+</div>
+
 <div id="how-modal" style="display:none;" class="overlay">
   <div class="modal-box">
     <div class="modal-title">🥷 遊びかた (How To Play)</div>
@@ -808,6 +820,17 @@ function toggleModal(show) {
   document.getElementById('how-modal').style.display = show ? 'flex' : 'none';
 }
 
+function toggleLinks(show) {
+  document.getElementById('links-modal').style.display = show ? 'flex' : 'none';
+}
+
+// ── Click sound for menu/level/mode/link interactions ─────────────────
+function playClick() { try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(_){} }
+document.addEventListener('click', function(ev){
+  const sel = '.level-btn, .mode-btn, .mode-toggle, .util-btn, .menu-btn, .back-btn, .action-btn, .modal-close, .export-btn';
+  if (ev.target.closest(sel)) playClick();
+}, true);
+
 // ─── EXPORT ──────────────────────────────────────────────
 function getMistakeRows() {
   return state.mistakes.map(m => ({ word: m.word, jp: m.jp, syn: m.syn, ex: m.ex, def: m.def }));
@@ -922,6 +945,7 @@ function renderHome() {
       </div>
       <div class="util-row">
         <button class="util-btn" onclick="toggleModal(true)">❓ 遊びかた</button>
+        <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other Games</button>
       </div>
       <div class="footer-strip">ELKえいご王国</div>
     </div>

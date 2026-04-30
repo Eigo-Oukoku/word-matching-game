@@ -235,6 +235,7 @@
     <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a>
     <a class="game-link-btn link-wn2" href="https://eigo-oukoku.github.io/Eigo-Ninja/game2">🥷 Word Ninja Vol. 2</a>
     <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a>
+    <a class="game-link-btn link-en" href="https://eigo-oukoku.github.io/Eigo-Ninja/eigo-ninja" style="background:#6A5ACD;">📚 Eigo-Ninja (Vocab Quiz)</a>
     <button class="links-close" onclick="closeLinks()">Close</button>
    </div>
   </div>
@@ -387,6 +388,13 @@ function getFooter(msg, excited=false) {
     <div class="brand-footer">ELKえいご王国</div>
   </div>`;
 }
+
+// ── Click sound for menu/level/mode/link interactions ─────────────────
+function playClick() { try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(_){} }
+document.addEventListener('click', function(ev){
+  const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close, .stage-btn, .mode-btn, .back-btn, .action-btn';
+  if (ev.target.closest(sel)) playClick();
+}, true);
 
 function openHow()    { document.getElementById('how-overlay').style.display='flex'; }
 function closeHow()   { document.getElementById('how-overlay').style.display='none'; }
