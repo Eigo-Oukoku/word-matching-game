@@ -155,11 +155,14 @@
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; }
   .overlay-box { background:white; border-radius:20px; padding:20px 18px; max-width:400px; width:100%; max-height:86vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,0.25); }
   .ov-title { font-size:21px; font-weight:bold; color:#E63946; margin-bottom:10px; text-align:center; }
+  .ov-title-jp { font-size:14px; font-weight:normal; color:#888; }
   .ov-intro { font-size:13px; color:#444; margin-bottom:12px; line-height:1.6; }
+  .ov-intro-jp { font-size:12px; color:#777; }
   .ov-item  { margin-bottom:9px; }
   .ov-item-title { font-size:13px; font-weight:bold; color:#2b2d42; margin-bottom:2px; }
   .ov-item-desc  { font-size:12px; color:#555; line-height:1.5; padding-left:6px; border-left:3px solid #F5C842; }
-  .ov-close { display:block; width:100%; margin-top:16px; padding:11px; font-size:15px; font-weight:bold; background:#E63946; color:white; border:none; border-radius:12px; cursor:pointer; }
+  .ov-desc-jp { font-size:11px; color:#888; }
+  .ov-close { display:block; width:100%; margin-top:16px; padding:11px; font-size:15px; font-weight:bold; background:#E63946; color:white; border:none; border-radius:12px; cursor:pointer; line-height:1.6; }
 
   .links-title { font-size:20px; font-weight:bold; color:#064E8A; margin-bottom:14px; text-align:center; }
   .game-link-btn { display:block; width:100%; padding:13px 12px; margin-bottom:10px; font-size:14px; font-weight:bold; text-align:center; text-decoration:none; border-radius:14px; border:none; cursor:pointer; box-shadow:0 4px 0 rgba(0,0,0,0.15); transition:0.1s; color:white; }
@@ -225,17 +228,17 @@
   <!-- How to Play -->
   <div class="overlay" id="how-overlay" style="display:none" onclick="if(event.target===this)closeHow()">
    <div class="overlay-box">
-    <div class="ov-title">📖 How to Play — Sentence Ninja</div>
-    <p class="ov-intro">Read the Japanese sentence and build the English translation!</p>
-    <div class="ov-item"><div class="ov-item-title">🟢 Easy</div><div class="ov-item-desc">First word placed. Tap remaining word chips in order.</div></div>
-    <div class="ov-item"><div class="ov-item-title">🟡 Normal</div><div class="ov-item-desc">All word chips given. Tap them all in order.</div></div>
-    <div class="ov-item"><div class="ov-item-title">🔴 Hard</div><div class="ov-item-desc">Spell each word letter by letter. First word given.</div></div>
-    <div class="ov-item"><div class="ov-item-title">🟣 Very Hard</div><div class="ov-item-desc">Spell every word from scratch.</div></div>
-    <div class="ov-item"><div class="ov-item-title">🌌 Ninja Sense Mode</div><div class="ov-item-desc">No JP clue, no audio — only alphabetically sorted letters per word! Build the full sentence. Alternative valid answers are also accepted.</div></div>
-    <div class="ov-item"><div class="ov-item-title">⚡ Speedster — 60 sec!</div><div class="ov-item-desc">Very Hard + clock. Score = letters typed correctly (partial progress counted at timeout).</div></div>
-    <div class="ov-item"><div class="ov-item-title">🥷 Ninja Type Blitz</div><div class="ov-item-desc">See the Japanese, type the English. Score = letters typed correctly (partial progress counted at timeout).</div></div>
-    <div class="ov-item"><div class="ov-item-title">🎯 Stages</div><div class="ov-item-desc">Stage 1–4 or Master (all 48 sentences).</div></div>
-    <button class="ov-close" onclick="closeHow()">Got it! Let's play 🎉</button>
+    <div class="ov-title">📖 How to Play — Sentence Ninja <span class="ov-title-jp">（遊び方）</span></div>
+    <p class="ov-intro">Read the Japanese sentence and build the English translation!<br><span class="ov-intro-jp">日本語の文を読んで、英語に並び替えよう！</span></p>
+    <div class="ov-item"><div class="ov-item-title">🟢 Easy</div><div class="ov-item-desc">First word placed. Tap remaining word chips in order.<br><span class="ov-desc-jp">最初の単語はすでに置いてあります。残りの単語を正しい順番にタップしよう。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🟡 Normal</div><div class="ov-item-desc">All word chips given. Tap them all in order.<br><span class="ov-desc-jp">すべての単語が表示されます。正しい順番にすべてタップしよう。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🔴 Hard</div><div class="ov-item-desc">Spell each word letter by letter. First word given.<br><span class="ov-desc-jp">各単語をアルファベット1文字ずつ入力しよう。最初の単語は表示されています。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🟣 Very Hard</div><div class="ov-item-desc">Spell every word from scratch.<br><span class="ov-desc-jp">すべての単語を最初から自分でつづろう。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🌌 Ninja Sense Mode</div><div class="ov-item-desc">No JP clue, no audio — only alphabetically sorted letters per word! Build the full sentence. Alternative valid answers are also accepted.<br><span class="ov-desc-jp">日本語ヒントも音声もなし！各単語のバラバラになったアルファベットだけを手がかりに、文全体を組み立てよう。別の正しい表現も正解として認められます。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">⚡ Speedster — 60 sec!</div><div class="ov-item-desc">Very Hard + clock. Score = letters typed correctly (partial progress counted at timeout).<br><span class="ov-desc-jp">Very Hardに60秒の制限時間が加わります。正しく入力した文字数がスコアになります（時間切れ時の途中入力もカウントされます）。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🥷 Ninja Type Blitz</div><div class="ov-item-desc">See the Japanese, type the English. Score = letters typed correctly (partial progress counted at timeout).<br><span class="ov-desc-jp">日本語文を見ながら、英語をタイピングするモードです。正しく入力した文字数がスコアになります（時間切れ時の途中入力もカウントされます）。</span></div></div>
+    <div class="ov-item"><div class="ov-item-title">🎯 Stages（ステージ）</div><div class="ov-item-desc">Stage 1–4 or Master (all 48 sentences).<br><span class="ov-desc-jp">ステージ1〜4、またはマスター（全48文）から選べます。</span></div></div>
+    <button class="ov-close" onclick="closeHow()">Got it! Let's play 🎉<br><span style="font-size:0.8em;">わかった！はじめよう</span></button>
    </div>
   </div>
 
@@ -1259,7 +1262,7 @@ function renderPasswordGate() {
       <button class="util-btn links-btn" onclick="openLinks()" style="width:100%;margin-bottom:8px;">🎮 Other Games</button>
     </div>
   `;
-  document.getElementById('game-area').innerHTML = html + getFooter('生徒限定。パスワードは英検父母の会開催日を４桁の数字にしたものです！');
+  document.getElementById('game-area').innerHTML = html + getFooter('生徒限定。パスワードは英検父母の会開催日の４桁の数字です！');
   setTimeout(() => {
     const inp = document.getElementById('pw-input');
     if (inp) inp.focus();
