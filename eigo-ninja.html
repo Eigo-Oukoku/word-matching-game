@@ -1802,11 +1802,15 @@ function blitzBuildItem(entry) {
       answer      = entry.word;
       modeLabel   = '🔍 Definition → English';
       cardBg      = '#fdf5ff'; cardBorder = '#e1bee7'; break;
-    case 'fill':
-      prompt      = entry.exJP;
-      answer      = blitzGetInflected(entry);
-      modeLabel   = '📝 Fill in the Blank (JP → EN)';
-      cardBg      = '#f0f8ff'; cardBorder = '#bbdefb'; break;
+    case 'fill': {
+      const _inflected = blitzGetInflected(entry);
+      const _esc = entry.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const _blanked = (entry.ex || '').replace(new RegExp('\\b' + _esc + '[a-zA-Z]*\\b', 'i'), '______');
+      prompt    = _blanked + (entry.exJP ? `<div style="font-size:12px;color:#888;font-weight:500;margin-top:8px;">${entry.exJP}</div>` : '');
+      answer    = _inflected;
+      modeLabel = '✏️ Fill in the Blank';
+      cardBg    = '#f0f8ff'; cardBorder = '#bbdefb'; break;
+    }
   }
   return { prompt, answer, modeLabel, cardBg, cardBorder, entry,
            firstLetter: answer[0].toLowerCase() };
@@ -1846,9 +1850,12 @@ function blitzLoadItem() {
       card.style.borderColor  = cardBorder;
       card.className          = 'blitz-card';
     }
+    const isFill = blitz.subMode === 'fill';
+    pc.style.textAlign  = isFill ? 'left'       : 'center';
+    pc.style.alignItems = isFill ? 'flex-start' : 'center';
     pc.innerHTML = `
       <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:6px;">${modeLabel}</div>
-      <div style="font-size:${blitz.subMode === 'fill' ? '14px' : '18px'};font-weight:700;line-height:1.55;color:var(--ink);">${prompt}</div>
+      <div style="font-size:${isFill ? '14px' : '18px'};font-weight:700;line-height:1.55;color:var(--ink);">${prompt}</div>
     `;
   }
 
