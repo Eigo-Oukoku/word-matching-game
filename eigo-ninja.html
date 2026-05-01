@@ -1829,7 +1829,7 @@ function renderResults() {
                 <td class="word-cell">${m.word}${isChallenge && state.mistakes.includes(m) ? ' ❌' : ''}</td>
                 <td>${m.jp}</td>
                 <td>${m.syn}</td>
-                <td>${m.ex}</td>
+                <td>${m.ex}${m.exJP ? `<div style="font-size:11px;color:#888;margin-top:3px;">${m.exJP}</div>` : ''}</td>
                 <td class="def-cell">${m.def}</td>
               </tr>`).join('')}
           </tbody>
