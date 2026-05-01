@@ -167,10 +167,91 @@
     .back-btn { display: inline-flex; align-items: center; gap: 6px; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif; color: #666; cursor: pointer; margin-bottom: 14px; box-shadow: 0 2px 0 var(--border); }
     .back-btn:active { transform: translateY(2px); box-shadow: none; }
     .copy-modal-ta { width: 100%; height: 180px; font-family: monospace; font-size: 11px; border: 2px solid var(--border); border-radius: 10px; padding: 10px; resize: none; margin: 10px 0; }
+
+    /* ── Ninja Type Blitz ────────────────────────────────── */
+    .mb-blitz {
+      background: linear-gradient(135deg,#4C1D95,#7C3AED);
+      box-shadow: 0 5px 0 #5B21B6;
+      position: relative; overflow: hidden;
+    }
+    .mb-blitz::after {
+      content:''; position:absolute; inset:0;
+      background: repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(255,255,255,0.07) 6px,rgba(255,255,255,0.07) 12px);
+      pointer-events:none;
+    }
+    #blitz-panel {
+      width:100%; display:none; flex-direction:column; gap:8px;
+    }
+    .blitz-card {
+      width:100%; background:#f8f8f5; border:2.5px solid var(--border);
+      border-radius:18px; padding:14px 16px; transition:border-color 0.3s, background 0.3s;
+    }
+    .blitz-card.correct-frame { border-color:var(--green); background:#E8FFF2; }
+    .blitz-card.wrong-frame   { border-color:var(--red);   background:#FFF2F2; }
+    .blitz-hint-row {
+      text-align:center; letter-spacing:4px; min-height:36px;
+      display:flex; align-items:center; justify-content:center; gap:3px; flex-wrap:wrap;
+    }
+    .kb-wrap  { width:100%; display:flex; gap:8px; align-items:center; }
+    .kb-input {
+      flex:1; font-size:20px; font-weight:700; color:var(--ink);
+      padding:12px 14px; border:2.5px solid var(--border); border-radius:14px;
+      background:white; outline:none; transition:border-color 0.15s, background 0.15s;
+      font-family:'Nunito', sans-serif;
+    }
+    .kb-input:focus { border-color:#7C3AED; }
+    .kb-input.ok    { border-color:var(--green); background:#F2FFF8; }
+    .kb-input.bad   { border-color:var(--red);   background:#FFF2F2; }
+    .kb-input.done  { border-color:var(--green); background:#E8FFF2; }
+    .kb-btn {
+      padding:12px 16px; background:linear-gradient(135deg,#4C1D95,#7C3AED); color:white;
+      border:none; border-radius:14px; font-size:15px; font-weight:800; cursor:pointer;
+      box-shadow:0 3px 0 #5B21B6; transition:0.1s; font-family:'Nunito', sans-serif;
+    }
+    .kb-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #5B21B6; }
+    .kb-fb   { min-height:22px; text-align:center; font-size:15px; font-weight:800; font-family:'Nunito', sans-serif; }
+    .kb-hint { font-size:11px; color:#adb5bd; text-align:center; }
   </style>
 </head>
 <body>
 <div id="game-root">
+  <!-- ── Persistent Ninja Type Blitz Panel ── -->
+  <div id="blitz-panel">
+    <div class="timer-wrap">
+      <div class="timer-label" id="blitz-timer-label">⏱ 20s</div>
+      <div class="timer-track"><div class="timer-bar green" id="blitz-timer-bar" style="width:100%"></div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+      <button class="menu-btn" onclick="blitzExit()">🏠 Menu</button>
+      <div id="blitz-score-pill" class="progress-pill">⚡ 0 chars</div>
+    </div>
+    <div id="blitz-card" class="blitz-card">
+      <div id="blitz-prompt-card" style="text-align:center;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;"></div>
+    </div>
+    <div style="text-align:center;font-size:12px;font-weight:800;color:#7C3AED;letter-spacing:0.5px;margin-top:2px;">
+      最初の文字から入力してください。
+    </div>
+    <div class="blitz-hint-row" id="blitz-hint-row"></div>
+    <div class="kb-wrap">
+      <input class="kb-input" id="blitz-input"
+        type="text"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        inputmode="text" enterkeyhint="go"
+        oninput="blitzOnInput()"
+        onkeydown="blitzOnKeydown(event)">
+      <button class="kb-btn" onclick="blitzCheckAnswer()">Go ➜</button>
+    </div>
+    <div class="kb-fb" id="blitz-fb"></div>
+    <button id="blitz-pass-btn" onclick="blitzPass()"
+      style="width:100%;padding:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+             background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:12px;
+             cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
+      onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
+      onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
+      わからない / Pass ›
+    </button>
+    <div id="blitz-hearts" style="text-align:center;font-size:22px;margin-top:2px;"></div>
+  </div>
   <div id="game-area"></div>
 </div>
 
@@ -208,6 +289,10 @@
     <div class="how-item">
       <div class="how-item-title">🏆 5. 100問チャレンジ</div>
       <div class="how-item-desc">使いたいモードを自由に選んでMIX！１００問に挑戦！</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">⚡ 6. Ninja Type Blitz（タイピングバトル）</div>
+      <div class="how-item-desc">40秒で何文字タイプできるかに挑戦！最初の文字はヒントとして表示されます。3種のモードから選ぼう：①日本語→英語 ②定義→英語 ③日本語文→空所の単語。スペルを正確に！<br>Challenge: how many characters in 40 sec? First letter given as a hint. 3 sub-modes to choose from!</div>
     </div>
     <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！</p>
     <button class="modal-close" onclick="toggleModal(false)">わかった！ Let's go! 🥷</button>
@@ -1385,6 +1470,13 @@ function renderModeSelect() {
             <span class="mode-desc">モードを選んでMIX！１００問に挑戦！</span>
           </span>
         </button>
+        <button class="mode-btn mb-blitz" onclick="renderBlitzModeSelect()">
+          <span class="mode-icon">⚡</span>
+          <span class="mode-text">
+            <span class="mode-name">Ninja Type Blitz</span>
+            <span class="mode-desc">40秒タイピングバトル · First letter hint付き！</span>
+          </span>
+        </button>
       </div>
     </div>
   `;
@@ -1668,6 +1760,421 @@ function renderResults() {
       }
       <button class="action-btn ab-primary" onclick="renderModeSelect()">🎯 Change Mode</button>
       <button class="action-btn ab-menu" onclick="renderHome()">🏠 Top Menu</button>
+    </div>
+  `;
+}
+
+// ─── NINJA TYPE BLITZ ────────────────────────────────────────────────────────
+const BLITZ_SECONDS  = 40;
+const BLITZ_MAX_LIVES = 3;
+
+let blitz = {
+  subMode:     '',   // 'vocab' | 'def' | 'fill'
+  timeLeft:    BLITZ_SECONDS,
+  interval:    null,
+  charScore:   0,
+  wordCount:   0,
+  lives:       BLITZ_MAX_LIVES,
+  currentItem: null,
+  queue:       [],
+  mistakes:    [],
+  locked:      false,
+};
+
+// Extract the inflected form that appears in the example sentence
+function blitzGetInflected(entry) {
+  const esc = entry.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m   = (entry.ex || '').match(new RegExp('\\b' + esc + '[a-zA-Z]*\\b', 'i'));
+  return m ? m[0] : entry.word;
+}
+
+// Build a prompt/answer item from a word entry based on current sub-mode
+function blitzBuildItem(entry) {
+  let prompt, answer, modeLabel, cardBg, cardBorder;
+  switch (blitz.subMode) {
+    case 'vocab':
+      prompt      = entry.jp;
+      answer      = entry.word;
+      modeLabel   = '🇯🇵 Japanese → English';
+      cardBg      = '#f1fff5'; cardBorder = '#c8e6c9'; break;
+    case 'def':
+      prompt      = entry.def;
+      answer      = entry.word;
+      modeLabel   = '🔍 Definition → English';
+      cardBg      = '#fdf5ff'; cardBorder = '#e1bee7'; break;
+    case 'fill':
+      prompt      = entry.exJP;
+      answer      = blitzGetInflected(entry);
+      modeLabel   = '📝 Fill in the Blank (JP → EN)';
+      cardBg      = '#f0f8ff'; cardBorder = '#bbdefb'; break;
+  }
+  return { prompt, answer, modeLabel, cardBg, cardBorder, entry,
+           firstLetter: answer[0].toLowerCase() };
+}
+
+// Render the first-letter + dashes hint row
+function blitzRenderHint(answer) {
+  const hintEl = document.getElementById('blitz-hint-row');
+  if (!hintEl) return;
+  let html = `<span style="color:#7C3AED;font-weight:900;font-size:28px;line-height:1;">${answer[0].toLowerCase()}</span>`;
+  for (let i = 1; i < answer.length; i++) {
+    const c = answer[i];
+    if (/[a-zA-Z]/.test(c)) {
+      html += `<span style="display:inline-block;width:13px;height:3px;background:#c8c8c8;border-radius:2px;vertical-align:middle;"></span>`;
+    } else {
+      html += `<span style="font-size:16px;color:#bbb;font-weight:700;margin:0 2px;">${c}</span>`;
+    }
+  }
+  hintEl.innerHTML = html;
+}
+
+// Load the next word into the persistent blitz panel
+function blitzLoadItem() {
+  if (!blitz.queue.length) blitz.queue = shuffle(wordStock[state.level] || []);
+  const entry = blitz.queue.shift();
+  blitz.currentItem = blitzBuildItem(entry);
+  blitz.locked = false;
+
+  const { prompt, answer, modeLabel, cardBg, cardBorder } = blitz.currentItem;
+
+  // Update prompt card
+  const pc = document.getElementById('blitz-prompt-card');
+  if (pc) {
+    const card = document.getElementById('blitz-card');
+    if (card) {
+      card.style.background   = cardBg;
+      card.style.borderColor  = cardBorder;
+      card.className          = 'blitz-card';
+    }
+    pc.innerHTML = `
+      <div style="font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999;margin-bottom:6px;">${modeLabel}</div>
+      <div style="font-size:${blitz.subMode === 'fill' ? '14px' : '18px'};font-weight:700;line-height:1.55;color:var(--ink);">${prompt}</div>
+    `;
+  }
+
+  blitzRenderHint(answer);
+
+  // Reset input — pre-fill with first letter, cursor after it
+  const inp = document.getElementById('blitz-input');
+  const fb  = document.getElementById('blitz-fb');
+  if (inp) {
+    inp.value     = '';
+    inp.className = 'kb-input';
+    inp.disabled  = false;
+    setTimeout(() => inp.focus(), 40);
+  }
+  if (fb) fb.innerHTML = '';
+
+  // Refresh score pill and hearts
+  const pill   = document.getElementById('blitz-score-pill');
+  const hearts = document.getElementById('blitz-hearts');
+  if (pill)   pill.textContent  = `⚡ ${blitz.charScore} chars`;
+  if (hearts) hearts.innerHTML  = blitzHeartsHTML();
+}
+
+function blitzHeartsHTML() {
+  let h = '';
+  for (let i = 0; i < BLITZ_MAX_LIVES; i++) h += i < blitz.lives ? '❤️' : '🖤';
+  return h;
+}
+
+function blitzUpdateTimer() {
+  const bar   = document.getElementById('blitz-timer-bar');
+  const label = document.getElementById('blitz-timer-label');
+  if (!bar || !label) return;
+  const pct = Math.max(0, (blitz.timeLeft / BLITZ_SECONDS) * 100);
+  bar.style.width  = pct + '%';
+  label.textContent = `⏱ ${blitz.timeLeft}s`;
+  bar.className    = 'timer-bar ' + (pct > 50 ? 'green' : pct > 25 ? 'yellow' : 'red');
+}
+
+function blitzStartTimer() {
+  if (blitz.interval) clearInterval(blitz.interval);
+  blitz.interval = setInterval(() => {
+    blitz.timeLeft--;
+    blitzUpdateTimer();
+    if (blitz.timeLeft <= 0) {
+      clearInterval(blitz.interval); blitz.interval = null;
+      // Award partial credit for letters correctly typed so far
+      const inp = document.getElementById('blitz-input');
+      if (inp && inp.value.length > 0) {
+        const typed    = inp.value.toLowerCase();
+        const expected = blitz.currentItem.answer.toLowerCase();
+        let partial = 0;
+        for (let i = 0; i < Math.min(typed.length, expected.length); i++) {
+          if (typed[i] === expected[i]) partial++; else break;
+        }
+        blitz.charScore += partial;
+      }
+      renderBlitzEnd();
+    }
+  }, 1000);
+}
+
+function blitzStopTimer() {
+  if (blitz.interval) { clearInterval(blitz.interval); blitz.interval = null; }
+}
+
+// Called on every keystroke in the blitz input
+function blitzOnInput() {
+  if (blitz.locked) return;
+  const inp = document.getElementById('blitz-input');
+  if (!inp || !blitz.currentItem) return;
+  const typed    = inp.value.toLowerCase();
+  const expected = blitz.currentItem.answer.toLowerCase();
+  // Neutral border when empty, green/red once typing starts
+  if (!typed) { inp.className = 'kb-input'; return; }
+  inp.className = 'kb-input ' + (expected.startsWith(typed) ? 'ok' : 'bad');
+}
+
+// Enter to submit
+function blitzOnKeydown(e) {
+  if (e.key === 'Enter') { e.preventDefault(); blitzCheckAnswer(); }
+}
+
+// Check the typed answer
+function blitzCheckAnswer() {
+  if (blitz.locked) return;
+  const inp = document.getElementById('blitz-input');
+  const fb  = document.getElementById('blitz-fb');
+  if (!inp || !fb || !blitz.currentItem) return;
+  const typed    = inp.value.toLowerCase().trim();
+  const expected = blitz.currentItem.answer.toLowerCase();
+  if (!typed) return;  // nothing typed yet
+
+  const card = document.getElementById('blitz-card');
+
+  if (typed === expected) {
+    const charCount = expected.length;
+    blitz.charScore += charCount;
+    blitz.wordCount++;
+    blitz.locked = true;
+    playCorrect();
+    inp.className = 'kb-input done';
+    if (card) card.classList.add('correct-frame');
+    fb.innerHTML = `<span style="color:var(--green);font-weight:900;">✅ +${charCount} chars!</span>`;
+    const pill = document.getElementById('blitz-score-pill');
+    if (pill) pill.textContent = `⚡ ${blitz.charScore} chars`;
+    setTimeout(() => blitzLoadItem(), 600);
+  } else {
+    playWrong();
+    inp.className = 'kb-input bad';
+    if (card) {
+      card.classList.add('wrong-frame');
+      setTimeout(() => { if (card) { card.className = 'blitz-card'; card.style.background = blitz.currentItem.cardBg; card.style.borderColor = blitz.currentItem.cardBorder; } }, 900);
+    }
+    fb.innerHTML = `<span style="color:var(--red);font-weight:900;">❌ ${blitz.currentItem.answer}</span>`;
+    // Record mistake (once per unique word)
+    if (!blitz.mistakes.find(m => m.word === blitz.currentItem.entry.word)) {
+      blitz.mistakes.push(blitz.currentItem.entry);
+    }
+    blitz.lives--;
+    const hearts = document.getElementById('blitz-hearts');
+    if (hearts) hearts.innerHTML = blitzHeartsHTML();
+    if (blitz.lives <= 0) {
+      blitz.locked = true;
+      blitzStopTimer();
+      setTimeout(() => renderBlitzEnd(), 1200);
+    } else {
+      blitz.locked = true;
+      setTimeout(() => blitzLoadItem(), 1400);
+    }
+  }
+}
+
+function showBlitzPanel() {
+  document.getElementById('blitz-panel').style.display = 'flex';
+  document.getElementById('game-area').style.display   = 'none';
+}
+function hideBlitzPanel() {
+  document.getElementById('blitz-panel').style.display = 'none';
+  document.getElementById('game-area').style.display   = '';
+}
+
+function blitzExportCSV() {
+  if (!blitz.mistakes.length) return;
+  const header = ['word', '意味 (jp)', 'synonym', 'example', 'definition', 'result'];
+  const rows = blitz.mistakes.map(m =>
+    [m.word, m.jp, m.syn, `"${m.ex}"`, `"${m.def}"`, m._passed ? 'passed' : 'wrong'].join(',')
+  );
+  const csv  = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `BlitzReview_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('⬇ CSVをダウンロードしました！');
+}
+
+async function blitzCopyToClipboard() {
+  if (!blitz.mistakes.length) return;
+  const subLabels = { vocab: 'Japanese → English', def: 'Definition → English', fill: 'Fill in the Blank' };
+  const lines = [`⚡ Ninja Type Blitz Review — ${subLabels[blitz.subMode]} (Grade ${state.level})`, ''];
+  blitz.mistakes.forEach((m, i) => {
+    const tag = m._passed ? '⏭ Passed' : '❌ Wrong';
+    lines.push(`${i + 1}. ${m.word}　${m.jp}　[${tag}]`);
+    lines.push(`   synonym: ${m.syn}`);
+    lines.push(`   ex: ${m.ex}`);
+    lines.push(`   def: ${m.def}`);
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('📋 コピーしました！'); return;
+    } catch(e) {}
+  }
+  // Fallback modal
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title" style="font-size:18px;">📋 Copy &amp; Paste</div>
+      <textarea class="copy-modal-ta" id="blitz-copy-ta">${text}</textarea>
+      <button class="modal-close" onclick="this.closest('.overlay').remove()">閉じる</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => { const ta = document.getElementById('blitz-copy-ta'); if(ta){ta.focus();ta.select();} }, 80);
+}
+
+function blitzPass() {
+  if (blitz.locked) return;
+  blitz.locked = true;
+  const fb = document.getElementById('blitz-fb');
+  if (fb) fb.innerHTML = `<span style="color:#888;font-weight:900;">⏭ ${blitz.currentItem.answer}</span>`;
+  // Record as a word to review (marked as passed)
+  if (!blitz.mistakes.find(m => m.word === blitz.currentItem.entry.word)) {
+    const entry = { ...blitz.currentItem.entry, _passed: true };
+    blitz.mistakes.push(entry);
+  }
+  setTimeout(() => blitzLoadItem(), 900);
+}
+
+function blitzExit() {
+  blitzStopTimer();
+  hideBlitzPanel();
+  renderModeSelect();
+}
+
+// Start a blitz session with the chosen sub-mode
+function startBlitz(subMode) {
+  blitz.subMode   = subMode;
+  blitz.timeLeft  = BLITZ_SECONDS;
+  blitz.charScore = 0;
+  blitz.wordCount = 0;
+  blitz.lives     = BLITZ_MAX_LIVES;
+  blitz.mistakes  = [];
+  blitz.locked    = false;
+  blitz.queue     = shuffle(wordStock[state.level] || []);
+
+  showBlitzPanel();
+  blitzUpdateTimer();
+  blitzLoadItem();
+  blitzStartTimer();
+}
+
+// Sub-mode selection screen
+function renderBlitzModeSelect() {
+  const gl = gradeLabels[state.level];
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <button class="back-btn" onclick="renderModeSelect()">← Back</button>
+      <div class="home-header" style="padding-top:0;">
+        <div class="brand-label">${gl.name} &mdash; Ninja Type Blitz</div>
+        <div class="game-title" style="font-size:40px;">⚡ <span>Type</span> Blitz</div>
+      </div>
+      <p style="text-align:center;font-size:13px;color:#888;font-weight:700;margin-bottom:16px;">
+        40秒で何文字打てるか挑戦！ · First letter is always given as a hint.<br>
+        Score = total characters typed correctly.
+      </p>
+      <div class="mode-grid">
+        <button class="mode-btn" style="background:var(--ink);box-shadow:0 5px 0 #0a0a1a;" onclick="startBlitz('vocab')">
+          <span class="mode-icon">🇯🇵</span>
+          <span class="mode-text">
+            <span class="mode-name">Japanese → English</span>
+            <span class="mode-desc">日本語の意味を見て英単語を入力しよう！</span>
+          </span>
+        </button>
+        <button class="mode-btn" style="background:var(--purple);box-shadow:0 5px 0 #5a2880;" onclick="startBlitz('def')">
+          <span class="mode-icon">🔍</span>
+          <span class="mode-text">
+            <span class="mode-name">Definition → English</span>
+            <span class="mode-desc">英語の定義を読んで単語を入力しよう！</span>
+          </span>
+        </button>
+        <button class="mode-btn" style="background:var(--blue);box-shadow:0 5px 0 #2060b0;" onclick="startBlitz('fill')">
+          <span class="mode-icon">📝</span>
+          <span class="mode-text">
+            <span class="mode-name">Fill in the Blank</span>
+            <span class="mode-desc">日本語訳を読んで空所の単語を入力しよう！</span>
+          </span>
+        </button>
+      </div>
+      <div class="footer-strip">ELKえいご王国</div>
+    </div>
+  `;
+}
+
+// Results screen after blitz ends
+function renderBlitzEnd() {
+  blitzStopTimer();
+  hideBlitzPanel();
+  const n = blitz.charScore;
+  const w = blitz.wordCount;
+  const emoji = n >= 80 ? '🏆' : n >= 50 ? '🥇' : n >= 25 ? '🥈' : '🥷';
+  const msg   = n >= 80 ? 'Blitz Master! 🎊' : n >= 50 ? 'Spelling Star! ⭐' : n >= 25 ? 'Nice typing! 💪' : 'Keep training! 🔥';
+  const subLabels = {
+    vocab: 'Japanese → English',
+    def:   'Definition → English',
+    fill:  'Fill in the Blank'
+  };
+
+  const wrong  = blitz.mistakes.filter(m => !m._passed);
+  const passed = blitz.mistakes.filter(m =>  m._passed);
+
+  let reviewHTML = '';
+  if (blitz.mistakes.length > 0) {
+    const makeCard = (m, icon, bg, border) => `
+      <div style="background:${bg};border:1.5px solid ${border};border-radius:12px;padding:10px 14px;margin-bottom:7px;">
+        <div style="font-size:11px;font-weight:800;color:${border};letter-spacing:1px;margin-bottom:3px;">${icon}</div>
+        <div style="font-size:17px;font-weight:900;color:var(--ink);">${m.word}</div>
+        <div style="font-size:12px;color:#555;margin-top:2px;">${m.jp}</div>
+        <div style="font-size:11px;color:#888;font-style:italic;margin-top:2px;">${m.def}</div>
+      </div>`;
+
+    reviewHTML = `<div style="margin-top:16px;text-align:left;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:800;color:#555;letter-spacing:1.5px;text-transform:uppercase;">
+          📋 Words to Review (${blitz.mistakes.length})
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="export-btn eb-csv"  onclick="blitzExportCSV()">⬇ CSV</button>
+          <button class="export-btn eb-copy" onclick="blitzCopyToClipboard()">📋 Copy</button>
+        </div>
+      </div>
+      ${wrong.length  ? `<div style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin-bottom:5px;">❌ WRONG (${wrong.length})</div>`  : ''}
+      ${wrong.map(m  => makeCard(m, '❌ Incorrect', '#fff5f5', '#F4A9A8')).join('')}
+      ${passed.length ? `<div style="font-size:11px;font-weight:800;color:#888;letter-spacing:1px;margin:8px 0 5px;">⏭ PASSED (${passed.length})</div>` : ''}
+      ${passed.map(m => makeCard(m, '⏭ Passed', '#f8f8f8', '#c8c8c8')).join('')}
+    </div>`;
+  }
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="result-screen">
+      <div class="result-medal">${emoji}</div>
+      <div class="result-title">Time's Up!</div>
+      <p style="font-size:12px;color:#aaa;font-weight:700;margin:4px 0 2px;">⚡ Ninja Type Blitz · ${subLabels[blitz.subMode]}</p>
+      <div class="result-score" style="color:#7C3AED;">${n}</div>
+      <div class="result-sub">${n === 1 ? 'character' : 'characters'} typed correctly &nbsp;·&nbsp; ${w} ${w === 1 ? 'word' : 'words'} answered</div>
+      <p style="font-size:18px;font-weight:800;color:#555;margin:12px 0 18px;">${msg}</p>
+      ${reviewHTML}
+      <button class="action-btn" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);box-shadow:0 5px 0 #5B21B6;margin-top:${blitz.mistakes.length ? '14px' : '0'};" onclick="startBlitz('${blitz.subMode}')">⚡ Blitz Again!</button>
+      <button class="action-btn ab-primary" onclick="renderBlitzModeSelect()">🎯 Try Another Sub-mode</button>
+      <button class="action-btn ab-menu" onclick="renderModeSelect()">← Mode Select</button>
     </div>
   `;
 }

@@ -155,6 +155,10 @@
   .kb-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #5B21B6; }
   .kb-fb   { min-height:24px; text-align:center; font-size:15px; font-weight:bold; }
   .kb-hint { font-size:11px; color:#adb5bd; text-align:center; }
+  .blitz-hint-row {
+    text-align:center; letter-spacing:4px; min-height:36px;
+    display:flex; align-items:center; justify-content:center; gap:3px; flex-wrap:wrap;
+  }
 
   /* Footer */
   .footer-area { margin-top:auto; padding-top:16px; text-align:center; width:100%; display:flex; flex-direction:column; align-items:center; }
@@ -216,6 +220,10 @@
        </div>
        <div class="target-word-display" id="blitz-word-display">???</div>
      </div>
+     <div style="text-align:center;font-size:12px;font-weight:800;color:#7C3AED;letter-spacing:0.5px;margin-top:2px;">
+       最初の文字から入力してください。
+     </div>
+     <div class="blitz-hint-row" id="blitz-hint-row"></div>
      <div class="kb-wrap">
        <input class="kb-input" id="kb-input"
          type="text"
@@ -228,7 +236,14 @@
        <button class="kb-btn" onclick="checkKeyboard()">Go ➜</button>
      </div>
      <div class="kb-fb" id="kb-fb"></div>
-     <div class="kb-hint">Type &amp; press Enter — border turns 🟢 green while on track</div>
+     <button id="blitz-pass-btn" onclick="passBlitz()"
+       style="width:100%;padding:9px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:bold;
+              background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:10px;
+              cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
+       onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
+       onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
+       わからない / Pass ›
+     </button>
      <div id="blitz-hearts" style="text-align:center;font-size:22px;margin-top:2px"></div>
    </div>
 
@@ -388,6 +403,19 @@ const ALL_WORDS = [
   "slide","swing","seesaw","jungle gym","television","telephone","camera","one","two","three","four","five","six","seven","eight","nine","ten","pants","skirt","sweater","T-shirt","handkerchief","cap","toothbrush","soap","towel","hairbrush","mirror","knife","fork","chopsticks","cup","glass","plate","dish","bowl","car","bus","motorcycle","bicycle","tricycle","train","airplane","helicopter"
 ];
 
+// ── Alternative accepted answers for Ninja Type Blitz ──
+// Key = canonical word in ALL_WORDS; values = also accepted alternatives.
+const BLITZ_ALTERNATIVES = {
+  "bicycle":    ["bike", "cycle"],
+  "motorcycle": ["motorbike"],
+  "airplane":   ["aeroplane", "plane"],
+  "television": ["tv", "telly"],
+  "telephone":  ["phone"],
+  "tricycle":   ["trike"],
+  "noodles":    ["pasta"],
+  "T-shirt":    ["tee-shirt", "tee shirt"],
+};
+
 // ── Static alternative answers for Ninja Sense Mode ──
 // Each key is a reference word (lowercase); values are valid anagram alternatives.
 const WORD_SENSE_ALTERNATIVES = {
@@ -502,7 +530,8 @@ let state = {
   blitzTimeLeft:BLITZ_SECONDS, blitzInterval:null,
   senseAltAccepted:false, senseAltWord:'',
   placedHistory:[],  // tracks {inputIdx, shuffleIdx, letter} for delete support
-  mistakes:[]        // words answered incorrectly
+  mistakes:[],       // words answered incorrectly
+  blitzReview:[],    // {word, passed} for blitz results
 };
 
 function playSfx(f){ if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
@@ -598,6 +627,8 @@ function showBlitzPanel(){
 function hideBlitzPanel(){
   document.getElementById('blitz-panel').classList.remove('active');
   document.getElementById('game-area').style.display='';
+  const hintEl=document.getElementById('blitz-hint-row');
+  if(hintEl) hintEl.innerHTML='';
 }
 
 function blitzUpdateCard(){
@@ -652,6 +683,21 @@ function stopBlitzTimer(){
   if(state.blitzInterval){ clearInterval(state.blitzInterval); state.blitzInterval=null; }
 }
 
+function blitzRenderHint(word){
+  const hintEl = document.getElementById('blitz-hint-row');
+  if(!hintEl || !word) return;
+  let html = `<span style="color:#7C3AED;font-weight:900;font-size:28px;line-height:1;">${word[0].toLowerCase()}</span>`;
+  for(let i=1; i<word.length; i++){
+    const c = word[i];
+    if(/[a-zA-Z]/.test(c)){
+      html += `<span style="display:inline-block;width:13px;height:3px;background:#c8c8c8;border-radius:2px;vertical-align:middle;"></span>`;
+    } else {
+      html += `<span style="font-size:16px;color:#bbb;font-weight:700;margin:0 2px;">${c}</span>`;
+    }
+  }
+  hintEl.innerHTML = html;
+}
+
 function blitzLoadNextWord(){
   if(state.round >= state.words.length){
     state.words=[...state.words,...shuffle(ALL_WORDS).slice(0,10)];
@@ -660,11 +706,70 @@ function blitzLoadNextWord(){
   state.kbLocked = false;
   blitzUpdateCard();
   speak(state.currentWord);
+  blitzRenderHint(state.currentWord);
 
   const inp = document.getElementById('kb-input');
   const fb  = document.getElementById('kb-fb');
-  if(inp){ inp.value=''; inp.className='kb-input'; }
+  if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
   if(fb)  fb.innerHTML='';
+}
+
+function passBlitz(){
+  if(state.kbLocked) return;
+  state.kbLocked=true;
+  const fb=document.getElementById('kb-fb');
+  if(fb) fb.innerHTML=`<span style="color:#888;font-weight:bold;">⏭ ${state.currentWord}</span>`;
+  if(!state.blitzReview.find(r=>r.word===state.currentWord)){
+    state.blitzReview.push({word:state.currentWord, passed:true});
+  }
+  state.round++;
+  setTimeout(()=>blitzLoadNextWord(), 900);
+}
+
+function snBlitzExportCSV(){
+  if(!state.blitzReview.length) return;
+  const header=['word','hint','result'];
+  const rows=state.blitzReview.map(r=>{
+    const hint=WORD_HINTS[r.word.toLowerCase()]||WORD_HINTS[r.word]||'';
+    return [r.word,`"${hint}"`,r.passed?'passed':'wrong'].join(',');
+  });
+  const csv=[header.join(','),...rows].join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`BlitzReview_SpellingNinja_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+async function snBlitzCopy(){
+  if(!state.blitzReview.length) return;
+  const lines=['🥷 Ninja Type Blitz — Spelling Ninja Review',''];
+  state.blitzReview.forEach((r,i)=>{
+    const tag=r.passed?'⏭ Passed':'❌ Wrong';
+    const hint=WORD_HINTS[r.word.toLowerCase()]||WORD_HINTS[r.word]||'';
+    lines.push(`${i+1}. ${r.word}  [${tag}]`);
+    const alts=(BLITZ_ALTERNATIVES[r.word.toLowerCase()]||[]);
+    if(alts.length) lines.push(`   also accepted: ${alts.join(', ')}`);
+    if(hint) lines.push(`   hint: ${hint}`);
+    lines.push('');
+  });
+  const text=lines.join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(text); snBlitzToast('📋 Copied!'); return; }catch(e){}
+  }
+  // Fallback
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); snBlitzToast('📋 Copied!'); }catch(e){ snBlitzToast('⚠️ Copy failed'); }
+  document.body.removeChild(ta);
+}
+
+function snBlitzToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#2b2d42;color:white;border-radius:999px;padding:10px 22px;font-size:13px;font-weight:bold;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2200);
 }
 
 function blitzExit(){
@@ -697,8 +802,13 @@ function checkKeyboard(){
 
   const card = document.getElementById('blitz-word-card');
 
-  if(typed===expected){
-    const charCount=state.currentWord.length;
+  // Check exact match OR accepted alternative
+  const altMatch = (BLITZ_ALTERNATIVES[state.currentWord.toLowerCase()]||[])
+                   .find(a=>a.toLowerCase()===typed);
+  const isCorrect = typed===expected || !!altMatch;
+
+  if(isCorrect){
+    const charCount = typed.length;
     state.letterScore+=charCount;
     state.score++;
     state.kbLocked=true;
@@ -707,7 +817,11 @@ function checkKeyboard(){
     if(card) card.className='correct-frame';
     const disp=document.getElementById('blitz-word-display');
     if(disp) disp.textContent=state.currentWord;
-    fb.innerHTML=`<span style="color:#2DD368">✅ +${charCount} character${charCount!==1?'s':''}!</span>`;
+    if(altMatch){
+      fb.innerHTML=`<span style="color:#2DD368">✅ "${altMatch}" accepted! (= ${state.currentWord}) +${charCount} char${charCount!==1?'s':''}!</span>`;
+    } else {
+      fb.innerHTML=`<span style="color:#2DD368">✅ +${charCount} character${charCount!==1?'s':''}!</span>`;
+    }
     const pill=document.getElementById('blitz-score-pill');
     if(pill) pill.textContent=`🥷 ${state.letterScore} chars`;
     state.round++;
@@ -717,6 +831,10 @@ function checkKeyboard(){
     inp.className='kb-input bad';
     if(card){ card.className='wrong-frame'; setTimeout(()=>{ card.className=''; },800); }
     fb.innerHTML=`<span style="color:#E63946">❌ Answer: <em>${state.currentWord}</em></span>`;
+    // Record for review (wrong)
+    if(!state.blitzReview.find(r=>r.word===state.currentWord)){
+      state.blitzReview.push({word:state.currentWord, passed:false});
+    }
     recordMistake(state.currentWord);
     state.lives--;
     const hearts=document.getElementById('blitz-hearts');
@@ -774,7 +892,7 @@ function initGame(mode){
   state.score=0; state.round=0; state.lives=MAX_LIVES;
   state.letterScore=0; state.kbLocked=false;
   state.senseAltAccepted=false; state.senseAltWord='';
-  state.placedHistory=[]; state.mistakes=[];
+  state.placedHistory=[]; state.mistakes=[]; state.blitzReview=[];
   state.words=shuffle(ALL_WORDS).slice(0,10);
 
   if(mode==='speedster'){
@@ -1083,6 +1201,38 @@ function renderBlitzEnd(){
   const w=state.score;
   const emoji=n>=40?'🏆':n>=30?'🥇':n>=20?'🥈':'🥷';
   const msg=n>=40?'Blitz Master!':n>=30?'Spelling Star!':n>=15?'Nice typing!':'Keep going!';
+
+  const wrong  = state.blitzReview.filter(r=>!r.passed);
+  const passed = state.blitzReview.filter(r=> r.passed);
+
+  const makeCard=(r,icon,bg,border)=>{
+    const hint=WORD_HINTS[r.word.toLowerCase()]||WORD_HINTS[r.word]||'';
+    const alts=(BLITZ_ALTERNATIVES[r.word.toLowerCase()]||[]);
+    return `<div class="sn-mistake-item" style="background:${bg};border-color:${border};">
+      <span class="sn-mistake-word">${icon} ${r.word}</span>
+      ${alts.length?`<span class="sn-mistake-hint" style="color:#7C3AED;font-weight:bold;">also accepted: ${alts.join(' / ')}</span>`:''}
+      ${hint?`<span class="sn-mistake-hint">${hint}</span>`:''}
+    </div>`;
+  };
+
+  let reviewHTML='';
+  if(state.blitzReview.length){
+    reviewHTML=`
+      <div class="sn-mistake-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div class="sn-mistake-header" style="margin:0;">📋 Words to Review (${state.blitzReview.length})</div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="snBlitzExportCSV()" style="background:#2DD368;color:white;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:bold;cursor:pointer;box-shadow:0 2px 0 #1a9647;">⬇ CSV</button>
+            <button onclick="snBlitzCopy()" style="background:#6A5ACD;color:white;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:bold;cursor:pointer;box-shadow:0 2px 0 #4a3aad;">📋 Copy</button>
+          </div>
+        </div>
+        ${wrong.length?`<div class="sn-mistake-header" style="color:#E63946;margin-bottom:6px;">❌ Wrong (${wrong.length})</div>`:''}
+        ${wrong.map(r=>makeCard(r,'❌','#FFF5F5','#F4A9A8')).join('')}
+        ${passed.length?`<div class="sn-mistake-header" style="color:#888;margin:8px 0 6px;">⏭ Passed (${passed.length})</div>`:''}
+        ${passed.map(r=>makeCard(r,'⏭','#f8f8f8','#dee2e6')).join('')}
+      </div>`;
+  }
+
   document.getElementById('game-area').innerHTML=`
     <div class="start-screen">
       <div style="font-size:70px">${emoji}</div>
@@ -1096,7 +1246,7 @@ function renderBlitzEnd(){
         <button class="level-btn btn-blitz" style="width:auto;padding:12px 28px" onclick="initGame('keyboard')">Blitz Again 🥷</button>
         <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
       </div>
-      ${getSpellingMistakesHTML()}
+      ${reviewHTML}
     </div>
     ${getFooterHTML(msg)}`;
 }
