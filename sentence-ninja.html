@@ -1259,7 +1259,7 @@ function renderPasswordGate() {
       <button class="util-btn links-btn" onclick="openLinks()" style="width:100%;margin-bottom:8px;">🎮 Other Games</button>
     </div>
   `;
-  document.getElementById('game-area').innerHTML = html + getFooter('生徒限定。パスワードは英検父母の会開催日の４桁の数字です！');
+  document.getElementById('game-area').innerHTML = html + getFooter('生徒限定。パスワードは英検父母の会開催日を４桁の数字にしたものです！');
   setTimeout(() => {
     const inp = document.getElementById('pw-input');
     if (inp) inp.focus();
