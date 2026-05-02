@@ -7,6 +7,11 @@
   <title>Eigo-Ninja - ELKえいご王国</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <!-- QR code feature removed per user request — script no longer loaded.
+       Helper functions (ninjaQRImg, ninjaRenderLocalQR, etc.) remain
+       defined in the script below but are no longer invoked, so they
+       can be revived later without re-wiring everything. -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script> -->
   <style>
     :root {
       --ink: #1a1a2e;
@@ -43,16 +48,16 @@
     .screen { animation: fadeUp 0.3s ease; width: 100%; }
 
     .home-header { text-align: center; padding: 18px 0 20px; }
-    .brand-label { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: #6A5ACD; margin-bottom: 4px; }
+    .brand-label { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: #6A5ACD; margin-bottom: 4px; }
     .game-title { font-family: 'Bangers', cursive; font-size: 64px; letter-spacing: 3px; line-height: 1; color: var(--ink); text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
     .game-title span { color: var(--red); }
     .ninja-mascot { font-size: 48px; display: block; margin: 6px auto; animation: bob 2.5s ease-in-out infinite; }
 
-    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #999; text-align: center; margin: 18px 0 10px; }
+    .section-label { font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #999; text-align: center; margin: 18px 0 10px; }
     .level-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
-    .level-btn { border: none; border-radius: 18px; padding: 18px 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900; color: white; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.1s; }
+    .level-btn { border: none; border-radius: 18px; padding: 18px 8px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; color: white; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 5px 0 rgba(0,0,0,0.2); transition: 0.1s; }
     .level-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
-    .level-btn .sub { font-size: 10px; font-weight: 600; opacity: 0.85; line-height: 1.3; text-align: center; }
+    .level-btn .sub { font-size: 12px; font-weight: 600; opacity: 0.85; line-height: 1.3; text-align: center; }
     /* Updated grade colors */
     .lb-4  { background: var(--grade4);  box-shadow: 0 5px 0 var(--grade4-shadow); }
     .lb-3  { background: var(--grade3);  box-shadow: 0 5px 0 var(--grade3-shadow); }
@@ -60,16 +65,16 @@
     .lb-2  { background: var(--grade2);  box-shadow: 0 5px 0 var(--grade2-shadow); }
 
     .util-row { display: flex; gap: 10px; width: 100%; margin-top: 12px; }
-    .util-btn { flex: 1; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 12px; padding: 11px 6px; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 var(--border); transition: 0.1s; text-align: center; }
+    .util-btn { flex: 1; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 12px; padding: 11px 6px; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 var(--border); transition: 0.1s; text-align: center; }
     .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
 
     .mode-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-    .mode-btn { border: none; border-radius: 16px; padding: 20px 18px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900; color: white; text-align: left; display: flex; align-items: center; gap: 14px; box-shadow: 0 5px 0 rgba(0,0,0,0.18); transition: 0.1s; width: 100%; }
+    .mode-btn { border: none; border-radius: 16px; padding: 20px 18px; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 900; color: white; text-align: left; display: flex; align-items: center; gap: 14px; box-shadow: 0 5px 0 rgba(0,0,0,0.18); transition: 0.1s; width: 100%; }
     .mode-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
     .mode-btn .mode-icon { font-size: 28px; flex-shrink: 0; }
     .mode-btn .mode-text { display: flex; flex-direction: column; gap: 2px; }
-    .mode-btn .mode-name { font-size: 17px; }
-    .mode-btn .mode-desc { font-size: 11px; font-weight: 600; opacity: 0.85; }
+    .mode-btn .mode-name { font-size: 18px; }
+    .mode-btn .mode-desc { font-size: 13px; font-weight: 600; opacity: 0.85; }
     .mb-vocab     { background: var(--ink);    box-shadow: 0 5px 0 #0a0a1a; }
     .mb-fill      { background: var(--blue);   box-shadow: 0 5px 0 #2060b0; }
     .mb-syn       { background: var(--yellow); box-shadow: 0 5px 0 #b07a00; }
@@ -78,16 +83,16 @@
     .challenge-tag { display: inline-block; background: #FFB000; color: #1a1a2e; border-radius: 999px; padding: 1px 7px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; margin-left: 6px; vertical-align: middle; }
 
     .mode-toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 8px; }
-    .mode-toggle { border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; background: white; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 3px 0 var(--border); transition: 0.15s; }
+    .mode-toggle { border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; background: white; color: #aaa; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 3px 0 var(--border); transition: 0.15s; }
     .mode-toggle .mt-icon { font-size: 22px; }
     .mode-toggle.active { background: linear-gradient(135deg, #E63946 0%, #8E44AD 100%); border-color: #8E44AD; color: white; box-shadow: 0 3px 0 #6a0050; }
     .mode-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
     .mode-toggle.active:active { box-shadow: 0 1px 0 #6a0050; }
-    .challenge-info { background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 14px; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #7a5800; text-align: center; margin-bottom: 4px; }
+    .challenge-info { background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #7a5800; text-align: center; margin-bottom: 4px; }
 
     .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px; }
-    .menu-btn { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 5px 12px; cursor: pointer; color: #666; box-shadow: 0 2px 0 var(--border); }
-    .progress-pill { font-size: 12px; font-weight: 800; background: #FFF3B0; color: #9B5E00; border-radius: 999px; padding: 4px 12px; border: 2px solid var(--yellow); }
+    .menu-btn { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 5px 12px; cursor: pointer; color: #666; box-shadow: 0 2px 0 var(--border); }
+    .progress-pill { font-size: 13px; font-weight: 800; background: #FFF3B0; color: #9B5E00; border-radius: 999px; padding: 4px 12px; border: 2px solid var(--yellow); }
 
     .progress-track { width: 100%; height: 10px; background: #e8e5de; border-radius: 999px; margin-bottom: 12px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.4s ease; }
@@ -96,23 +101,23 @@
     .quiz-card.vocab-card  { border-color: #c8e6c9; background: #f1fff5; }
     .quiz-card.fill-card   { border-color: #bbdefb; background: #f0f8ff; font-size: 18px; line-height: 1.6; display: block; text-align: left; padding: 24px 20px; }
     .quiz-card.syn-card    { border-color: #ffe082; background: #fffde7; }
-    .quiz-card.def-card    { border-color: #e1bee7; background: #fdf5ff; font-size: 16px; line-height: 1.7; }
+    .quiz-card.def-card    { border-color: #e1bee7; background: #fdf5ff; font-size: 16px; line-height: 1.7; text-align: left; display: block; padding: 24px 20px; }
     .blank-word { display: inline-block; background: #dee2e6; border-radius: 6px; padding: 0 10px; color: #333; }
 
-    .cat-strip { width: 100%; border-radius: 12px; padding: 7px 14px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 900; letter-spacing: 0.5px; text-align: center; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 7px; animation: popIn 0.2s ease; }
+    .cat-strip { width: 100%; border-radius: 12px; padding: 7px 14px; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; letter-spacing: 0.5px; text-align: center; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 7px; animation: popIn 0.2s ease; }
     .cat-vocab { background: #e8fff2; color: #0a5c2d; border: 2px solid var(--green); }
     .cat-fill  { background: #e8f3ff; color: #1a4a80; border: 2px solid var(--blue); }
     .cat-syn   { background: #fff8e0; color: #7a5400; border: 2px solid var(--yellow); }
     .cat-def   { background: #f5eaff; color: #5a2880; border: 2px solid var(--purple); }
-    .mode-badge { font-size: 10px; font-weight: 800; letter-spacing: 0.5px; background: rgba(0,0,0,0.07); border-radius: 6px; padding: 2px 7px; color: #666; margin-bottom: 6px; display: inline-block; }
+    .mode-badge { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; background: rgba(0,0,0,0.07); border-radius: 6px; padding: 2px 7px; color: #666; margin-bottom: 6px; display: inline-block; }
 
     .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
-    .choice-btn { background: white; border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; min-height: 66px; box-shadow: 0 4px 0 var(--border); transition: 0.1s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; }
+    .choice-btn { background: white; border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); cursor: pointer; min-height: 66px; box-shadow: 0 4px 0 var(--border); transition: 0.1s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; }
     .choice-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--border); }
     .choice-btn.correct { background: #E8FFF2; border-color: var(--green); box-shadow: 0 4px 0 #1a9647; color: #0a5c2d; animation: popIn 0.2s ease; }
     .choice-btn.wrong { background: #FFE5E7; border-color: var(--red); box-shadow: 0 4px 0 #a02030; color: var(--red); animation: shake 0.35s ease; }
 
-    .feedback-row { text-align: center; min-height: 28px; margin-top: 10px; font-size: 18px; font-weight: 900; }
+    .feedback-row { text-align: center; min-height: 28px; margin-top: 10px; font-size: 19px; font-weight: 900; }
     .fb-ok  { color: var(--green); animation: popIn 0.2s ease; }
     .fb-bad { color: var(--red);   animation: shake 0.3s ease; }
 
@@ -120,24 +125,24 @@
     .result-medal  { font-size: 80px; margin: 10px 0; animation: starBurst 0.5s ease; }
     .result-title  { font-family: 'Bangers', cursive; font-size: 40px; letter-spacing: 2px; color: var(--ink); margin-bottom: 4px; }
     .result-score  { font-size: 56px; font-weight: 900; color: var(--red); margin: 8px 0; }
-    .result-sub    { font-size: 14px; color: #888; margin-bottom: 20px; font-weight: 700; }
+    .result-sub    { font-size: 15px; color: #888; margin-bottom: 20px; font-weight: 700; }
 
     .review-header-row { display: flex; align-items: center; justify-content: space-between; margin: 24px 0 10px; }
     .review-header { font-family: 'Bangers', cursive; font-size: 22px; letter-spacing: 1px; color: var(--red); text-align: left; margin: 0; }
     .export-btns   { display: flex; gap: 8px; }
-    .export-btn { display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 10px; padding: 7px 12px; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 rgba(0,0,0,0.15); color: white; }
+    .export-btn { display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 10px; padding: 7px 12px; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.1s; box-shadow: 0 3px 0 rgba(0,0,0,0.15); color: white; }
     .export-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,0.15); }
     .eb-csv  { background: #2DD368; box-shadow: 0 3px 0 #1a9647; }
     .eb-copy { background: #6A5ACD; box-shadow: 0 3px 0 #4a3aad; }
-    .copy-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; border-radius: 999px; padding: 10px 22px; font-size: 13px; font-weight: 800; box-shadow: 0 4px 16px rgba(0,0,0,0.25); animation: popIn 0.2s ease; z-index: 9999; white-space: nowrap; }
+    .copy-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; border-radius: 999px; padding: 10px 22px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 16px rgba(0,0,0,0.25); animation: popIn 0.2s ease; z-index: 9999; white-space: nowrap; }
 
     .review-wrap   { overflow-x: auto; border-radius: 14px; border: 2px solid var(--border); }
-    .review-table  { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 540px; }
-    .review-table th { background: #f8f7f3; padding: 9px 10px; border-bottom: 2px solid var(--border); text-align: left; font-weight: 800; color: #555; font-size: 11px; letter-spacing: 0.5px; }
+    .review-table  { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 540px; }
+    .review-table th { background: #f8f7f3; padding: 9px 10px; border-bottom: 2px solid var(--border); text-align: left; font-weight: 800; color: #555; font-size: 12px; letter-spacing: 0.5px; }
     .review-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); line-height: 1.4; vertical-align: top; }
     .review-table tr:last-child td { border-bottom: none; }
     .review-table .word-cell { font-weight: 900; color: var(--ink); }
-    .review-table .def-cell  { color: #555; font-style: italic; }
+    .review-table .def-cell  { color: #555; font-style: italic; text-align: left; }
 
     .action-btn { width: 100%; border: none; border-radius: 14px; padding: 18px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900; color: white; cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,0.15); margin-top: 12px; transition: 0.1s; }
     .action-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
@@ -150,21 +155,21 @@
     .modal-box { background: white; border-radius: 22px; padding: 24px 20px; max-width: 400px; width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,0.3); animation: popIn 0.25s ease; }
     .modal-title { font-family: 'Bangers', cursive; font-size: 26px; letter-spacing: 1px; color: var(--red); margin-bottom: 14px; text-align: center; }
     .how-item { margin-bottom: 12px; }
-    .how-item-title { font-size: 14px; font-weight: 900; color: var(--ink); margin-bottom: 3px; }
-    .how-item-desc { font-size: 12px; color: #555; line-height: 1.55; padding-left: 8px; border-left: 3px solid var(--yellow); }
-    .modal-note { font-size: 11px; color: #999; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; line-height: 1.5; }
+    .how-item-title { font-size: 15px; font-weight: 900; color: var(--ink); margin-bottom: 3px; }
+    .how-item-desc { font-size: 13px; color: #555; line-height: 1.55; padding-left: 8px; border-left: 3px solid var(--yellow); }
+    .modal-note { font-size: 12px; color: #999; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; line-height: 1.5; }
     .modal-close { width: 100%; margin-top: 16px; padding: 13px; font-size: 15px; font-weight: 900; font-family: 'Nunito', sans-serif; background: var(--red); color: white; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 #a02030; }
 
-    .hint-btn { display: inline-flex; align-items: center; gap: 6px; background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 999px; padding: 7px 16px; font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; color: #7a5800; cursor: pointer; box-shadow: 0 3px 0 #FFD54F; transition: 0.1s; margin: 0 auto 4px; display: block; width: fit-content; }
+    .hint-btn { display: inline-flex; align-items: center; gap: 6px; background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 999px; padding: 7px 16px; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 800; color: #7a5800; cursor: pointer; box-shadow: 0 3px 0 #FFD54F; transition: 0.1s; margin: 0 auto 4px; display: block; width: fit-content; }
     .hint-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #FFD54F; }
-    .hint-bubble { background: #FFFDE7; border: 2px solid #FFD54F; border-radius: 14px; padding: 10px 16px; text-align: center; font-size: 15px; font-weight: 800; color: #5a4000; margin: 6px 0 2px; animation: popIn 0.2s ease; line-height: 1.5; }
+    .hint-bubble { background: #FFFDE7; border: 2px solid #FFD54F; border-radius: 14px; padding: 10px 16px; text-align: center; font-size: 16px; font-weight: 800; color: #5a4000; margin: 6px 0 2px; animation: popIn 0.2s ease; line-height: 1.5; }
 
     .footer-strip { text-align: center; padding: 18px 0 4px; font-size: 15px; font-weight: 700; color: #6A5ACD; letter-spacing: 1px; }
     /* ── Mute button ──────────────────────────────────────── */
     .mute-btn { position:fixed; top:10px; right:10px; z-index:9000; background:white; border:2px solid #dee2e6; border-radius:50%; width:38px; height:38px; font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; transition:0.15s; padding:0; }
     .mute-btn:active { transform:scale(0.9); }
     .mute-btn.muted  { background:#FFE5E7; border-color:#E63946; }
-    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 13px; font-weight: 700; font-family: 'Nunito', sans-serif; color: #666; cursor: pointer; margin-bottom: 14px; box-shadow: 0 2px 0 var(--border); }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 7px 14px; font-size: 14px; font-weight: 700; font-family: 'Nunito', sans-serif; color: #666; cursor: pointer; margin-bottom: 14px; box-shadow: 0 2px 0 var(--border); }
     .back-btn:active { transform: translateY(2px); box-shadow: none; }
     .copy-modal-ta { width: 100%; height: 180px; font-family: monospace; font-size: 11px; border: 2px solid var(--border); border-radius: 10px; padding: 10px; resize: none; margin: 10px 0; }
 
@@ -292,9 +297,9 @@
     </div>
     <div class="how-item">
       <div class="how-item-title">⚡ 6. Ninja Type Blitz（タイピングバトル）</div>
-      <div class="how-item-desc">40秒で何文字タイプできるかに挑戦！最初の文字はヒントとして表示されます。3種のモードから選ぼう：①日本語→英語 ②定義→英語 ③日本語文→空所の単語。スペルを正確に！<br>Challenge: how many characters in 40 sec? First letter given as a hint. 3 sub-modes to choose from!</div>
+      <div class="how-item-desc">40秒で何文字タイプできるかに挑戦！最初の文字はヒントとして表示されます。3種のモードから選ぼう：①日本語→英語 ②定義→英語 ③日本語文→空所の単語。スペルを正確に！</div>
     </div>
-    <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！</p>
+    <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！Analysis Scrollは苦手な単語のリストです。復習して次はうまく答えられるようにしよう！３回答えるとリストから消えます。</p>
     <button class="modal-close" onclick="toggleModal(false)">わかった！ Let's go! 🥷</button>
   </div>
 </div>
@@ -492,7 +497,7 @@ const wordStock = {
     { word:"volunteer", pos:"verb",    jp:"ボランティアをする",   syn:"help out",      ex:"I volunteer at a local animal shelter on weekends.",          exJP:"週末に地域の動物保護施設でボランティアをしています。",    def:"to do work without being paid" },
     { word:"travel", pos:"verb",       jp:"旅行する",            syn:"tour",       ex:"I want to travel around Southeast Asia after graduation.",    exJP:"卒業後に東南アジアを旅行したいです。",                 def:"to go from one place to another, often far away" },
     { word:"waste", pos:"verb",        jp:"〜を無駄にする",       syn:"throw away",    ex:"Don't waste food — there are people who are hungry.",        exJP:"食べ物を無駄にしないで ― お腹を空かせている人がいます。", def:"to use more of something than is necessary" },
-    { word:"save", pos:"verb",         jp:"〜を節約する・守る",   syn:"preserve",      ex:"Turn off the lights to save energy at home.",                 exJP:"家でのエネルギーを節約するために電気を消してください。",  def:"to use less of something or to keep for later" },
+    { word:"save", pos:"verb",         jp:"〜を節約する・守る",   syn:"preserve",      ex:"Turn off the lights to <!--save--> energy at home.",                 exJP:"家でのエネルギーを節約するために電気を消してください。",  def:"to use less of something or to keep for later" },
     { word:"share", pos:"verb",        jp:"〜を共有する",        syn:"divide",        ex:"Please feel free to share your ideas with the group.",               exJP:"グループで気軽にアイデアを共有してください。",        def:"to give part of something to others" },
     { word:"choose", pos:"verb",       jp:"〜を選ぶ",            syn:"pick",          ex:"Choose one interesting topic for your report.",               exJP:"レポートのためにおもしろいテーマを一つ選んでください。",  def:"to decide which one you want" },
     { word:"collect", pos:"verb",      jp:"〜を集める",          syn:"gather",        ex:"I collect stamps from different countries as a hobby.",       exJP:"趣味として、いろんな国の切手を集めています。",           def:"to bring things together" },
@@ -937,7 +942,885 @@ let state = {
   challengeModes: [],
   selectedChallengeModes: [],
   locked: false,
+  // ── Per-session progression bookkeeping ──
+  streak: 0,
+  sessionExp: 0,
+  perAnswerExp: [],     // log per-answer exp for review
+  questionStart: 0,     // timestamp when a question is shown
+  recoveredFlags: [],   // mark words "recovered" if they were previously wrong
+  firstTimeFlags: [],   // mark words first-ever-correct
 };
+
+// ────────────────────────────────────────────────────────
+// 🥷 NINJA PROGRESSION SYSTEM
+//   • EXP / Level (cap 1000)
+//   • Adaptive question selection
+//   • Time-based "slow" tracking
+//   • Cross-game shared word memory (localStorage)
+//   • Scroll save / load with checksum
+// ────────────────────────────────────────────────────────
+const NINJA_STORAGE_KEY = 'eigo_ninja_progress_v1';
+const NINJA_SHARED_KEY  = 'ninja_shared_word_memory_v1';   // unified DB across games
+const NINJA_LEVEL_CAP   = 1000;
+const NINJA_SLOW_MS = {           // time threshold per mode
+  vocab: 8000,
+  fill: 10000,
+  synonym: 10000,
+  definition: 12000,
+  blitz: 12500,
+};
+
+const progress = {
+  name:        'Ninja',
+  nameLocked:  false, // set true once the user explicitly names the ninja → cannot be re-edited
+  exp:         0,
+  level:       0,
+  words:       {},   // wordKey -> { correct, wrong, slow, seen, lastWrong, lastSeenIndex }
+  globalIndex: 0,    // monotonic question counter (for "recently shown" check)
+  totalSessions: 0,
+  lastTrainedAt: 0,  // ms timestamp of the most recent completed session
+};
+
+function ninjaWordKey(entry, levelOverride) {
+  const lvl = levelOverride || state.level;
+  return 'g' + lvl + '::' + (entry.word || '').toLowerCase();
+}
+function ninjaGetWord(entry, levelOverride) {
+  const k = ninjaWordKey(entry, levelOverride);
+  if (!progress.words[k]) {
+    progress.words[k] = { correct:0, wrong:0, slow:0, seen:false, lastWrong:false, lastSeenIndex:-999 };
+  }
+  return progress.words[k];
+}
+function ninjaModeKey(mode) {
+  return ['','vocab','fill','synonym','definition'][mode] || 'vocab';
+}
+function ninjaGradeKey() {
+  return ({'4':'grade4', '3':'grade3', 'Pre2':'pre2', '2':'grade2'})[state.level] || 'grade4';
+}
+
+// Record an answer; mutates shared word DB and returns flags.
+function ninjaRecordAnswer(entry, isCorrect, timeMs, modeKey) {
+  if (!entry) return { firstTimeCorrect:false, recovered:false };
+  const w = ninjaGetWord(entry);
+  const wasFirstTime = !w.seen;
+  const wasWrong     = w.lastWrong === true;
+  w.seen = true;
+  progress.globalIndex++;
+  w.lastSeenIndex = progress.globalIndex;
+  if (isCorrect) { w.correct++; w.lastWrong = false; }
+  else           { w.wrong++;   w.lastWrong = true;  }
+  const threshold = NINJA_SLOW_MS[modeKey] || 10000;
+  if (typeof timeMs === 'number' && timeMs > threshold) w.slow++;
+  ninjaSaveLocal();
+  return {
+    firstTimeCorrect: isCorrect && wasFirstTime,
+    recovered:        isCorrect && wasWrong,
+  };
+}
+
+// EXP formula
+function calculateExp({correct, mode, grade, streak, isPerfect, firstTimeCorrect, recovered}) {
+  let exp = (correct || 0);
+  const modeMul  = ({vocab:1.0, fill:1.5, synonym:2.0, definition:2.5, blitz:1.0})[mode]  || 1.0;
+  const gradeMul = ({grade4:1.0, grade3:1.3, pre2:1.7, grade2:2.2})[grade] || 1.0;
+  const streakMul = 1 + ((streak || 0) * 0.05);
+  exp = exp * modeMul * gradeMul * streakMul;
+  if (firstTimeCorrect) exp += 2;
+  if (recovered)        exp += 3;
+  if (isPerfect)        exp *= 1.3;
+  return Math.round(exp);
+}
+// Level curve: level = floor(sqrt(exp / 50))  →  Lv 1 = 50 XP, Lv 10 = 5,000 XP
+// (factor was 100; reduced 50% so leveling is twice as fast)
+const NINJA_LEVEL_FACTOR = 50;
+function ninjaLevelFromExp(e) { return Math.min(NINJA_LEVEL_CAP, Math.floor(Math.sqrt(Math.max(0, e|0) / NINJA_LEVEL_FACTOR))); }
+function ninjaExpForLevel(L)  { return L * L * NINJA_LEVEL_FACTOR; }
+function ninjaAddExp(amount) {
+  amount = Math.max(0, amount|0);
+  if (!amount) return 0;
+  const before = progress.level;
+  progress.exp  += amount;
+  progress.level = ninjaLevelFromExp(progress.exp);
+  ninjaSaveLocal();
+  return progress.level - before;  // levels gained
+}
+
+// Adaptive weighting
+function ninjaWeight(d) {
+  let w = 1 + (d.wrong * 2) - (d.correct * 0.2) + (d.slow * 1.2);
+  if (d.lastWrong) w += 5;
+  if (!d.seen)     w += 3;
+  if ((progress.globalIndex - d.lastSeenIndex) <= 2) return 0; // recently shown
+  return Math.max(0.5, w);
+}
+function ninjaWeightedSample(entries, count) {
+  const items = entries.map(e => ({ e, w: ninjaWeight(ninjaGetWord(e)) }));
+  const out = [];
+  while (out.length < count && items.length) {
+    let total = 0;
+    for (let i=0;i<items.length;i++) total += items[i].w;
+    if (total <= 0) {
+      const idx = Math.floor(Math.random() * items.length);
+      out.push(items.splice(idx,1)[0].e);
+      continue;
+    }
+    let r = Math.random() * total, idx = 0;
+    for (let i=0;i<items.length;i++) { r -= items[i].w; if (r <= 0) { idx = i; break; } }
+    out.push(items.splice(idx,1)[0].e);
+  }
+  return out;
+}
+
+// ── Local persistence ──
+function ninjaSaveLocal() {
+  try {
+    const snap = {
+      name: progress.name, nameLocked: progress.nameLocked,
+      exp: progress.exp, level: progress.level,
+      words: progress.words, globalIndex: progress.globalIndex,
+      totalSessions: progress.totalSessions,
+      lastTrainedAt: progress.lastTrainedAt,
+    };
+    localStorage.setItem(NINJA_STORAGE_KEY, JSON.stringify(snap));
+    // Mirror the word memory into a shared cross-game key so other ninja
+    // games can read each other's training records.
+    localStorage.setItem(NINJA_SHARED_KEY, JSON.stringify({
+      name: progress.name, nameLocked: progress.nameLocked,
+      exp: progress.exp, level: progress.level, words: progress.words,
+      lastTrainedAt: progress.lastTrainedAt,
+      updatedAt: Date.now(),
+    }));
+  } catch(e) {}
+}
+function ninjaLoadLocal() {
+  try {
+    // Prefer per-app key; fall back to shared key for cross-game memory.
+    const raw    = localStorage.getItem(NINJA_STORAGE_KEY);
+    const shared = localStorage.getItem(NINJA_SHARED_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      progress.name        = d.name  || progress.name;
+      progress.nameLocked  = !!d.nameLocked;
+      progress.exp         = d.exp   || 0;
+      progress.level       = ninjaLevelFromExp(progress.exp);
+      progress.words       = d.words || {};
+      progress.globalIndex   = d.globalIndex   || 0;
+      progress.totalSessions = d.totalSessions || 0;
+      progress.lastTrainedAt = d.lastTrainedAt || 0;
+    }
+    if (shared) {
+      const s = JSON.parse(shared);
+      // merge shared word stats (cross-game) — take max counts
+      if (s.words) ninjaMergeWords(s.words);
+      if ((s.exp || 0) > progress.exp) {
+        progress.exp = s.exp;
+        progress.level = ninjaLevelFromExp(progress.exp);
+      }
+      // adopt shared name+lock if local didn't have one
+      if (!progress.nameLocked && s.nameLocked) {
+        progress.name = s.name || progress.name;
+        progress.nameLocked = true;
+      }
+      if ((s.lastTrainedAt || 0) > progress.lastTrainedAt) progress.lastTrainedAt = s.lastTrainedAt;
+    }
+  } catch(e) {}
+}
+function ninjaMergeWords(incoming) {
+  for (const k in incoming) {
+    const a = progress.words[k] || { correct:0, wrong:0, slow:0, seen:false, lastWrong:false, lastSeenIndex:-999 };
+    const b = incoming[k] || {};
+    progress.words[k] = {
+      correct: Math.max(a.correct||0, b.correct||0),
+      wrong:   Math.max(a.wrong||0,   b.wrong||0),
+      slow:    Math.max(a.slow||0,    b.slow||0),
+      seen:    a.seen || b.seen || false,
+      lastWrong:     b.lastWrong || a.lastWrong || false,
+      lastSeenIndex: a.lastSeenIndex || -999,
+    };
+  }
+}
+
+// ── Scroll codec (Save data: Shadow Clone Srcoll) ──
+function ninjaChecksum(s) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  return h.toString(36);
+}
+function _utf8Btoa(s) { return btoa(unescape(encodeURIComponent(s))); }
+function _utf8Atob(s) { return decodeURIComponent(escape(atob(s))); }
+function generateScrollCode(data) {
+  const payload = JSON.stringify(data || {});
+  const sum = ninjaChecksum(payload);
+  const wrap = JSON.stringify({ v:1, sum, payload });
+  return 'NINJA1.' + _utf8Btoa(wrap);
+}
+function loadFromScrollCode(code) {
+  if (typeof code !== 'string') throw new Error('scroll code missing');
+  const t = code.trim();
+  if (!t.startsWith('NINJA1.')) throw new Error('invalid scroll header');
+  let wrap;
+  try { wrap = JSON.parse(_utf8Atob(t.slice(7))); }
+  catch(e) { throw new Error('cannot decode scroll'); }
+  if (!wrap || wrap.v !== 1)              throw new Error('unsupported scroll version');
+  if (ninjaChecksum(wrap.payload) !== wrap.sum) throw new Error('checksum mismatch');
+  return JSON.parse(wrap.payload);
+}
+function ninjaExportData() {
+  // The design block travels with the scroll so users can restore their
+  // chosen ninja avatar + unlocked list on a different device.
+  // Guarded with typeof in case this is called before the design module
+  // has initialised (defensive — the module is defined later in the file).
+  const designBlock = (typeof shadowNinja !== 'undefined')
+    ? { selected: shadowNinja.selected, unlocked: shadowNinja.unlocked.slice() }
+    : null;
+  return {
+    name:       progress.name,
+    nameLocked: progress.nameLocked,
+    exp:        progress.exp,
+    level:      progress.level,
+    words:      progress.words,
+    lastTrainedAt: progress.lastTrainedAt,
+    design:     designBlock,
+  };
+}
+function ninjaImportData(d) {
+  if (!d || typeof d !== 'object') return false;
+  if (d.name) progress.name = String(d.name).slice(0, 40);
+  if (typeof d.nameLocked === 'boolean') progress.nameLocked = d.nameLocked;
+  else if (d.name) progress.nameLocked = true; // older scrolls without flag → name was set
+  if (typeof d.exp === 'number')   progress.exp   = Math.max(progress.exp, d.exp);
+  progress.level = ninjaLevelFromExp(progress.exp);
+  if (d.words) ninjaMergeWords(d.words);
+  if (typeof d.lastTrainedAt === 'number' && d.lastTrainedAt > (progress.lastTrainedAt || 0)) {
+    progress.lastTrainedAt = d.lastTrainedAt;
+  }
+  // Restore design block if present.
+  //
+  // IMPORTANT: design state is REPLACED, not merged. The Shadow Clone
+  // Scroll captures the user's design state at the moment the scroll was
+  // saved — loading it must restore that state EXACTLY. Merging would
+  // let designs unlocked after the scroll was saved (e.g. a new starter
+  // chosen post-reset) survive the restore, which is the bug this fix
+  // addresses: "after reset → pick new design B → load old scroll (had A) →
+  // B should disappear, only A should remain."
+  //
+  // Behaviour summary:
+  //   • Scroll has design block with unlocked[] → replace local list with it
+  //   • Scroll has design block but unlocked is missing/empty → clear locals
+  //   • Scroll has NO design block (legacy scroll) → leave current design
+  //     state alone (don't punish users restoring pre-design scrolls)
+  if (d.design && typeof d.design === 'object' && typeof shadowNinja !== 'undefined') {
+    // Drain the in-memory unlocked list IN PLACE (preserves array identity).
+    shadowNinja.unlocked.splice(0, shadowNinja.unlocked.length);
+    if (Array.isArray(d.design.unlocked)) {
+      d.design.unlocked.forEach(id => {
+        if (ninjaAssets[id] && shadowNinja.unlocked.indexOf(id) < 0) {
+          shadowNinja.unlocked.push(id);
+        }
+      });
+    }
+    // Adopt the scroll's selected design only if it landed in the unlocked
+    // list above; otherwise force a "no pick" state so the picker re-prompts.
+    if (d.design.selected && ninjaAssets[d.design.selected]
+        && shadowNinja.unlocked.indexOf(d.design.selected) >= 0) {
+      shadowNinja.selected = d.design.selected;
+    } else {
+      shadowNinja.selected = null;
+    }
+    shadowNinjaSave();
+  }
+  ninjaSaveLocal();
+  return true;
+}
+
+// ── Name management ──
+// Once the user names the ninja, it is locked permanently (until 原点回帰 reset).
+function ninjaSetName(name) {
+  if (progress.nameLocked) return false;
+  const safe = (name || '').replace(/[<>]/g, '').trim().slice(0, 20);
+  if (!safe) return false;
+  progress.name       = safe;
+  progress.nameLocked = true;
+  ninjaSaveLocal();
+  return true;
+}
+function ninjaTouchTrained() {
+  progress.lastTrainedAt = Date.now();
+  ninjaSaveLocal();
+}
+function ninjaFormatTimestamp(ms) {
+  if (!ms) return '—';
+  try {
+    return new Date(ms).toLocaleString('ja-JP', {
+      year:'numeric', month:'2-digit', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', hour12:false
+    });
+  } catch(e) { return '—'; }
+}
+function ninjaQRUrl(text, size) {
+  const s = size || 200;
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=' + s + 'x' + s
+       + '&margin=2&data=' + encodeURIComponent(text);
+}
+function ninjaQRImg(text, size) {
+  const s = size || 130;
+  const url = ninjaQRUrl(text, s);
+  return '<img src="' + url + '" alt="QR" width="' + s + '" height="' + s + '" loading="lazy" '
+       + 'style="border-radius:8px;background:white;padding:4px;flex-shrink:0;display:block;">';
+}
+
+// ── QR data helpers ─────────────────────────────────────────────
+// QR data is ALWAYS preserved as TEXT first (so Copy/CSV exports never lose it).
+// Visual QR is regenerated from that text on demand using qrcodejs (local, offline)
+// with a graceful fallback to the api.qrserver.com URL via ninjaQRImg above.
+function ninjaScrollCodeText() {
+  // Compact representation of the user's training scroll. Safe to embed in
+  // exports because it is plain ASCII (NINJA1.<base64>).
+  try { return generateScrollCode(ninjaExportData()); } catch(e) { return ''; }
+}
+// Combined QR payload: ninja status badge + scroll code, separated by a newline.
+// This is what gets encoded in the QR image — and what is mirrored as plain
+// text in CSV/Copy exports so the data is recoverable even if the QR image
+// is stripped during sharing.
+function ninjaCombinedQRPayload() {
+  return ninjaShareCard() + '\n' + ninjaScrollCodeText();
+}
+// Render a QR code into a target container. Resilient to oversized
+// payloads — when the user has trained many words, the Shadow Clone
+// Scroll exceeds both qrcodejs's ~2953 alphanumeric-char ceiling AND
+// api.qrserver.com's URL length cap, which previously caused the QR to
+// silently vanish on the Analysis Scroll. The render now degrades:
+//   1. Try qrcodejs with the full payload at level L (max capacity)
+//   2. If that throws or renders nothing → try qrcodejs with status-only
+//   3. If qrcodejs is unavailable → try api.qrserver.com (URL must fit)
+//   4. Last resort → small "open Scroll" hint so the user can still
+//      retrieve their scroll code via the Shadow Clone Scroll modal
+function ninjaRenderLocalQR(containerId, text, size) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const s = size || 130;
+  const fullPayload   = (text == null || text === '') ? ' ' : text;
+  const statusOnly    = (typeof ninjaShareCard === 'function') ? ninjaShareCard() : ' ';
+  const styleBox = () => {
+    el.style.padding      = '4px';
+    el.style.background   = 'white';
+    el.style.borderRadius = '8px';
+    el.style.display      = 'inline-block';
+  };
+  const tryLib = (payload, level) => {
+    if (typeof QRCode === 'undefined') return false;
+    try {
+      el.innerHTML = '';
+      new QRCode(el, {
+        text: payload,
+        width: s,
+        height: s,
+        correctLevel: level,
+      });
+      // qrcodejs can silently no-op for over-capacity input — verify that
+      // it actually injected a canvas/img/table child.
+      if (el.children && el.children.length > 0) { styleBox(); return true; }
+    } catch(e) { /* fall through */ }
+    return false;
+  };
+  const tryApi = (payload) => {
+    try {
+      const url = ninjaQRUrl(payload, s);
+      // api.qrserver.com cuts off around 7-8KB URL length in browsers.
+      if (url.length < 7000) {
+        el.innerHTML = '<img src="' + url + '" alt="QR" width="' + s + '" height="' + s
+          + '" loading="lazy" style="border-radius:8px;background:white;padding:4px;flex-shrink:0;display:block;">';
+        return true;
+      }
+    } catch(e) { /* fall through */ }
+    return false;
+  };
+  // 1. qrcodejs full payload (level L gives max capacity)
+  if (typeof QRCode !== 'undefined' && tryLib(fullPayload, QRCode.CorrectLevel.L)) return;
+  // 2. qrcodejs status-only (small, always fits)
+  if (typeof QRCode !== 'undefined' && tryLib(statusOnly, QRCode.CorrectLevel.M)) return;
+  // 3. api.qrserver.com full payload (works if URL fits)
+  if (tryApi(fullPayload)) return;
+  // 4. api.qrserver.com status-only
+  if (tryApi(statusOnly)) return;
+  // 5. Final fallback: a tiny placeholder pointing the user to the
+  //    Shadow Clone Scroll modal where they can copy the full text.
+  el.innerHTML = '<div style="width:' + s + 'px;height:' + s + 'px;background:white;color:#7C3AED;'
+    + 'border-radius:8px;display:flex;align-items:center;justify-content:center;text-align:center;'
+    + 'font-size:11px;font-weight:800;padding:8px;line-height:1.3;">📜 巻物が大きいので<br>QRを生成できません<br><span style="font-size:9px;font-weight:700;color:#999;">Open Shadow Clone Scroll</span></div>';
+}
+// Shared share-card text used for QR codes and exports
+function ninjaShareCard() {
+  return '🥷 ' + (progress.name || 'Ninja')
+       + ' | Lv ' + progress.level
+       + ' | ' + progress.exp + ' XP'
+       + ' | Eigo-Ninja';
+}
+// Status preamble for CSV exports (returns array of CSV lines).
+// QR feature removed — output is just the ninja's status block followed
+// by the data table.
+function ninjaStatusCSVMeta(scrollLabel) {
+  const card = ninjaShareCard();
+  const esc  = (s) => _weakCsvEscape(s == null ? '' : s);
+  return [
+    '# ' + esc(scrollLabel || 'Ninja Scroll'),
+    '# Ninja,' + esc(progress.name || 'Ninja'),
+    '# Level,' + progress.level,
+    '# EXP,' + progress.exp,
+    '# Last trained,' + esc(ninjaFormatTimestamp(progress.lastTrainedAt)),
+    '# Share badge,' + esc(card),
+    '',  // blank separator before the data table
+  ];
+}
+// Status preamble for Copy/text exports.
+// QR feature removed — output is the status block, then a separator, then
+// the per-row table provided by the caller.
+function ninjaStatusTextHeader(scrollLabel) {
+  const card = ninjaShareCard();
+  return [
+    '═══════════════════════════════════════',
+    '🥷 ' + (scrollLabel || 'Ninja Scroll'),
+    '═══════════════════════════════════════',
+    'Ninja:        ' + (progress.name || 'Ninja') + (progress.nameLocked ? ' 🔒' : ''),
+    'Level:        ' + progress.level,
+    'EXP:          ' + progress.exp.toLocaleString(),
+    'Last trained: ' + ninjaFormatTimestamp(progress.lastTrainedAt),
+    'Badge:        ' + card,
+    '═══════════════════════════════════════',
+    '',
+  ];
+}
+// Identity card header used on Analysis Scroll and 修行の巻物 results.
+// QR removed — the right-hand slot now shows the user's chosen ninja
+// design (the same avatar shown on the home profile card). The 🥷 emoji
+// prefix on the name was dropped because the avatar already conveys
+// "this is the ninja".
+function ninjaIdentityHeader(label) {
+  const last       = ninjaFormatTimestamp(progress.lastTrainedAt);
+  const avatarFile = (typeof shadowNinjaSelectedFile === 'function') ? shadowNinjaSelectedFile() : '';
+  const avatarHTML = avatarFile
+    ? `<img src="${avatarFile}" alt="忍者" loading="lazy"
+           style="max-width:100%;max-height:100%;object-fit:contain;"
+           onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:11px;font-weight:800;color:#fff;text-align:center;padding:6px;line-height:1.3;&quot;>未選択</span>';">`
+    : `<span style="font-size:11px;font-weight:800;color:#fff;text-align:center;padding:6px;line-height:1.3;">未選択<br>Tap home<br>to choose</span>`;
+  return `
+    <div style="display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;padding:14px;box-shadow:0 4px 0 #5B21B6;margin:6px 0 14px;">
+      <div style="width:90px;height:90px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2.5px solid rgba(255,255,255,0.35);">
+        ${avatarHTML}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.9;">${label || '忍者 / NINJA'}</div>
+        <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;line-height:1.05;word-break:break-word;margin-top:2px;">${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}${progress.nameLocked?' <span style="font-size:12px;opacity:0.85;">🔒</span>':''}</div>
+        <div style="font-size:14px;font-weight:900;margin-top:4px;">Lv ${progress.level} · ${progress.exp.toLocaleString()} XP</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:3px;">最終修行 / Last trained:<br>${last}</div>
+      </div>
+    </div>`;
+}
+
+// ── Reset / 原点回帰 ──
+function ninjaResetProgress() {
+  if (!confirm('⚠️ 原点回帰\n\nすべての修行記録（レベル・経験値・全単語の正答記録）をゼロに戻します。\nこの操作は取り消せません！\n\nWipe ALL training progress?\nThis cannot be undone.')) return;
+  if (!confirm('⚠️ 本当に消去してよろしいですか？\n\nThis will permanently erase your training scroll. Continue?')) return;
+  progress.name          = 'Ninja';
+  progress.nameLocked    = false;
+  progress.exp           = 0;
+  progress.level         = 0;
+  progress.words         = {};
+  progress.globalIndex   = 0;
+  progress.totalSessions = 0;
+  progress.lastTrainedAt = 0;
+  try {
+    localStorage.removeItem(NINJA_STORAGE_KEY);
+    localStorage.removeItem(NINJA_SHARED_KEY);
+    // Also wipe the ninja design selection so the next render shows the
+    // first-run picker again (the original initial design no longer
+    // sticks around after a 原点回帰 reset).
+    if (typeof NINJA_DESIGN_STORAGE_KEY !== 'undefined') {
+      localStorage.removeItem(NINJA_DESIGN_STORAGE_KEY);
+    }
+    if (typeof shadowNinjaResetState === 'function') shadowNinjaResetState();
+  } catch(e) {}
+  showToast('🌅 原点回帰しました — Reset complete.');
+  // Tear down transient overlays — the Shadow Clone Scroll modal AND
+  // any open ninja-design picker — but PRESERVE the static #how-modal
+  // and #links-modal so "遊びかた" and "Other Games" keep working.
+  _removeTransientOverlays();
+  if (state.screen === 'home') renderHome();
+  else if (state.screen === 'weak') renderWeakList();
+  // Re-prompt the design picker so the user picks a fresh starter ninja.
+  // Defensive: force-clear state once more right before the picker shows
+  // (in case any concurrent code re-saved between the lines above).
+  if (typeof shadowNinjaShowPicker === 'function') {
+    setTimeout(() => {
+      if (typeof shadowNinjaResetState === 'function') shadowNinjaResetState();
+      try { localStorage.removeItem(NINJA_DESIGN_STORAGE_KEY); } catch(e) {}
+      shadowNinjaShowPicker({ firstRun: true });
+    }, 250);
+  }
+}
+
+// ── Weak words list (across ALL grades, since memory is shared) ──
+// Mastery rule: a word is dropped from the list once it has been answered
+// correctly 3 or more times AND is not currently flagged as last-wrong.
+// If the user later misses it again, lastWrong becomes true → it returns
+// to the list automatically.
+const NINJA_MASTERY_THRESHOLD = 3;
+function ninjaIsMastered(w) {
+  return (w.correct || 0) >= NINJA_MASTERY_THRESHOLD && !w.lastWrong;
+}
+function ninjaWeakWords(limit) {
+  const items = [];
+  Object.keys(wordStock).forEach(grade => {
+    (wordStock[grade] || []).forEach(entry => {
+      const w = ninjaGetWord(entry, grade);
+      if (!w.seen) return;
+      if (ninjaIsMastered(w)) return;          // hide mastered words
+      const total = (w.correct || 0) + (w.wrong || 0);
+      const acc   = total > 0 ? w.correct / total : 0;
+      const need  = (w.wrong * 3) + (w.lastWrong ? 5 : 0) + (w.slow * 1.5) - (w.correct * 0.5);
+      if (need > 0 || w.lastWrong) items.push({ entry, grade, w, need, acc });
+    });
+  });
+  items.sort((a, b) => b.need - a.need);
+  return items.slice(0, limit || 50);
+}
+
+function renderWeakList() {
+  state.screen = 'weak';
+  const items = ninjaWeakWords(60);
+  const rows = items.length
+    ? items.map(({ entry, grade, w, acc }) => `
+        <tr${w.lastWrong ? ' style="background:#fff5f5;"' : ''}>
+          <td class="word-cell">${entry.word}${w.lastWrong ? ' 🔥' : ''}</td>
+          <td>${entry.jp || ''}</td>
+          <td style="text-align:center;font-weight:800;color:#7C3AED;">${grade === 'Pre2' ? 'P2' : 'G' + grade}</td>
+          <td style="text-align:center;color:#0a5c2d;font-weight:800;">${w.correct}</td>
+          <td style="text-align:center;color:var(--red);font-weight:800;">${w.wrong}</td>
+          <td style="text-align:center;color:#b07a00;font-weight:800;">${w.slow}</td>
+          <td style="text-align:center;font-weight:900;color:${acc >= 0.6 ? '#0a5c2d' : acc >= 0.3 ? '#b07a00' : 'var(--red)'};">${(acc * 100).toFixed(0)}%</td>
+        </tr>
+      `).join('')
+    : `<tr><td colspan="7" style="padding:24px;text-align:center;color:#888;font-weight:700;">
+         まだ弱点はありません 🎉<br>
+         <span style="font-size:11px;font-weight:600;">Play more to see your weakness scroll.</span>
+       </td></tr>`;
+
+  // Quick-launch a focused review session over weak words (any grade)
+  const totalWeak = items.length;
+  // Count mastered words (≥3 correct & not lastWrong) — these are filtered out of the list
+  let masteredCount = 0;
+  Object.keys(wordStock).forEach(grade => {
+    (wordStock[grade] || []).forEach(entry => {
+      if (ninjaIsMastered(ninjaGetWord(entry, grade))) masteredCount++;
+    });
+  });
+  // Stash for export
+  state._weakSnapshot = items;
+  document.getElementById('game-area').innerHTML = `
+    <div class="screen">
+      <button class="back-btn" onclick="renderHome()">← Home</button>
+      <div class="home-header" style="padding-top:0;">
+        <div class="brand-label">🎯 Analysis Scroll · Words to Master</div>
+        <div class="game-title" style="font-size:34px;">Weak <span>Spots</span></div>
+      </div>
+      ${ninjaIdentityHeader('Analysis Scroll / WEAK SPOTS')}
+      <p style="text-align:center;font-size:12px;color:#888;font-weight:700;margin-bottom:6px;">
+        ${totalWeak} 修行待ち · <span style="color:#0a5c2d;">${masteredCount} 習得済</span> · cross-game memory
+      </p>
+      <p style="text-align:center;font-size:10px;color:#aaa;font-weight:600;margin-bottom:10px;">
+        ✅ ${NINJA_MASTERY_THRESHOLD}回以上正解で自動で消えます · 間違えると再登場<br>
+        🔥=直前で間違えた · ○=正解数 · ×=間違い数 · ⏱=遅かった回数
+      </p>
+      ${totalWeak > 0 ? `
+      <div class="review-header-row" style="margin:0 0 10px;">
+        <div class="review-header" style="font-size:16px;">📋 Top ${totalWeak}</div>
+        <div class="export-btns">
+          <button class="export-btn eb-csv"  onclick="weakExportCSV()">⬇ CSV</button>
+          <button class="export-btn eb-copy" onclick="weakCopyToClipboard()">📋 Copy</button>
+        </div>
+      </div>` : ''}
+      <div class="review-wrap">
+        <table class="review-table">
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>意味</th>
+              <th style="text-align:center;">Lv</th>
+              <th style="text-align:center;">○</th>
+              <th style="text-align:center;">×</th>
+              <th style="text-align:center;">⏱</th>
+              <th style="text-align:center;">Acc</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <button class="action-btn ab-primary" onclick="renderHome()" style="margin-top:18px;">🏠 Home</button>
+    </div>
+  `;
+}
+
+// ── Weak list export ──
+function _weakCsvEscape(s) {
+  if (s == null) return '';
+  const t = String(s).replace(/"/g, '""');
+  return /[",\n]/.test(t) ? '"' + t + '"' : t;
+}
+function weakExportCSV() {
+  const items = state._weakSnapshot && state._weakSnapshot.length
+    ? state._weakSnapshot
+    : ninjaWeakWords(60);
+  if (!items.length) { showToast('⚠️ まだ弱点がありません'); return; }
+  const header = ['word','jp','grade','correct','wrong','slow','accuracy_pct','synonym','example','exJP','definition','last_wrong'];
+  const rows = items.map(({entry, grade, w, acc}) => [
+    _weakCsvEscape(entry.word),
+    _weakCsvEscape(entry.jp || ''),
+    _weakCsvEscape(grade),
+    w.correct, w.wrong, w.slow,
+    (acc * 100).toFixed(0),
+    _weakCsvEscape(entry.syn || ''),
+    _weakCsvEscape(entry.ex || ''),
+    _weakCsvEscape(entry.exJP || ''),
+    _weakCsvEscape(entry.def || ''),
+    w.lastWrong ? '1' : '0',
+  ].join(','));
+  const csv = [...ninjaStatusCSVMeta('Analysis Scroll / Weak Spots'), header.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `WeakSpots_${(progress.name||'Ninja').replace(/[^a-zA-Z0-9_-]/g,'')}_Lv${progress.level}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('⬇ Analysis Scroll CSVを保存しました！');
+}
+async function weakCopyToClipboard() {
+  const items = state._weakSnapshot && state._weakSnapshot.length
+    ? state._weakSnapshot
+    : ninjaWeakWords(60);
+  if (!items.length) { showToast('⚠️ まだ弱点がありません'); return; }
+  const lines = ninjaStatusTextHeader('Analysis Scroll / Words to Master');
+  items.forEach((item, i) => {
+    const { entry, grade, w, acc } = item;
+    lines.push((i+1) + '. ' + entry.word + (w.lastWrong ? ' 🔥' : '') + '　[G' + grade + ']　' + (entry.jp || ''));
+    lines.push('   ○' + w.correct + ' × ' + w.wrong + ' ⏱ ' + w.slow + '   acc ' + (acc*100).toFixed(0) + '%');
+    if (entry.syn) lines.push('   syn: ' + entry.syn);
+    if (entry.ex)  lines.push('   ex: ' + entry.ex);
+    if (entry.def) lines.push('   def: ' + entry.def);
+    lines.push('');
+  });
+  const text = lines.join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try { await navigator.clipboard.writeText(text); showToast('📋 Analysis Scrollを写し取りました！'); return; } catch(e) {}
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '9999';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title" style="font-size:18px;">📋 Copy &amp; Paste</div>
+      <textarea class="copy-modal-ta" id="weak-copy-ta">${text.replace(/</g,'&lt;')}</textarea>
+      <button class="modal-close" onclick="this.closest('.overlay').remove()">閉じる</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => { const ta = document.getElementById('weak-copy-ta'); if(ta){ta.focus();ta.select();} }, 80);
+}
+
+// ── Scroll modal UI ──
+function showScrollModal() {
+  const code = generateScrollCode(ninjaExportData());
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '9999';
+  // Escape special chars in current name for safe interpolation into HTML attribute
+  const safeName = (progress.name || 'Ninja').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  overlay.innerHTML = `
+    <div class="modal-box" style="max-height:90vh;overflow-y:auto;">
+      <div class="modal-title">📜 Shadow Clone Srcoll</div>
+      <div style="font-size:12px;color:#666;margin:0 0 12px;line-height:1.6;text-align:center;">
+        修行の記録を影として巻物に封じよう<br>
+        <span style="font-size:11px;color:#888;">Save / Load Your Training progress.</span>
+      </div>
+
+      <!-- ── Ninja name ── -->
+      <div style="font-size:13px;font-weight:900;color:#333;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+        <span>🥷 忍者の名前 / Ninja Name</span>
+        ${progress.nameLocked ? '<span style="font-size:10px;color:#7C3AED;font-weight:800;">🔒 LOCKED</span>' : '<span style="font-size:10px;color:#b07a00;font-weight:800;">⚠️ ONE-TIME</span>'}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:6px;">
+        <input id="ninja-name-input" type="text" maxlength="20" value="${safeName}"
+          ${progress.nameLocked ? 'readonly disabled' : ''}
+          placeholder="名前を入れる / your name"
+          style="flex:1;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;
+                 padding:11px 12px;border:2px solid ${progress.nameLocked ? '#A78BFA' : 'var(--border)'};border-radius:12px;
+                 outline:none;color:var(--ink);background:${progress.nameLocked ? '#F3E8FF' : 'white'};
+                 ${progress.nameLocked ? 'cursor:not-allowed;' : ''}">
+        <button class="kb-btn" style="padding:11px 14px;${progress.nameLocked ? 'opacity:0.4;cursor:not-allowed;' : ''}"
+          ${progress.nameLocked ? 'disabled' : ''} onclick="ninjaApplyName()">決定</button>
+      </div>
+      <div style="font-size:10px;color:#888;font-weight:700;line-height:1.5;margin-bottom:14px;">
+        ${progress.nameLocked
+          ? '名前は一度きり登録できます。変更したい場合は 原点回帰 が必要です。<br>Name is locked once set — only resetting can change it.'
+          : '⚠️ 一度登録するとこの名前は変更できません。慎重に！<br>You can name your ninja only ONCE — choose carefully.'}
+      </div>
+
+      <!-- ── Save scroll ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Srcollを作る</span>
+        <span style="font-size:11px;color:#7C3AED;font-weight:800;">Lv ${progress.level} · ${progress.exp.toLocaleString()} XP</span>
+      </div>
+      <textarea class="copy-modal-ta" id="ninja-scroll-ta" readonly>${code}</textarea>
+      <button class="action-btn ab-primary" style="margin-top:4px;padding:13px;" onclick="ninjaCopyScroll()">📋 Shadow Clone Scrollを写し取る</button>
+
+      <!-- ── Load scroll ── -->
+      <div style="font-size:13px;font-weight:900;color:#333;margin:14px 0 6px;">⬆ Shadow Clone Scrollを読み込む</div>
+      <textarea class="copy-modal-ta" id="ninja-load-ta" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>
+      <button class="action-btn ab-retry" style="margin-top:4px;padding:13px;" onclick="ninjaApplyLoad()">🥷 修行記録を呼び戻す</button>
+
+      <!-- ── Persistence note ── -->
+      <div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:12px;padding:9px 12px;margin-top:14px;font-size:11px;color:#7a5800;font-weight:700;line-height:1.5;">
+        💡 ブラウザの記録はページを閉じても残りますが、<br>
+        「閲覧履歴の削除 → サイトデータ」を消すと失われます。<br>
+        大事な巻物はコピーして外に保存しておくと安心 ✨
+      </div>
+
+      <!-- ── DESTRUCTIVE: 原点回帰 ── -->
+      <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);">
+        <button onclick="ninjaResetProgress()"
+          style="width:100%;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;
+                 background:#FFE5E7;color:var(--red);border:2px solid var(--red);border-radius:12px;
+                 cursor:pointer;box-shadow:0 3px 0 #a02030;letter-spacing:0.5px;">
+          🌅 原点回帰 — Reset All Progress
+        </button>
+        <div style="font-size:10px;color:#888;text-align:center;margin-top:6px;line-height:1.4;">
+          全ての修行記録を消去します。確認は2回行います。<br>
+          Will erase Lv, EXP, and all word stats. Confirms twice.
+        </div>
+      </div>
+
+      <button class="modal-close" onclick="this.closest('.overlay').remove()" style="margin-top:14px;">閉じる</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// ── Standalone name picker (callable from the home status card) ──
+//
+// The original name UI was buried inside the Shadow Clone Scroll modal.
+// This adds a focused, single-purpose modal so the user can tap the name
+// area on the home profile card and set their ninja name without going
+// through the Scroll flow. The lock rule is unchanged: once set, the
+// name stays locked until 原点回帰.
+function showNameModal() {
+  if (progress.nameLocked) {
+    showToast('🔒 名前は登録済みです · 原点回帰でリセットできます');
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.style.zIndex = '9999';
+  // Close when tapping the dim backdrop (but not the modal box).
+  overlay.onclick = function(ev) { if (ev.target === overlay) overlay.remove(); };
+  const safeName = (progress.name || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  overlay.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">🥷 忍者の名前 / Name your Ninja</div>
+      <p style="font-size:13px;color:#666;font-weight:700;margin-bottom:14px;line-height:1.55;text-align:center;">
+        忍者の名前を登録しよう。<br>
+        <span style="color:#b07a00;">⚠️ 一度登録すると変更できません</span><br>
+        <span style="font-size:11px;font-weight:700;color:#888;">Name your ninja — locks once set. Reset is the only way to change it.</span>
+      </p>
+      <input id="ninja-name-modal-input" type="text" maxlength="20" value="${safeName}"
+        placeholder="名前を入れる / your name"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();ninjaApplyNameFromModal();}"
+        style="width:100%;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;
+               padding:13px 14px;border:2.5px solid var(--border);border-radius:12px;
+               outline:none;color:var(--ink);margin-bottom:12px;background:white;">
+      <button class="action-btn ab-primary" onclick="ninjaApplyNameFromModal()" style="padding:14px;font-size:15px;">
+        🥷 決定 / Lock In Name
+      </button>
+      <button class="modal-close" onclick="this.closest('.overlay').remove()" style="margin-top:10px;background:#8d99ae;box-shadow:0 4px 0 #5a6070;">
+        閉じる / Close
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => {
+    const inp = document.getElementById('ninja-name-modal-input');
+    if (inp) { inp.focus(); inp.select(); }
+  }, 80);
+}
+function ninjaApplyNameFromModal() {
+  if (progress.nameLocked) { showToast('🔒 名前はすでに登録済みです'); return; }
+  const inp = document.getElementById('ninja-name-modal-input');
+  if (!inp) return;
+  const proposed = (inp.value || '').trim();
+  if (!proposed) { showToast('⚠️ 名前を入れてください'); return; }
+  if (!confirm('「' + proposed + '」で忍者の名前を登録します。\n一度きりで変更できません。よろしいですか？\n\nLock the ninja name as "' + proposed + '"?\nThis cannot be changed except by full reset.')) return;
+  if (!ninjaSetName(proposed)) { showToast('⚠️ 名前を登録できませんでした'); return; }
+  showToast('🥷 ' + progress.name + ' として登録しました！');
+  // Clean up only the transient name modal — DON'T touch static page
+  // overlays (#how-modal, #links-modal) or the design picker.
+  if (typeof _removeTransientOverlays === 'function') _removeTransientOverlays();
+  else document.querySelectorAll('.overlay:not([id])').forEach(o => o.remove());
+  if (state.screen === 'home') renderHome();
+  else if (state.screen === 'weak') renderWeakList();
+}
+
+function ninjaApplyName() {
+  if (progress.nameLocked) {
+    showToast('🔒 名前はすでに登録済みです');
+    return;
+  }
+  const inp = document.getElementById('ninja-name-input');
+  if (!inp) return;
+  const proposed = (inp.value || '').trim();
+  if (!proposed) { showToast('⚠️ 名前を入れてください'); return; }
+  if (!confirm('「' + proposed + '」で忍者の名前を登録します。\n一度きりで変更できません。よろしいですか？\n\nLock the ninja name as "' + proposed + '"?\nThis cannot be changed except by full reset.')) return;
+  if (!ninjaSetName(proposed)) { showToast('⚠️ 名前を登録できませんでした'); return; }
+  showToast('🥷 ' + progress.name + ' として登録しました！');
+  document.querySelectorAll('.overlay:not([id])').forEach(o => o.remove());
+  if (state.screen === 'home') renderHome();
+  else if (state.screen === 'weak') renderWeakList();
+  showScrollModal();
+}
+function ninjaCopyScroll() {
+  const ta = document.getElementById('ninja-scroll-ta');
+  if (!ta) return;
+  ta.select();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(()=>showToast('📋 Shadow Clone Scrollを写し取りました！')).catch(()=>{
+      try { document.execCommand('copy'); showToast('📋 Shadow Clone Scrollを写し取りました！'); } catch(e) {}
+    });
+  } else {
+    try { document.execCommand('copy'); showToast('📋 Shadow Clone Scrollを写し取りました！'); } catch(e) {}
+  }
+}
+function ninjaApplyLoad() {
+  const ta = document.getElementById('ninja-load-ta');
+  if (!ta || !ta.value.trim()) { showToast('⚠️ 巻物が空です'); return; }
+  try {
+    const d = loadFromScrollCode(ta.value);
+    if (!ninjaImportData(d)) throw new Error('failed');
+    showToast('🥷 修行記録を読み込みました！');
+    // Tear down transient overlays (Shadow Clone Scroll modal + design
+    // picker) but keep the static #how-modal / #links-modal alive so the
+    // "遊びかた" and "Other Games" buttons still open after a restore.
+    _removeTransientOverlays();
+    if (state.screen === 'home') renderHome();
+    // If the loaded scroll didn't bring back a selected design (e.g. a
+    // legacy scroll), reopen the picker so the user can re-pick one.
+    if (typeof shadowNinja !== 'undefined' && !shadowNinja.selected
+        && typeof shadowNinjaShowPicker === 'function') {
+      setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 250);
+    }
+  } catch(e) {
+    showToast('⚠️ 巻物が読めません: ' + (e.message || ''));
+  }
+}
 
 // ─── INFLECTION ENGINE ───────────────────────────────────
 const IRREGULARS = {
@@ -1372,6 +2255,18 @@ function toggleLinks(show) {
   document.getElementById('links-modal').style.display = show ? 'flex' : 'none';
 }
 
+// Tear down dynamically-created overlays without killing the two static
+// page-level modals (#how-modal, #links-modal). The plain
+// querySelectorAll('.overlay').remove() pattern was wiping these too,
+// which broke the "How to Play" and "Other Games" buttons after any
+// reset or scroll-restore event.
+function _removeTransientOverlays() {
+  document.querySelectorAll('.overlay').forEach(o => {
+    if (o.id === 'how-modal' || o.id === 'links-modal') return;
+    o.remove();
+  });
+}
+
 // ── Mute ──────────────────────────────────────────────────────────────
 let _muted = localStorage.getItem('ninja_muted') === '1';
 function toggleMute() {
@@ -1413,15 +2308,18 @@ function exportCSV() {
   if (!rows.length) return;
   const header = ['word', '意味 (jp)', 'synonym', 'example', 'definition'];
   const csvRows = rows.map(r =>
-    [r.word, r.jp, r.syn, `"${r.ex}"`, `"${r.def}"`].join(',')
+    [_weakCsvEscape(r.word), _weakCsvEscape(r.jp), _weakCsvEscape(r.syn),
+     _weakCsvEscape(r.ex), _weakCsvEscape(r.def)].join(',')
   );
-  const csv = [header.join(','), ...csvRows].join('\n');
+  const scrollLabel = state.mode === 5 ? '🏆 100問チャレンジ / Challenge 100' : '🥷 修行の巻物 / Ninja Training Scroll';
+  const csv = [...ninjaStatusCSVMeta(scrollLabel), header.join(','), ...csvRows].join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   const tag = state.mode === 5 ? 'Challenge100' : 'NinjaTrainingScroll';
-  a.download = `${tag}_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
+  const safeName = (progress.name||'Ninja').replace(/[^a-zA-Z0-9_-]/g,'');
+  a.download = `${tag}_${safeName}_Lv${progress.level}_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast('⬇ CSVをダウンロードしました！');
@@ -1430,8 +2328,8 @@ function exportCSV() {
 async function copyToClipboard() {
   const rows = getExportRows();
   if (!rows.length) return;
-  const heading = state.mode === 5 ? '🏆 100問チャレンジ — Eigo-Ninja' : '🥷 Ninja Training Scroll — Eigo-Ninja';
-  const lines = [heading, ''];
+  const scrollLabel = state.mode === 5 ? '🏆 100問チャレンジ — Eigo-Ninja' : '🥷 修行の巻物 / Ninja Training Scroll — Eigo-Ninja';
+  const lines = ninjaStatusTextHeader(scrollLabel);
   rows.forEach((r, i) => {
     lines.push(`${i + 1}. ${r.word}　${r.jp}`);
     lines.push(`   synonym: ${r.syn}`);
@@ -1494,11 +2392,50 @@ function showToast(msg) {
 // ─── HOME SCREEN ─────────────────────────────────────────
 function renderHome() {
   state.screen = 'home';
+  // Compute level / next-level progress
+  const lvl   = progress.level;
+  const cur   = progress.exp;
+  const nextE = ninjaExpForLevel(Math.min(NINJA_LEVEL_CAP, lvl + 1));
+  const baseE = ninjaExpForLevel(lvl);
+  const span  = Math.max(1, nextE - baseE);
+  const pctXp = Math.min(100, Math.round(((cur - baseE) / span) * 100));
+  const seenCount = Object.values(progress.words).filter(w => w.seen).length;
   document.getElementById('game-area').innerHTML = `
     <div class="screen">
       <div class="home-header">
         <div class="game-title">Eigo-<span>Ninja</span></div>
-        <span class="ninja-mascot">🥷</span>
+      </div>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:22px;padding:18px 18px 16px;box-shadow:0 6px 0 #5B21B6;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:120px;height:120px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;border:3px solid rgba(255,255,255,0.35);" onclick="shadowNinjaShowPicker({firstRun:false})" title="忍者デザインを変更">
+            ${(typeof shadowNinjaSelectedFile==='function' && shadowNinjaSelectedFile())
+              ? `<img src="${shadowNinjaSelectedFile()}" alt="忍者" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;&quot;>Tap to<br>choose</span>';">`
+              : `<span style="font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;">Tap to<br>choose</span>`}
+          </div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:13px;font-weight:800;letter-spacing:1.5px;opacity:0.9;">忍者 / NINJA</div>
+            <!-- Tap-to-name area: opens showNameModal() unless the name is
+                 already locked, in which case a small 🔒 indicator is
+                 shown and a tap surfaces a "locked" toast. -->
+            <div onclick="showNameModal()" title="${progress.nameLocked ? '🔒 名前は登録済み（原点回帰でリセット可）' : 'タップして名前を登録 / tap to name'}"
+                 style="font-family:'Bangers',cursive;font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;cursor:pointer;display:flex;align-items:center;gap:8px;">
+              <span>${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+              <span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${progress.nameLocked ? '🔒' : '✏️'}</span>
+            </div>
+            ${progress.nameLocked ? '' : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">タップして名前を登録 / tap to name</div>'}
+            <div style="font-size:16px;font-weight:900;margin-top:6px;">Lv ${lvl}${lvl >= NINJA_LEVEL_CAP ? ' ★MAX' : ''} &nbsp;·&nbsp; <span style="font-size:14px;opacity:0.9;">${cur.toLocaleString()} XP</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;height:10px;background:rgba(255,255,255,0.18);border-radius:999px;overflow:hidden;">
+          <div style="height:100%;width:${pctXp}%;background:linear-gradient(90deg,#FFD54F,#FFB000);transition:width 0.5s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;opacity:0.92;margin-top:6px;">
+          <span>${seenCount} 単語修行済 / words trained</span>
+          <span>${lvl >= NINJA_LEVEL_CAP ? 'MAX' : (nextE - cur).toLocaleString() + ' XP → Lv ' + (lvl + 1)}</span>
+        </div>
+        <div style="margin-top:5px;font-size:12px;font-weight:700;opacity:0.92;">
+          ⏱ 最後に修行した日時 / Last trained: <span style="opacity:0.95;">${progress.lastTrainedAt ? ninjaFormatTimestamp(progress.lastTrainedAt) : '— まだ修行していません'}</span>
+        </div>
       </div>
       <div class="section-label">レベルを選択 / Choose Grade</div>
       <div class="level-grid">
@@ -1521,7 +2458,12 @@ function renderHome() {
       </div>
       <div class="util-row">
         <button class="util-btn" onclick="toggleModal(true)">❓ 遊びかた</button>
-        <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other Games</button>
+        <button class="util-btn" onclick="showScrollModal()" style="background:#F3E8FF; border-color:#A78BFA; color:#4C1D95; box-shadow:0 3px 0 #A78BFA;">📜 Shadow Clone Scroll</button>
+        <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other</button>
+      </div>
+      <div class="util-row">
+        <button class="util-btn" onclick="renderWeakList()" style="background:#FFF1E6; border-color:#FFB870; color:#7a4400; box-shadow:0 3px 0 #FFB870;">🎯 Analysis Scroll</button>
+        <button class="util-btn" onclick="shadowNinjaShowPicker({firstRun:false})" style="background:#F3E8FF; border-color:#A78BFA; color:#4C1D95; box-shadow:0 3px 0 #A78BFA;">🥷 Ninja Design</button>
       </div>
       <div class="footer-strip">ELKえいご王国</div>
     </div>
@@ -1659,6 +2601,15 @@ function toggleChallengeMode(mode) {
 }
 
 // ─── QUIZ ────────────────────────────────────────────────
+function _resetSessionProgress() {
+  state.streak = 0;
+  state.sessionExp = 0;
+  state.perAnswerExp = [];
+  state.recoveredFlags = [];
+  state.firstTimeFlags = [];
+  state.questionStart = 0;
+}
+
 function startQuiz(mode) {
   state.mode = mode;
   state.score = 0;
@@ -1666,8 +2617,9 @@ function startQuiz(mode) {
   state.mistakes = [];
   state.locked = false;
   state.challengeModes = [];
+  _resetSessionProgress();
   const all = wordStock[state.level] || [];
-  state.sessionWords = shuffle(all).slice(0, 20);
+  state.sessionWords = ninjaWeightedSample(all, Math.min(20, all.length));
   renderQuestion();
 }
 
@@ -1681,9 +2633,10 @@ function startChallenge() {
   state.currentIndex = 0;
   state.mistakes = [];
   state.locked = false;
+  _resetSessionProgress();
   const all = wordStock[state.level] || [];
   const count = Math.min(100, all.length);
-  state.sessionWords = shuffle(all).slice(0, count);
+  state.sessionWords = ninjaWeightedSample(all, count);
   const modes = state.selectedChallengeModes;
   state.challengeModes = state.sessionWords.map(() => modes[Math.floor(Math.random() * modes.length)]);
   renderQuestion();
@@ -1696,6 +2649,7 @@ function renderQuestion() {
   }
 
   state.locked = false;
+  state.questionStart = Date.now();
   const current = state.sessionWords[state.currentIndex];
   const effectiveMode = state.mode === 5 ? state.challengeModes[state.currentIndex] : state.mode;
 
@@ -1788,15 +2742,39 @@ function checkAnswer(btn, selected, correct) {
   allBtns.forEach(b => b.style.pointerEvents = 'none');
 
   const fb = document.getElementById('feedback-row');
+  const currentWord = state.sessionWords[state.currentIndex];
+  const elapsed = Date.now() - (state.questionStart || Date.now());
+  const effectiveMode = state.mode === 5 ? state.challengeModes[state.currentIndex] : state.mode;
+  const modeKey = ninjaModeKey(effectiveMode);
+
   if (selected === correct) {
     btn.classList.add('correct');
     state.score++;
+    state.streak++;
+    const flags = ninjaRecordAnswer(currentWord, true, elapsed, modeKey);
+    if (flags.firstTimeCorrect) state.firstTimeFlags[state.currentIndex] = true;
+    if (flags.recovered)        state.recoveredFlags[state.currentIndex] = true;
+    const gained = calculateExp({
+      correct: 1,
+      mode: modeKey,
+      grade: ninjaGradeKey(),
+      streak: state.streak,
+      firstTimeCorrect: flags.firstTimeCorrect,
+      recovered: flags.recovered,
+    });
+    state.sessionExp += gained;
+    state.perAnswerExp[state.currentIndex] = gained;
+    ninjaAddExp(gained);
     playCorrect();
     const msgs = ['Great! 🌟', 'Amazing! ⭐', 'Correct! 🎉', 'Nice! 🔥', 'Yes! 💪'];
-    if (fb) fb.innerHTML = `<span class="fb-ok">${msgs[Math.floor(Math.random()*msgs.length)]}</span>`;
+    const tag = flags.recovered ? ' · 弱点突破！Great!+3' : (flags.firstTimeCorrect ? ' · 初成功+2' : '');
+    if (fb) fb.innerHTML = `<span class="fb-ok">${msgs[Math.floor(Math.random()*msgs.length)]} <span style="font-size:13px;color:#7C3AED;">+${gained} XP${tag}</span></span>`;
   } else {
     btn.classList.add('wrong');
-    state.mistakes.push(state.sessionWords[state.currentIndex]);
+    state.streak = 0;
+    state.mistakes.push(currentWord);
+    ninjaRecordAnswer(currentWord, false, elapsed, modeKey);
+    state.perAnswerExp[state.currentIndex] = 0;
     allBtns.forEach(b => { if (b.textContent.trim() === correct) b.classList.add('correct'); });
     playWrong();
     const msgs = ['Keep going! 💪', 'Almost! 🤗', 'Good try! 🌸'];
@@ -1816,6 +2794,36 @@ function renderResults() {
   else if (pct >= 60) { medal = '🥇'; msg = 'Well done!'; }
   else if (pct >= 40) { medal = '🥈'; msg = 'Good try!'; }
 
+  // Perfect bonus: ×1.3 on session total
+  let perfectBonus = 0;
+  if (total > 0 && state.score === total) {
+    const before = state.sessionExp;
+    const after  = Math.round(before * 1.3);
+    perfectBonus = after - before;
+    if (perfectBonus > 0) {
+      state.sessionExp = after;
+      ninjaAddExp(perfectBonus);
+    }
+  }
+  progress.totalSessions++;
+  progress.lastTrainedAt = Date.now();
+  ninjaSaveLocal();
+
+  const expBlock = `
+    <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;padding:14px 18px;margin:14px 0 6px;box-shadow:0 4px 0 #5B21B6;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">EXP GAINED</div>
+          <div style="font-size:30px;font-weight:900;">+${state.sessionExp.toLocaleString()} <span style="font-size:14px;opacity:0.85;">XP</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">忍者ランク</div>
+          <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;line-height:1;">Lv ${progress.level}</div>
+        </div>
+      </div>
+      ${perfectBonus > 0 ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FFD54F;">🎊 PERFECT! ×1.3 ボーナス +${perfectBonus} XP</div>` : ''}
+    </div>`;
+
   const isChallenge = state.mode === 5;
   // Challenge: always export all session words; regular: only show/export mistakes
   const reviewWords = isChallenge ? state.sessionWords : state.mistakes;
@@ -1824,8 +2832,9 @@ function renderResults() {
   if (reviewWords.length > 0) {
     const headerLabel = isChallenge
       ? `📋 All ${reviewWords.length} Words <span style="font-size:11px;font-weight:700;opacity:0.7;">(${state.mistakes.length} mistake${state.mistakes.length !== 1 ? 's' : ''})</span>`
-      : '🥷 Ninja Training Scroll';
+      : '🥷 修行の巻物 / Ninja Training Scroll';
     reviewHTML = `
+      ${ninjaIdentityHeader('修行の巻物 / TRAINING SCROLL')}
       <div class="review-header-row">
         <div class="review-header">${headerLabel}</div>
         <div class="export-btns">
@@ -1864,6 +2873,7 @@ function renderResults() {
       <div class="result-title">${msg}</div>
       <div class="result-score">${state.score} <span style="font-size:28px;color:#999;">/ ${total}</span></div>
       <div class="result-sub">${pct}% correct &nbsp;·&nbsp; ${state.mistakes.length} mistake${state.mistakes.length !== 1 ? 's' : ''}</div>
+      ${expBlock}
       ${reviewHTML}
       ${isChallenge
         ? `<button class="action-btn ab-challenge" onclick="renderChallengeSetup()" style="margin-top:24px;">🏆 もう一度チャレンジ</button>`
@@ -1890,6 +2900,18 @@ let blitz = {
   queue:       [],
   mistakes:    [],
   locked:      false,
+  // ── scoring extensions ──
+  combo:        0,
+  totalTyped:   0,
+  correctChars: 0,
+  scoreF:       0,
+  attemptDirty: false,   // current word had a wrong attempt
+  itemStart:    0,
+  // ── Per-question typing state (added for unanswered detection on time-up) ──
+  // startedTyping: true once the user has typed at least one character for the
+  // CURRENT word. Distinguishes "didn't try at all" from "tried but ran out
+  // of time mid-word". Reset every time a new item is loaded.
+  startedTyping: false,
 };
 
 // Extract the inflected form that appears in the example sentence
@@ -1943,10 +2965,13 @@ function blitzRenderHint(answer) {
 
 // Load the next word into the persistent blitz panel
 function blitzLoadItem() {
-  if (!blitz.queue.length) blitz.queue = shuffle(wordStock[state.level] || []);
+  if (!blitz.queue.length) blitz.queue = ninjaWeightedSample(wordStock[state.level] || [], (wordStock[state.level] || []).length);
   const entry = blitz.queue.shift();
   blitz.currentItem = blitzBuildItem(entry);
   blitz.locked = false;
+  blitz.attemptDirty = false;
+  blitz.itemStart = Date.now();
+  blitz.startedTyping = false; // reset per-question typing flag
 
   const { prompt, answer, modeLabel, cardBg, cardBorder } = blitz.currentItem;
 
@@ -2022,6 +3047,25 @@ function blitzStartTimer() {
         }
         blitz.charScore += partial;
       }
+      // ── Time-up bookkeeping for the CURRENTLY displayed word ──
+      // We split into two cases per the user's requirement:
+      //   (a) startedTyping === false  → user typed nothing for this word.
+      //       Treat as "unanswered" → surface on Result screen and add to
+      //       Analysis Scroll (lastWrong=true via ninjaRecordAnswer).
+      //   (b) startedTyping === true   → user attempted but ran out of time.
+      //       DO NOT treat as unattempted. Leave existing partial-credit
+      //       handling above as the only effect (no double-penalty).
+      if (blitz.currentItem && !blitz.locked) {
+        const entry = blitz.currentItem.entry;
+        const alreadyTracked = blitz.mistakes.find(m => m.word === entry.word);
+        if (!blitz.startedTyping) {
+          if (!alreadyTracked) {
+            blitz.mistakes.push({ ...entry, _unanswered: true });
+          }
+          // Add to Analysis Scroll memory as a missed word.
+          try { ninjaRecordAnswer(entry, false, BLITZ_SECONDS * 1000, 'blitz'); } catch(e) {}
+        }
+      }
       renderBlitzEnd();
     }
   }, 1000);
@@ -2038,6 +3082,10 @@ function blitzOnInput() {
   if (!inp || !blitz.currentItem) return;
   const typed    = inp.value.toLowerCase();
   const expected = blitz.currentItem.answer.toLowerCase();
+  // Mark that the user has actually attempted this word (any character counts).
+  // Even a single wrong keystroke is "an attempt" — only true emptiness on
+  // time-up means the word was never tried.
+  if (typed.length > 0) blitz.startedTyping = true;
   // Neutral border when empty, green/red once typing starts
   if (!typed) { inp.className = 'kb-input'; return; }
   inp.className = 'kb-input ' + (expected.startsWith(typed) ? 'ok' : 'bad');
@@ -2059,20 +3107,39 @@ function blitzCheckAnswer() {
   if (!typed) return;  // nothing typed yet
 
   const card = document.getElementById('blitz-card');
+  const elapsed = Date.now() - (blitz.itemStart || Date.now());
+
+  // Track totals for accuracy calc
+  blitz.totalTyped += Math.max(typed.length, 1);
 
   if (typed === expected) {
     const charCount = expected.length;
-    blitz.charScore += charCount;
+    blitz.charScore   += charCount;
+    blitz.correctChars += charCount;
     blitz.wordCount++;
+    blitz.combo++;
+    // Per-word: was this word answered with no wrong attempts? → "perfect word"
+    const perfectWord = !blitz.attemptDirty;
+    const diffMul = ({vocab:1.0, def:1.5, fill:1.7})[blitz.subMode] || 1.0;
+    const comboBonus = 1 + (blitz.combo * 0.05);
+    const perfectBonus = perfectWord ? 1.1 : 1.0;
+    blitz.scoreF += charCount * comboBonus * perfectBonus * diffMul;
+    // Cross-game stat record
+    ninjaRecordAnswer(blitz.currentItem.entry, true, elapsed, 'blitz');
     blitz.locked = true;
     playCorrect();
     inp.className = 'kb-input done';
     if (card) card.classList.add('correct-frame');
-    fb.innerHTML = `<span style="color:var(--green);font-weight:900;">✅ +${charCount} chars!</span>`;
+    const tag = perfectWord ? ' · PERFECT' : '';
+    const comboTag = blitz.combo >= 3 ? ` · 🔥x${blitz.combo}` : '';
+    fb.innerHTML = `<span style="color:var(--green);font-weight:900;">✅ +${charCount} chars!${tag}${comboTag}</span>`;
     const pill = document.getElementById('blitz-score-pill');
     if (pill) pill.textContent = `⚡ ${blitz.charScore} chars`;
     setTimeout(() => blitzLoadItem(), 600);
   } else {
+    blitz.combo = 0;
+    blitz.attemptDirty = true;
+    ninjaRecordAnswer(blitz.currentItem.entry, false, elapsed, 'blitz');
     playWrong();
     inp.className = 'kb-input bad';
     if (card) {
@@ -2109,16 +3176,20 @@ function hideBlitzPanel() {
 
 function blitzExportCSV() {
   if (!blitz.mistakes.length) return;
+  const subLabels = { vocab: 'Japanese → English', def: 'Definition → English', fill: 'Fill in the Blank' };
   const header = ['word', '意味 (jp)', 'synonym', 'example', 'definition', 'result'];
   const rows = blitz.mistakes.map(m =>
-    [m.word, m.jp, m.syn, `"${m.ex}"`, `"${m.def}"`, m._passed ? 'passed' : 'wrong'].join(',')
+    [_weakCsvEscape(m.word), _weakCsvEscape(m.jp), _weakCsvEscape(m.syn),
+     _weakCsvEscape(m.ex), _weakCsvEscape(m.def),
+     m._unanswered ? 'unanswered' : (m._passed ? 'passed' : 'wrong')].join(',')
   );
-  const csv  = [header.join(','), ...rows].join('\n');
+  const csv  = [...ninjaStatusCSVMeta('⚡ Ninja Type Blitz Review — ' + (subLabels[blitz.subMode] || '')), header.join(','), ...rows].join('\n');
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = `BlitzReview_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
+  const safeName = (progress.name||'Ninja').replace(/[^a-zA-Z0-9_-]/g,'');
+  a.download = `BlitzReview_${safeName}_Lv${progress.level}_Grade${state.level}_${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast('⬇ CSVをダウンロードしました！');
@@ -2127,9 +3198,9 @@ function blitzExportCSV() {
 async function blitzCopyToClipboard() {
   if (!blitz.mistakes.length) return;
   const subLabels = { vocab: 'Japanese → English', def: 'Definition → English', fill: 'Fill in the Blank' };
-  const lines = [`⚡ Ninja Type Blitz Review — ${subLabels[blitz.subMode]} (Grade ${state.level})`, ''];
+  const lines = ninjaStatusTextHeader('⚡ Ninja Type Blitz Review — ' + (subLabels[blitz.subMode] || '') + ' (Grade ' + state.level + ')');
   blitz.mistakes.forEach((m, i) => {
-    const tag = m._passed ? '⏭ Passed' : '❌ Wrong';
+    const tag = m._unanswered ? '⏳ Unanswered' : (m._passed ? '⏭ Passed' : '❌ Wrong');
     lines.push(`${i + 1}. ${m.word}　${m.jp}　[${tag}]`);
     lines.push(`   synonym: ${m.syn}`);
     lines.push(`   ex: ${m.ex}`);
@@ -2185,7 +3256,14 @@ function startBlitz(subMode) {
   blitz.lives     = BLITZ_MAX_LIVES;
   blitz.mistakes  = [];
   blitz.locked    = false;
-  blitz.queue     = shuffle(wordStock[state.level] || []);
+  blitz.combo        = 0;
+  blitz.totalTyped   = 0;
+  blitz.correctChars = 0;
+  blitz.scoreF       = 0;
+  blitz.attemptDirty = false;
+  blitz.itemStart    = 0;
+  // Adaptive: bias the queue toward weak / new words
+  blitz.queue = ninjaWeightedSample(wordStock[state.level] || [], (wordStock[state.level] || []).length);
 
   showBlitzPanel();
   blitzUpdateTimer();
@@ -2243,14 +3321,50 @@ function renderBlitzEnd() {
   const w = blitz.wordCount;
   const emoji = n >= 80 ? '🏆' : n >= 50 ? '🥇' : n >= 25 ? '🥈' : '🥷';
   const msg   = n >= 80 ? 'Blitz Master! 🎊' : n >= 50 ? 'Spelling Star! ⭐' : n >= 25 ? 'Nice typing! 💪' : 'Keep training! 🔥';
+
+  // ── Type Blitz scoring & rank ──
+  const accuracy = blitz.totalTyped > 0 ? Math.min(1, blitz.correctChars / blitz.totalTyped) : 0;
+  const score    = Math.max(0, Math.round(blitz.scoreF * accuracy));
+  const blitzExp = Math.floor(Math.sqrt(score));
+  let rank = 'D';
+  if      (score >= 200) rank = 'S';
+  else if (score >= 130) rank = 'A';
+  else if (score >=  80) rank = 'B';
+  else if (score >=  40) rank = 'C';
+  if (blitzExp > 0) ninjaAddExp(blitzExp);
+  progress.totalSessions++;
+  progress.lastTrainedAt = Date.now();
+  ninjaSaveLocal();
+  const rankColor = ({S:'#FFD700', A:'#7C3AED', B:'#3A8EE8', C:'#2DD368', D:'#888'})[rank];
+  const blitzExpBlock = `
+    <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;padding:14px 18px;margin:14px 0 6px;box-shadow:0 4px 0 #5B21B6;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">BLITZ RANK</div>
+          <div style="font-family:'Bangers',cursive;font-size:42px;letter-spacing:2px;line-height:1;color:${rankColor};text-shadow:2px 2px 0 rgba(0,0,0,0.25);">${rank}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">EXP / Lv</div>
+          <div style="font-size:20px;font-weight:900;">+${blitzExp} <span style="font-size:12px;opacity:0.85;">XP</span></div>
+          <div style="font-size:11px;font-weight:800;opacity:0.85;">Lv ${progress.level}</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;font-size:11px;font-weight:700;opacity:0.9;">
+        score ${score} · accuracy ${(accuracy*100).toFixed(0)}% · combo max ${blitz.combo}
+      </div>
+    </div>`;
   const subLabels = {
     vocab: 'Japanese → English',
     def:   'Definition → English',
     fill:  'Fill in the Blank'
   };
 
-  const wrong  = blitz.mistakes.filter(m => !m._passed);
-  const passed = blitz.mistakes.filter(m =>  m._passed);
+  // ── Bucket mistakes by status. Unanswered words (time-up + no typing)
+  //    are a NEW bucket added in addition to the existing wrong / passed
+  //    buckets so the existing review UI keeps working unchanged. ──
+  const unanswered = blitz.mistakes.filter(m =>  m._unanswered);
+  const wrong      = blitz.mistakes.filter(m => !m._passed && !m._unanswered);
+  const passed     = blitz.mistakes.filter(m =>  m._passed);
 
   let reviewHTML = '';
   if (blitz.mistakes.length > 0) {
@@ -2272,7 +3386,9 @@ function renderBlitzEnd() {
           <button class="export-btn eb-copy" onclick="blitzCopyToClipboard()">📋 Copy</button>
         </div>
       </div>
-      ${wrong.length  ? `<div style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin-bottom:5px;">❌ WRONG (${wrong.length})</div>`  : ''}
+      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;letter-spacing:1px;margin-bottom:5px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未入力</div>` : ''}
+      ${unanswered.map(m => makeCard(m, '⏳ Time-up · not attempted', '#F3E8FF', '#A78BFA')).join('')}
+      ${wrong.length  ? `<div style="font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin:${unanswered.length ? '8px 0 5px' : '0 0 5px'};">❌ WRONG (${wrong.length})</div>`  : ''}
       ${wrong.map(m  => makeCard(m, '❌ Incorrect', '#fff5f5', '#F4A9A8')).join('')}
       ${passed.length ? `<div style="font-size:11px;font-weight:800;color:#888;letter-spacing:1px;margin:8px 0 5px;">⏭ PASSED (${passed.length})</div>` : ''}
       ${passed.map(m => makeCard(m, '⏭ Passed', '#f8f8f8', '#c8c8c8')).join('')}
@@ -2287,6 +3403,7 @@ function renderBlitzEnd() {
       <div class="result-score" style="color:#7C3AED;">${n}</div>
       <div class="result-sub">${n === 1 ? 'character' : 'characters'} typed correctly &nbsp;·&nbsp; ${w} ${w === 1 ? 'word' : 'words'} answered</div>
       <p style="font-size:18px;font-weight:800;color:#555;margin:12px 0 18px;">${msg}</p>
+      ${blitzExpBlock}
       ${reviewHTML}
       <button class="action-btn" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);box-shadow:0 5px 0 #5B21B6;margin-top:${blitz.mistakes.length ? '14px' : '0'};" onclick="startBlitz('${blitz.subMode}')">⚡ Blitz Again!</button>
       <button class="action-btn ab-primary" onclick="renderBlitzModeSelect()">🎯 Try Another Sub-mode</button>
@@ -2295,8 +3412,306 @@ function renderBlitzEnd() {
   `;
 }
 
+// ─────────────────────────────────────────────────────────
+// 🥷 NINJA DESIGN SYSTEM (additive — does NOT touch level system)
+// ─────────────────────────────────────────────────────────
+//
+//   Model:
+//   • The user gets ONE FREE STARTER pick on first run — they may choose
+//     ANY design from the catalog as their starting ninja.
+//   • Every NINJA_DESIGN_UNLOCK_EVERY levels (5), the user earns 1
+//     unlock token. They spend tokens to unlock additional designs of
+//     their own choosing — order is up to them, no fixed level gates.
+//   • Once unlocked, the user can switch between any unlocked designs
+//     at any time from the picker.
+//   • Selection + unlock list are part of the Shadow Clone Scroll
+//     (see ninjaExportData / ninjaImportData) so they travel with
+//     saved progress.
+//   • localStorage key "shadowNinjaScroll" mirrors the in-memory state.
+//     ninjaResetProgress() now clears it as well.
+//
+// IMPORTANT: this system READS progress.level — it never writes to it.
+// All XP / level math continues to flow through ninjaAddExp().
+
+const NINJA_DESIGN_STORAGE_KEY = 'shadowNinjaScroll';
+const NINJA_DESIGN_UNLOCK_EVERY = 5; // levels per new unlock token
+
+// ── ninjaAssets: master catalog ──────────────────────────
+// Mapping system (per project instructions §5). gender:null means "unknown
+// / awaiting confirmation" — when the user confirms, we can later rename
+// the file to "Boy Ninja" / "Girl Ninja" without touching this code.
+// Names are commented out per request — uncomment any `label` line below
+// to re-enable the printed name in the picker. While commented, the
+// picker shows only the avatar image (no name caption beneath it).
+const ninjaAssets = {
+  ninja_01: { gender: null, file: 'images/Sublect0.png'   /*, label: '黒 KURO · Black'      */ },
+  ninja_02: { gender: null, file: 'images/Subject 2.png'  /*, label: '紅 KURENAI · Crimson' */ },
+  ninja_03: { gender: null, file: 'images/Subject 3.png'  /*, label: '蒼 AO · Azure'        */ },
+  ninja_04: { gender: null, file: 'images/Subject 4.png'  /*, label: '翠 MIDORI · Jade'     */ },
+  ninja_05: { gender: null, file: 'images/Subject 5.png'  /*, label: '雷 RAI · Thunder'     */ },
+  ninja_06: { gender: null, file: 'images/Subject 6.png'  /*, label: '炎 HONOO · Flame'     */ },
+  ninja_07: { gender: null, file: 'images/Subject 7.png'  /*, label: '霧 KIRI · Mist'       */ },
+  ninja_08: { gender: null, file: 'images/Subject 8.png'  /*, label: '風 KAZE · Wind'       */ },
+  ninja_09: { gender: null, file: 'images/Subject 9.png'  /*, label: '月 TSUKI · Moon'      */ },
+  ninja_10: { gender: null, file: 'images/Subject 10.png' /*, label: '陽 HI · Sun'          */ },
+  ninja_11: { gender: null, file: 'images/Subject 11.png' /*, label: '霜 SHIMO · Frost'     */ },
+  ninja_12: { gender: null, file: 'images/Subject 12.png' /*, label: '影 KAGE · Shadow'     */ },
+  ninja_13: { gender: null, file: 'images/Subject 13.png' /*, label: '空 SORA · Sky'        */ },
+  ninja_14: { gender: null, file: 'images/Subject 14.png' /*, label: '金 KIN · Gold'        */ },
+};
+// Helper: a fallback display label when `label` is commented out.
+// Returns the label if defined, otherwise returns '' so the UI can hide
+// the caption row entirely.
+function ninjaAssetLabel(id) {
+  const def = ninjaAssets[id];
+  return (def && def.label) ? def.label : '';
+}
+// Stable iteration order
+const NINJA_ASSET_IDS = Object.keys(ninjaAssets);
+
+// In-memory state — fresh defaults match the "no design picked yet" state
+const shadowNinja = {
+  selected: null,   // id of the currently active design (null = not picked yet)
+  unlocked: [],     // ordered list of ids the user has unlocked
+};
+
+// ── Reset the in-memory state to "no design picked yet" ──
+//   Uses splice() to drain the array IN PLACE rather than reassigning,
+//   which avoids any subtle bugs if some other reference still points
+//   at the old array. Also actively writes an empty record to
+//   localStorage (instead of just removing the key) so any stale data
+//   under that key is overwritten by the empty state.
+function shadowNinjaResetState() {
+  shadowNinja.selected = null;
+  if (Array.isArray(shadowNinja.unlocked)) {
+    shadowNinja.unlocked.splice(0, shadowNinja.unlocked.length);
+  } else {
+    shadowNinja.unlocked = [];
+  }
+  // Persist the cleared state immediately so any later read sees blank data
+  try { shadowNinjaSave(); } catch(e) {}
+}
+
+// ── Persistence ──
+function shadowNinjaSave() {
+  try {
+    localStorage.setItem(NINJA_DESIGN_STORAGE_KEY, JSON.stringify({
+      selected: shadowNinja.selected,
+      unlocked: shadowNinja.unlocked,
+      v: 2,
+    }));
+  } catch(e) {}
+}
+function shadowNinjaLoad() {
+  try {
+    const raw = localStorage.getItem(NINJA_DESIGN_STORAGE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d && typeof d === 'object') {
+      // Accept both the legacy v1 (unlocked as object map) and the new v2
+      // (unlocked as array). Migrate transparently.
+      if (Array.isArray(d.unlocked)) {
+        shadowNinja.unlocked = d.unlocked.filter(id => ninjaAssets[id]);
+      } else if (d.unlocked && typeof d.unlocked === 'object') {
+        shadowNinja.unlocked = Object.keys(d.unlocked).filter(id => d.unlocked[id] && ninjaAssets[id]);
+      }
+      if (d.selected && ninjaAssets[d.selected] && shadowNinja.unlocked.indexOf(d.selected) >= 0) {
+        shadowNinja.selected = d.selected;
+      }
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function shadowNinjaIsUnlocked(id) { return shadowNinja.unlocked.indexOf(id) >= 0; }
+function shadowNinjaSelected()     { return shadowNinja.selected ? ninjaAssets[shadowNinja.selected] : null; }
+function shadowNinjaSelectedFile() {
+  const sel = shadowNinjaSelected();
+  return sel ? sel.file : '';
+}
+// Token math:
+//   total earned = floor(level / 5) + 1   (the +1 is the free starter pick)
+//   available    = total earned − unlocks already claimed
+function shadowNinjaTokensTotal()     { return Math.floor((progress.level || 0) / NINJA_DESIGN_UNLOCK_EVERY) + 1; }
+function shadowNinjaTokensAvailable() { return Math.max(0, shadowNinjaTokensTotal() - shadowNinja.unlocked.length); }
+// XP needed until the next unlock token becomes available.
+function shadowNinjaXpToNextToken() {
+  const lvl = progress.level || 0;
+  const nextMilestone = (Math.floor(lvl / NINJA_DESIGN_UNLOCK_EVERY) + 1) * NINJA_DESIGN_UNLOCK_EVERY;
+  return Math.max(0, ninjaExpForLevel(nextMilestone) - progress.exp);
+}
+
+// Pick a different design (must already be unlocked).
+function shadowNinjaSelect(id) {
+  if (!ninjaAssets[id]) return false;
+  if (!shadowNinjaIsUnlocked(id)) return false;
+  shadowNinja.selected = id;
+  shadowNinjaSave();
+  return true;
+}
+// Spend a token (or the free starter) to unlock + auto-select.
+function shadowNinjaUnlock(id) {
+  if (!ninjaAssets[id]) return false;
+  if (shadowNinjaIsUnlocked(id)) return false;
+  if (shadowNinjaTokensAvailable() <= 0) return false;
+  shadowNinja.unlocked.push(id);
+  shadowNinja.selected = id;
+  shadowNinjaSave();
+  return true;
+}
+
+// ── Picker UI (rebuilds the modal-box only — overlay stays mounted to
+//    avoid the click-twice / flash bug from the previous version) ──
+function shadowNinjaShowPicker(opts) {
+  const isFirstRun = !!(opts && opts.firstRun);
+  // For firstRun (post-reset / fresh-install) ALWAYS destroy any stale
+  // picker DOM and create from scratch. Reusing the old overlay was
+  // letting old in-DOM card markup briefly show the previously chosen
+  // design as "Selected" before the refresh ran.
+  if (isFirstRun) {
+    const stale = document.getElementById('shadow-ninja-picker');
+    if (stale) stale.remove();
+  }
+  // Reuse an existing picker only when not firstRun
+  let overlay = document.getElementById('shadow-ninja-picker');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.id = 'shadow-ninja-picker';
+    overlay.style.zIndex = '9999';
+    overlay.innerHTML = '<div class="modal-box" id="shadow-ninja-picker-box" style="max-height:90vh;overflow-y:auto;"></div>';
+    document.body.appendChild(overlay);
+  }
+  shadowNinjaRefreshPickerUI(isFirstRun);
+}
+function shadowNinjaRefreshPickerUI(isFirstRun) {
+  const box = document.getElementById('shadow-ninja-picker-box');
+  if (!box) return;
+  const tokens     = shadowNinjaTokensAvailable();
+  const xpToNext   = shadowNinjaXpToNextToken();
+  const hasNoPick  = !shadowNinja.selected;
+  // First run = the user hasn't claimed their starter yet
+  const starterMode = isFirstRun || hasNoPick;
+  const cards = NINJA_ASSET_IDS.map(id => {
+    const def      = ninjaAssets[id];
+    const unlocked = shadowNinjaIsUnlocked(id);
+    const selected = shadowNinja.selected === id;
+    let action = '';
+    let status, statusColor, ring, bg, cursor;
+    if (selected) {
+      status = '✅ Selected'; statusColor = '#7C3AED';
+      ring = '#7C3AED'; bg = '#F3E8FF'; cursor = 'default';
+    } else if (unlocked) {
+      status = 'Tap to switch'; statusColor = '#0a5c2d';
+      ring = 'var(--border)'; bg = 'white'; cursor = 'pointer';
+      action = `shadowNinjaPickAction('select','${id}')`;
+    } else if (starterMode) {
+      status = '🆓 Free starter'; statusColor = '#b07a00';
+      ring = '#FFD54F'; bg = '#FFFDE7'; cursor = 'pointer';
+      action = `shadowNinjaPickAction('starter','${id}')`;
+    } else if (tokens > 0) {
+      status = '🔓 Tap to unlock'; statusColor = '#7C3AED';
+      ring = '#A78BFA'; bg = '#F3E8FF'; cursor = 'pointer';
+      action = `shadowNinjaPickAction('unlock','${id}')`;
+    } else {
+      status = '🔒 Need token'; statusColor = '#bbb';
+      ring = '#eee'; bg = 'white'; cursor = 'not-allowed';
+    }
+    // Label may be commented out → use ninjaAssetLabel(id) which returns ''
+    // when undefined. We hide the caption row when there's no label.
+    const labelText = ninjaAssetLabel(id);
+    const altText   = labelText || ('Ninja ' + (NINJA_ASSET_IDS.indexOf(id) + 1));
+    const fallbackText = labelText || ('#' + (NINJA_ASSET_IDS.indexOf(id) + 1));
+    return `
+      <div ${action ? `onclick="${action}"` : ''}
+           style="border:3px solid ${ring};border-radius:18px;padding:14px 10px;text-align:center;cursor:${cursor};
+                  background:${bg};opacity:${cursor === 'not-allowed' ? '0.5' : '1'};
+                  box-shadow:${selected ? '0 4px 0 #7C3AED' : '0 3px 0 var(--border)'};transition:0.1s;">
+        <div style="width:130px;height:130px;margin:0 auto 8px;background:#f8f8f5;border-radius:50%;
+                    display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <img src="${def.file}" alt="${altText}" loading="lazy"
+               style="max-width:100%;max-height:100%;object-fit:contain;"
+               onerror="this.style.display='none';this.parentElement.style.background='#f0f0f0';this.parentElement.innerHTML='<span style=\\'font-size:13px;color:#999;font-weight:800;\\'>${fallbackText}</span>';">
+        </div>
+        ${labelText ? `<div style="font-size:14px;font-weight:900;color:var(--ink);">${labelText}</div>` : ''}
+        <div style="font-size:12px;font-weight:700;color:${statusColor};margin-top:${labelText ? '3px' : '6px'};">${status}</div>
+      </div>`;
+  }).join('');
+  // Token banner — different language for starter vs ongoing unlocks
+  let banner;
+  if (starterMode) {
+    banner = `<div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:14px;padding:10px 14px;font-size:13px;font-weight:800;color:#7a5800;text-align:center;margin-bottom:14px;line-height:1.5;">
+        🆓 まずは1つ自由に選ぼう！<br>
+        Pick any design as your free starter.
+      </div>`;
+  } else {
+    banner = `<div style="background:${tokens>0?'#F3E8FF':'#f8f8f5'};border:2px solid ${tokens>0?'#A78BFA':'var(--border)'};border-radius:14px;padding:10px 14px;font-size:13px;font-weight:800;color:${tokens>0?'#4C1D95':'#666'};text-align:center;margin-bottom:14px;line-height:1.5;">
+        🎟 Unlock tokens: <span style="font-size:18px;">${tokens}</span> &nbsp;·&nbsp; Lv ${progress.level}<br>
+        <span style="font-size:11px;font-weight:700;opacity:0.85;">
+          ${tokens>0 ? '好きなデザインを選んで解放しよう！' : 'あと ' + xpToNext.toLocaleString() + ' XP で次のトークン獲得'}
+        </span>
+      </div>`;
+  }
+  box.innerHTML = `
+    <div class="modal-title" style="color:#4C1D95;">🥷 Ninja Design${starterMode ? ' — Welcome!' : ''}</div>
+    <p style="text-align:center;font-size:13px;color:#666;font-weight:700;margin-bottom:10px;line-height:1.5;">
+      ${starterMode
+        ? '好きな忍者を選んで修行を始めよう！<br>Pick your favorite ninja to start training.'
+        : 'いつでも解放済みデザインに切り替え可能<br>Switch between any unlocked design anytime.'}
+    </p>
+    ${banner}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+      ${cards}
+    </div>
+    <button class="action-btn ab-primary" onclick="shadowNinjaClosePicker()">
+      ${starterMode ? '後で / Later' : '✅ 決定 / Done'}
+    </button>`;
+}
+function shadowNinjaClosePicker() {
+  const ov = document.getElementById('shadow-ninja-picker');
+  if (ov) ov.remove();
+  if (state.screen === 'home') renderHome();
+}
+// Single click handler — covers select / starter / unlock paths.
+// Updates state, then redraws the modal contents in place (no overlay teardown).
+function shadowNinjaPickAction(action, id) {
+  if (action === 'select') {
+    if (!shadowNinjaSelect(id)) return;
+    shadowNinjaRefreshPickerUI(false);
+    return;
+  }
+  if (action === 'starter') {
+    // Free starter — no token cost. Add to unlocked + set selected directly.
+    if (shadowNinjaIsUnlocked(id)) return;
+    shadowNinja.unlocked.push(id);
+    shadowNinja.selected = id;
+    shadowNinjaSave();
+    showToast('🥷 ' + (ninjaAssetLabel(id) || ('Ninja #' + (NINJA_ASSET_IDS.indexOf(id) + 1))) + ' を選びました！');
+    // Close after starter pick — friendly "you're done" experience.
+    shadowNinjaClosePicker();
+    return;
+  }
+  if (action === 'unlock') {
+    if (shadowNinjaTokensAvailable() <= 0) { showToast('⚠️ トークンが足りません'); return; }
+    const _name = ninjaAssetLabel(id) || ('Ninja #' + (NINJA_ASSET_IDS.indexOf(id) + 1));
+    if (!confirm('「' + _name + '」を解放してこのデザインに切り替えますか？\n（解放トークンを1つ使います）\n\nUnlock and switch to this design? Spends 1 token.')) return;
+    if (!shadowNinjaUnlock(id)) return;
+    showToast('🔓 ' + _name + ' を解放！');
+    shadowNinjaRefreshPickerUI(false);
+    return;
+  }
+}
+
 // ─── BOOT ────────────────────────────────────────────────
+ninjaLoadLocal();   // restore EXP, level, and shared word memory across sessions / games
+const _hadDesignAtBoot = shadowNinjaLoad();
 renderHome();
+// First-time users (or anyone who hasn't picked a starter yet) see the
+// design picker as a friendly welcome. After 原点回帰 this also re-runs
+// because shadowNinjaResetState() clears `selected`.
+if (!_hadDesignAtBoot || !shadowNinja.selected) {
+  setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 200);
+}
 </script>
 </body>
 </html>
