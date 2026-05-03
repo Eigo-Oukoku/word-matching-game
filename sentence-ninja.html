@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="google" content="notranslate">
   <title>Sentence Ninja - ELKえいご王国</title>
+  <!-- Match eigo-ninja's typography. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
   html, body { background: #fff; color: #2b2d42; min-height: 100%; overflow-x: hidden; }
@@ -26,6 +30,12 @@
   .screen { width:100%; animation: fadeIn 0.3s ease; }
   .screen-title { font-size:38px; font-weight:bold; color:#2b2d42; margin-bottom:4px; letter-spacing:-1px; }
   .screen-sub   { font-size:19px; color:#E63946; font-weight:bold; margin-bottom:14px; display:block; }
+  /* Eigo-ninja hero title style. The universal `*` selector forces
+     font-family on all elements, so spans need their own rule. */
+  .home-header { text-align: center; padding: 12px 0 14px; }
+  .game-title { font-family: 'Bangers', cursive; font-size: 52px; letter-spacing: 3px; line-height: 1; color: #2b2d42; text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
+  .game-title span { font-family: 'Bangers', cursive; color: #E63946; }
+  .game-title .vol-mini { display:block; font-family:'Bangers',cursive; font-size:22px; letter-spacing:2px; color:#E63946; margin-top:4px; }
   .section-label { font-size:11px; font-weight:bold; letter-spacing:2px; text-transform:uppercase; color:#adb5bd; margin-bottom:8px; }
 
   .stage-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; margin-bottom:10px; }
@@ -220,6 +230,8 @@
        <button class="blitz-submit" onclick="checkBlitz()">Go ➜</button>
      </div>
      <div id="blitz-feedback"></div>
+     <!-- Inline XP-bonus feedback row for Type Blitz mode. -->
+     <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
    </div>
 
    <div id="game-area"></div>
@@ -254,7 +266,41 @@
    </div>
   </div>
 
+  <!-- Ninja shared progression modules (cross-game character + scroll system).
+       NinjaCore: persistence, scroll codec (NINJA1.* — eigo-ninja compatible),
+       XP/level math (cap 1000), Analysis Scroll memory.
+       NinjaUI:   profile chip, design picker, Analysis Scroll modal,
+                  Shadow Clone Scroll modal, name lock modal. -->
+  <script src="ninja-core.js"></script>
+  <script src="ninja-ui.js"></script>
   <script>
+// ── Configure Ninja for Sentence Ninja ──
+// xpMultiplier 0.75 = 75% of eigo-ninja's per-correct XP rate (per spec).
+// slowMs 14s — sentence builds take longer than single-word answers.
+Ninja.configure({
+  gameId:          'sentence-ninja',
+  storageKey:      'sentence_ninja_progress_v1',
+  xpMultiplier:    0.75,
+  slowMs:          14000,
+  imagePathPrefix: 'images/',
+  gameLabel:       'Sentence Ninja',
+});
+Ninja.boot();
+window.onNinjaProgressChanged = function () { try { renderWelcome(); } catch (e) {} };
+window.getNinjaCatalogs = function () {
+  // Sentence Ninja entries are full sentences — we use audio key as the
+  // primary identifier so the same sentence at the same difficulty has a
+  // stable Analysis Scroll bucket.
+  if (typeof ALL_SENTENCES === 'undefined') return [];
+  return [{
+    namespace: 'sentence-ninja',
+    label:     'Sent',
+    entries:   ALL_SENTENCES.map(function (s) {
+      return { word: s.audio || s.en, jp: s.jp, def: s.en };
+    }),
+  }];
+};
+
 // ═══════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════
@@ -506,8 +552,60 @@ let G = {
   // FIX #1: track partial progress for timeout scoring
   speedsterPartialLetters:0, blitzPartialLetters:0,
   avatar:'fox', revealed:false, isGameOver:false,
-  mistakes:[] // sentences answered incorrectly {jp, en, audio}
+  mistakes:[],   // sentences answered incorrectly {jp, en, audio}
+  unanswered:[], // sentences shown when timer expired with no attempt
+  blitzReview:[],// per-sentence outcomes for Type Blitz: {entry, _passed, _unanswered}
+  currentStartedAt:0,
+  streak:0,           // consecutive-correct counter (resets on wrong)
+  sessionBonusXp:0,   // total per-question XP earned this session
+  // ── Per-round wrong-attempt flag ──
+  // Armed by recordMistake() when the player has already flubbed the
+  // CURRENT sentence. If they then retry on the same sentence (e.g.
+  // Sense Mode keeps the question on screen) and finish correctly,
+  // suppress the recovered/firstTime flags so it doesn't bogus-fire as
+  // 弱点突破. Real recovery = wrong in an earlier round, then correct
+  // later. Reset by nextRound() and blitzNextSentence().
+  attemptedWrongThisRound:false,
 };
+// Helper: log a correct sentence + award per-question bonus XP.
+// Sentence Ninja base = 8 (matches eigo-ninja's sentence-tier weighting).
+// Also surfaces an inline "+N XP · 弱点突破！+3" feedback toast.
+function ninjaSentenceLogCorrect(s, ms){
+  if(!s) return;
+  let flags = { firstTimeCorrect: false, recovered: false };
+  try { flags = Ninja.recordAnswer({word: s.audio || s.en}, true, ms || 0) || flags; } catch(e){}
+  // Suppress same-question wrong-then-right "recovered" claim — see
+  // index.html for the rationale (real recovery only when the sentence
+  // reappears in a LATER round and is then answered correctly).
+  if (G.attemptedWrongThisRound) {
+    flags.recovered        = false;
+    flags.firstTimeCorrect = false;
+  }
+  G.streak = (G.streak || 0) + 1;
+  try {
+    const rawXp = Ninja.calculateAnswerExp({
+      base: 8, isCorrect: true,
+      firstTimeCorrect: flags.firstTimeCorrect,
+      recovered:        flags.recovered,
+      streak:           G.streak - 1,
+    });
+    Ninja.addExp(rawXp);
+    G.sessionBonusXp += rawXp;
+    const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
+    NinjaUI.flashAnswerXp({
+      gainedXp:         scaled,
+      firstTimeCorrect: flags.firstTimeCorrect,
+      recovered:        flags.recovered,
+      streak:           G.streak,
+    });
+  } catch(e){}
+}
+function ninjaSentenceLogWrong(s, ms){
+  if(!s) return;
+  try { Ninja.recordAnswer({word: s.audio || s.en}, false, ms || 0); } catch(e){}
+  try { NinjaUI.flashStreakBreak(G.streak); } catch (e) {}
+  G.streak = 0;
+}
 
 // ═══════════════════════════════════════════════
 // TIMER MANAGEMENT — single point of truth
@@ -667,18 +765,27 @@ function startBlitzTimer() {
     if(G.blitzTimeLeft<=0){
       clearInterval(G.blitzInterval); G.blitzInterval=null;
       G.isGameOver=true;
-      // FIX #1: add partial letters from current in-progress input
       const inp=document.getElementById('blitz-inp');
-      if(inp && inp.value.trim()) {
-        const typed = inp.value.trim();
+      const typedRaw = inp ? inp.value.trim() : '';
+      // Partial credit for in-progress typing
+      if(typedRaw) {
         const expected = G.currentSentence ? G.currentSentence.en : '';
-        // Count matching prefix characters
         let partial = 0;
-        const nt = normAnswer(typed), ne = normAnswer(expected);
+        const nt = normAnswer(typedRaw), ne = normAnswer(expected);
         for(let i=0; i<Math.min(nt.length, ne.length); i++) {
           if(nt[i]===ne[i]) partial++; else break;
         }
         G.score += partial;
+      }
+      // ── Type Blitz unanswered detection (eigo-ninja parity) ──
+      // No typing on the live sentence → mark ⏳ Unanswered + Analysis Scroll miss.
+      if(G.currentSentence && !G.blitzLocked) {
+        const key = G.currentSentence.audio;
+        const already = G.blitzReview.some(r => r.entry && r.entry.audio === key);
+        if(!typedRaw) {
+          if(!already) G.blitzReview.push({entry: G.currentSentence, _unanswered:true});
+          ninjaSentenceLogWrong(G.currentSentence, BLITZ_SECS * 1000);
+        }
       }
       renderBlitzEnd();
     }
@@ -691,6 +798,7 @@ function blitzNextSentence() {
     G.sentences=[...G.sentences,...shuffle([...pool]).slice(0,10)];
   }
   G.currentSentence=G.sentences[G.round];
+  G.attemptedWrongThisRound=false;  // reset per-sentence wrong tracker (Type Blitz)
   G.blitzLocked=false;
   blitzUpdateCard();
   speakSentence(G.currentSentence.audio);
@@ -714,6 +822,11 @@ function checkBlitz() {
     G.score+=charCount;
     G.blitzLocked=true;
     playSfx('correctsound');
+    // Analysis Scroll + Type Blitz review bucket
+    ninjaSentenceCorrect();
+    if(!G.blitzReview.some(r=>r.entry && r.entry.audio===G.currentSentence.audio)){
+      G.blitzReview.push({entry: G.currentSentence, _passed:true});
+    }
     inp.className='blitz-input correct';
     if(fb) fb.innerHTML=`<span class="fb-correct">✅ +${charCount} chars!</span>`;
     const scoreRow=document.getElementById('blitz-score-row');
@@ -721,7 +834,7 @@ function checkBlitz() {
     G.round++;
     setTimeout(()=>blitzNextSentence(),500);
   } else {
-    recordMistake();
+    recordMistake();   // also writes to Analysis Scroll + blitzReview
     G.blitzLocked=true;
     playSfx('wrongsound');
     inp.className='blitz-input wrong';
@@ -739,11 +852,14 @@ function renderWelcome() {
   hideBlitzPanel();
   G.isGameOver=false;
   pickMascot(G.avatar);
+  // Phone-friendly home — hero title (eigo-ninja style) + status card
+  // hero. Profile hub centralises identity / Analysis / Shadow Clone.
   document.getElementById('game-area').innerHTML=`
     <div class="screen" style="text-align:center;padding:8px 0">
-      <div style="font-size:50px;margin-bottom:4px">💬</div>
-      <div class="screen-title">Sentence Ninja</div>
-      <span class="screen-sub">Build the English Sentence!</span>
+      <div class="home-header">
+        <div class="game-title">Sentence-<span>Ninja</span><span class="vol-mini">Build the English Sentence!</span></div>
+      </div>
+      <div style="margin: 4px 0 14px;">${NinjaUI.statusBadgeHTML()}</div>
       <div class="section-label">Choose a Stage</div>
       <div class="stage-grid">
         <button class="stage-btn s1" onclick="selectStage(1)">Stage 1<span class="stage-sub">Japan &amp; Japanese<br>12 sentences</span></button>
@@ -758,6 +874,7 @@ function renderWelcome() {
       </div>
     </div>
     ${getFooter("Choose your stage!")}`;
+  NinjaUI.armOnLinks('a.game-link-btn');
 }
 
 function selectStage(id) { G.stageId=id; renderLevelSelect(); }
@@ -791,6 +908,8 @@ function startGame(level) {
   stopAllTimers();
   G.level=level; G.score=0; G.round=0; G.lives=3; G.isGameOver=false;
   G.speedsterPartialLetters=0; G.blitzPartialLetters=0; G.mistakes=[];
+  G.unanswered=[]; G.blitzReview=[]; G.currentStartedAt=0;
+  G.streak=0; G.sessionBonusXp=0;
   const pool=G.stageId==='M' ? ALL_SENTENCES : SENTENCES[G.stageId];
   G.sentences=shuffle([...pool]).slice(0,ROUNDS_PER_GAME);
 
@@ -822,9 +941,17 @@ function startSpeedsterTimer() {
     if(G.speedsterTimeLeft<=0){
       clearInterval(G.speedsterInterval); G.speedsterInterval=null;
       G.isGameOver=true;
-      // FIX #1: count partial in-progress word letters as score
       const partial = G.currentLetterBuf.length;
       G.score += partial;
+      // ── Type-Blitz-style Speedster bookkeeping ──
+      // No letters placed for this sentence → mark ⏳ Unanswered + log a
+      // miss in Analysis Scroll. Partial-letter cases keep their score
+      // bonus and are NOT double-penalised.
+      if(G.currentSentence && partial === 0 && !G.revealed) {
+        const key = G.currentSentence.audio;
+        if(!G.unanswered.some(s=>s.audio===key)) G.unanswered.push(G.currentSentence);
+        ninjaSentenceLogWrong(G.currentSentence, SPEEDSTER_SECS * 1000);
+      }
       renderSpeedsterEnd();
     }
   },1000);
@@ -860,6 +987,8 @@ function nextRound() {
   pickMascot(G.avatar);
   G.currentSentence=G.sentences[G.round];
   G.revealed=false;
+  G.attemptedWrongThisRound=false;  // reset wrong-then-right tracker
+  G.currentStartedAt=Date.now();   // for SRS slow-tracking
 
   const words=tokenise(G.currentSentence.en);
 
@@ -964,6 +1093,10 @@ function renderWordMode() {
   return `
     <div class="answer-area" id="answer-area">${answerHTML}${blanks}</div>
     <div class="feedback-row" id="feedback-row"></div>
+    <!-- Inline XP-bonus feedback row (NinjaUI.flashAnswerXp targets this).
+         Sits right below the per-question status feedback so the bonus
+         message appears under the question — eigo-ninja parity. -->
+    <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
     <div class="choices-wrap">
       <div class="choices-label">Tap words in order</div>
       <div class="word-choices">${chipsHTML}</div>
@@ -994,6 +1127,8 @@ function renderLetterMode() {
   return `
     <div class="answer-area" id="answer-area">${doneWords}${currentSlot}${remaining}</div>
     <div class="feedback-row" id="feedback-row"></div>
+    <!-- Inline XP-bonus feedback row. -->
+    <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
     <div class="choices-wrap">
       <div class="choices-label">Tap letters in order</div>
       <div class="letter-choices">${letterHTML}</div>
@@ -1014,6 +1149,7 @@ function tapWord(word,idx) {
     G.answer.push(word); G.usedWordIdxs.push(idx); playSfx('correctsound_short');
     if(G.answer.length===words.length){
       G.revealed=true; G.score++; showFeedback(true);
+      ninjaSentenceCorrect();
       document.getElementById('answer-area').classList.add('correct'); playSfx('correctsound');
       setTimeout(()=>{ G.round++; nextRound(); },1100);
     } else { renderGame(); }
@@ -1059,6 +1195,7 @@ function tapLetter(letter,idx) {
           const builtAnswer=G.answer.join(' ');
           if(isAccepted(builtAnswer, G.currentSentence)){
             G.score++;
+            ninjaSentenceCorrect();
             playSfx('correctsound');
             renderGame();
             document.getElementById('answer-area').classList.add('correct');
@@ -1076,6 +1213,9 @@ function tapLetter(letter,idx) {
         else { G.score++; }
 
         if(!isSense) {
+          // Speedster path counts letters; non-speedster path counts +1 word.
+          // Either way, the sentence was completed → log success in Analysis Scroll.
+          ninjaSentenceCorrect();
           playSfx('correctsound');
           renderGame();
           document.getElementById('answer-area').classList.add('correct');
@@ -1107,6 +1247,20 @@ function recordMistake() {
   if(!G.currentSentence) return;
   const key=G.currentSentence.audio;
   if(!G.mistakes.some(m=>m.audio===key)) G.mistakes.push(G.currentSentence);
+  // Arm the per-round wrong tracker so a wrong → retry → correct on the
+  // SAME sentence doesn't bogusly fire as a 弱点突破 recovery.
+  G.attemptedWrongThisRound = true;
+  // Analysis Scroll: record a miss for this sentence so the SRS resurfaces it.
+  ninjaSentenceLogWrong(G.currentSentence, G.currentStartedAt ? (Date.now() - G.currentStartedAt) : 0);
+  // Type Blitz reviewable bucket
+  if(G.level === 'blitz' && !G.blitzReview.some(r => r.entry && r.entry.audio === key)) {
+    G.blitzReview.push({ entry: G.currentSentence, _passed:false });
+  }
+}
+// Helper: log a sentence as correctly answered.
+function ninjaSentenceCorrect() {
+  if(!G.currentSentence) return;
+  ninjaSentenceLogCorrect(G.currentSentence, G.currentStartedAt ? (Date.now() - G.currentStartedAt) : 0);
 }
 
 function handleWrong() {
@@ -1167,16 +1321,33 @@ function renderEnd() {
   if(pct>=90){medal='🏆';msg='Sentence Master!';}
   else if(pct>=70){medal='🥇';msg='Excellent work!';}
   else if(pct>=50){medal='🥈';msg='Good job!';}
+  // Per-question XP awarded inside ninjaSentenceLogCorrect.  Add the
+  // perfect-run completion bonus only.
+  let gainedLv = 0;
+  try {
+    const isPerfect = G.score === ROUNDS_PER_GAME && G.lives === 3;
+    if (isPerfect) gainedLv = Ninja.addExp(15);
+    Ninja.touchTrained();
+  } catch (e) {}
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
       <div class="end-medal">${medal}</div>
       <div class="end-title">${msg}</div>
       <div class="end-score">⭐ ${G.score} / ${ROUNDS_PER_GAME} correct</div>
-      <div style="font-size:13px;color:#adb5bd;font-weight:bold;margin-bottom:16px;">${pct}% accuracy</div>
+      <div style="font-size:13px;color:#adb5bd;font-weight:bold;margin-bottom:8px;">${pct}% accuracy</div>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.75×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(G.sessionBonusXp*0.75))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
       <div class="end-btns">
         <button class="end-btn eb-again" onclick="startGame('${G.level}')">Try Again</button>
         <button class="end-btn" style="background:#FFB000;" onclick="renderLevelSelect()">Change Level</button>
         <button class="end-btn eb-menu" onclick="renderWelcome()">Menu</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
       </div>
       ${getMistakesHTML()}
     </div>
@@ -1192,18 +1363,47 @@ function renderSpeedsterEnd() {
             :n>=50?['🎉','Ninja in Training!','Keep it up!']
             :n>=25 ?['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
+  // Per-question XP awarded inside ninjaSentenceLogCorrect.  Add small
+  // Speedster letter-count completion bonus.
+  let gainedLv = 0;
+  try {
+    const bonus = Math.floor(Math.sqrt(Math.max(0, n)));
+    if (bonus > 0) gainedLv = Ninja.addExp(bonus);
+    Ninja.touchTrained();
+  } catch (e) {}
+  // Unanswered review (Type Blitz parity)
+  const ua = G.unanswered || [];
+  const reviewHTML = ua.length ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#7C3AED;margin-bottom:8px;letter-spacing:1px;">⏳ UNANSWERED (${ua.length}) — 時間切れで未挑戦</div>
+      ${ua.map(s=>`<div style="background:#F3E8FF;border:1.5px solid #A78BFA;border-radius:10px;padding:8px 12px;margin-bottom:5px;">
+        <div style="font-size:12px;color:#555;margin-bottom:2px;">🇯🇵 ${s.jp}</div>
+        <div style="font-weight:900;color:#2b2d42;">🇬🇧 ${s.en}</div>
+      </div>`).join('')}
+      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらは Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
       <div class="end-medal">${rank[0]}</div>
       <div class="end-title">Time's Up!</div>
       <p style="font-size:14px;color:#adb5bd;font-weight:bold;margin-bottom:6px;">⚡ Speedster Result</p>
       <div class="end-score">${n} letters in 60 seconds!</div>
-      <p style="font-size:17px;font-weight:bold;color:#555;margin-bottom:18px;">${rank[1]}</p>
+      <p style="font-size:17px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:6px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.75×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(G.sessionBonusXp*0.75))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
       <div class="end-btns">
         <button class="end-btn eb-again" onclick="startGame('speedster')">Play Again</button>
         <button class="end-btn eb-menu" onclick="renderWelcome()">Menu</button>
       </div>
+      ${reviewHTML}
       ${getMistakesHTML()}
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooter(rank[2])}`;
 }
@@ -1218,18 +1418,56 @@ function renderBlitzEnd() {
             :n>=70?['🎉','Ninja in Training!','Keep it up!']
             :n>=30 ?['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
+  // Per-question XP awarded inside ninjaSentenceLogCorrect.  Add Type
+  // Blitz completion bonus (sqrt curve like eigo-ninja).
+  let gainedLv = 0;
+  try {
+    const bonus = Math.floor(Math.sqrt(Math.max(0, n)));
+    if (bonus > 0) gainedLv = Ninja.addExp(bonus);
+    Ninja.touchTrained();
+  } catch (e) {}
+  // Three buckets per Type Blitz spec: unanswered / wrong / passed (correct)
+  const unanswered = G.blitzReview.filter(r=> r._unanswered);
+  const wrong      = G.blitzReview.filter(r=>!r._passed && !r._unanswered);
+  const passed     = G.blitzReview.filter(r=> r._passed);
+  const card = (r, icon, color, bg) => `
+    <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;">
+      <div style="font-size:11px;font-weight:800;color:${color};letter-spacing:0.5px;">${icon}</div>
+      <div style="font-size:12px;color:#555;margin-bottom:2px;">🇯🇵 ${r.entry.jp}</div>
+      <div style="font-weight:900;color:#2b2d42;">🇬🇧 ${r.entry.en}</div>
+    </div>`;
+  const reviewHTML = G.blitzReview.length ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review (${G.blitzReview.length})</div>
+      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
+      ${unanswered.map(r => card(r, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${wrong.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ WRONG (${wrong.length})</div>` : ''}
+      ${wrong.map(r => card(r, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
+      ${passed.length ? `<div style="font-size:11px;font-weight:800;color:#0a5c2d;margin:8px 0 4px;">✅ CORRECT (${passed.length})</div>` : ''}
+      ${passed.map(r => card(r, '✅ Correct', '#0a5c2d', '#f1fff5')).join('')}
+      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらは Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
       <div class="end-medal">${rank[0]}</div>
       <div class="end-title">Time's Up!</div>
       <p style="font-size:14px;color:#adb5bd;font-weight:bold;margin-bottom:6px;">🥷 Ninja Type Blitz Results</p>
       <div class="end-score">${n} letter${n!==1?'s':''} in 60 seconds!</div>
-      <p style="font-size:17px;font-weight:bold;color:#555;margin-bottom:18px;">${rank[1]}</p>
+      <p style="font-size:17px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:6px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.75×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(G.sessionBonusXp*0.75))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
       <div class="end-btns">
         <button class="end-btn" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);" onclick="startGame('blitz')">Blitz Again 🥷</button>
         <button class="end-btn eb-menu" onclick="renderWelcome()">Menu</button>
       </div>
-      ${getMistakesHTML()}
+      ${reviewHTML}
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooter(rank[2])}`;
 }
@@ -1270,12 +1508,16 @@ function renderPasswordGate() {
 }
 
 function checkPassword() {
+  // The Sentence Ninja password gate is unrelated to the cross-game ninja
+  // identity — once it's cleared we still want to prompt the design picker
+  // for first-time players.
   const inp = document.getElementById('pw-input');
   const err = document.getElementById('pw-err');
   if (!inp) return;
   if (inp.value === GAME_PASSWORD) {
     playSfx('correctsound');
     renderWelcome();
+    NinjaUI.maybePromptStarter(300);
   } else {
     playSfx('wrongsound');
     inp.style.borderColor = '#E63946';

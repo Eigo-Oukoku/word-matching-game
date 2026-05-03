@@ -6,6 +6,10 @@
   <meta name="google" content="notranslate">
   <meta name="color-scheme" content="light">
   <title>Word Ninja Vol. 1 - ELKえいご王国</title>
+  <!-- Match eigo-ninja's typography: Bangers (display/hero) + Nunito (UI). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   :root { color-scheme: light; }
   html, body { background-color: #ffffff !important; color: #2b2d42 !important; }
@@ -21,6 +25,14 @@
   .start-screen { text-align: center; width: 100%; padding: 10px 0; }
   .welcome-title { font-size: 40px; font-weight: bold; color: #2b2d42 !important; margin-bottom: 5px; }
   .vol-tag { font-size: 20px; color: #E63946 !important; font-weight: bold; margin-bottom: 15px; display: block; }
+  /* Eigo-ninja-style hero title — Bangers 64px, with the second word in red.
+     The universal `* { font-family: ... }` selector at the top of this
+     file overrides inherited fonts, so we MUST repeat the font-family
+     on every inner element. */
+  .home-header { text-align: center; padding: 12px 0 14px; }
+  .game-title { font-family: 'Bangers', cursive; font-size: 56px; letter-spacing: 3px; line-height: 1; color: #2b2d42; text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
+  .game-title span { font-family: 'Bangers', cursive; color: #E63946; }
+  .game-title .vol-mini { display:block; font-family:'Bangers',cursive; font-size:24px; letter-spacing:2px; color:#E63946; margin-top:4px; }
 
   .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .level-btn {
@@ -186,7 +198,32 @@
   </div>
 </div>
 
+<!-- Ninja shared progression modules (cross-game character + scroll system).
+     ninja-core.js  : data manager, scroll codec (NINJA1.* — backward compatible
+                      with eigo-ninja's Shadow Clone Scroll), XP/level math,
+                      Analysis Scroll memory, character-maker assets.
+     ninja-ui.js    : profile chip, design picker, Analysis Scroll modal,
+                      Shadow Clone Scroll modal, name-lock modal. -->
+<script src="ninja-core.js"></script>
+<script src="ninja-ui.js"></script>
 <script>
+// ── Configure Ninja for THIS game ──
+// xpMultiplier 0.5 = Word Ninja gets 50% of eigo-ninja's per-correct XP.
+// storageKey is per-game; the shared key (ninja_shared_word_memory_v1) is
+// what carries level/exp between games.
+Ninja.configure({
+  gameId:          'word-ninja-v1',
+  storageKey:      'word_ninja_v1_progress_v1',
+  xpMultiplier:    0.5,
+  slowMs:          8000,           // multi-choice → 8 s = "thinking too long"
+  imagePathPrefix: 'images/',
+  gameLabel:       'Word Ninja Vol.1',
+});
+Ninja.boot();
+// Refresh the home screen whenever the user changes their name / loads a
+// scroll / picks a new design — keeps the profile chip in sync.
+window.onNinjaProgressChanged = function () { try { renderWelcome(); } catch (e) {} };
+
 function openHow()   { document.getElementById('how-overlay').style.display='flex'; }
 function closeHow()  { document.getElementById('how-overlay').style.display='none'; }
 function openLinks() { document.getElementById('links-overlay').style.display='flex'; }
@@ -230,7 +267,36 @@ let state = {
   round: 0, score: 0, lives: 3, words: [], current: null, choices: [],
   choiceCount: 4, isNinja: false, isPhantom: false, revealed: false,
   isGameOver: false, avatar: 'fox',
-  isSpeedster: false, speedsterTimeLeft: SPEEDSTER_SECONDS, speedsterInterval: null
+  isSpeedster: false, speedsterTimeLeft: SPEEDSTER_SECONDS, speedsterInterval: null,
+  // ── Analysis Scroll bookkeeping (added per Ninja master spec) ──
+  // mistakes:  words the user got wrong this session
+  // unanswered: Speedster only — words that were on screen when time ran out
+  //             AND the user didn't pick anything ("attempted but timed out").
+  // currentStartedAt: ms timestamp when state.current was shown (for SRS slow-tracking).
+  // streak:    consecutive correct-answer count this session (resets on wrong)
+  //            — feeds into Ninja.calculateAnswerExp for the streak bonus.
+  // sessionBonusXp: total per-question bonus XP earned this session
+  //                 (firstTime / recovered / streak). Surfaced on results.
+  mistakes: [], unanswered: [], currentStartedAt: 0,
+  streak: 0, sessionBonusXp: 0,
+  // ── Per-round wrong-attempt flag ──
+  // Word Ninja keeps the same word on screen until the player clicks the
+  // correct option. If the player clicks a wrong option first and then
+  // the right one in THE SAME question, that should NOT count as a
+  // 弱点突破 / "recovered" (the user spec: only count recovery when the
+  // word reappears in a LATER round and is then answered correctly).
+  // We flip this to true on the first wrong click of the round, and on
+  // the eventual correct click we suppress flags.recovered if it was on.
+  attemptedWrongThisRound: false,
+};
+// Catalog feed used by NinjaUI's Analysis Scroll. Each ALL_WORDS entry is
+// just a string here, so we wrap into {word, jp:''} on the fly.
+window.getNinjaCatalogs = function () {
+  return [{
+    namespace: 'word-ninja-v1',
+    label:     'WN1',
+    entries:   ALL_WORDS.map(function (w) { return { word: w }; }),
+  }];
 };
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
@@ -257,11 +323,14 @@ function renderWelcome() {
   state.isGameOver = false;
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   pickRandomMascot();
+  // Phone-friendly home screen: hero title (eigo-ninja style) on top,
+  // status card immediately below (tap → profile hub).
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
-      <div style="font-size: 60px; margin-bottom: 5px;">🥷</div>
-      <div class="welcome-title">Word Ninja</div>
-      <span class="vol-tag">Vol. 1</span>
+      <div class="home-header">
+        <div class="game-title">Word-<span>Ninja</span><span class="vol-mini">Vol. 1</span></div>
+      </div>
+      <div style="margin: 4px 0 14px;">${NinjaUI.statusBadgeHTML()}</div>
       <div class="level-box">
         <button class="level-btn btn-easy"      onclick="initGame(4,false,false,false)">Easy<span class="sub">Choose from 4 options</span></button>
         <button class="level-btn btn-normal"    onclick="initGame(6,false,false,false)">Normal<span class="sub">Choose from 6 options</span></button>
@@ -277,6 +346,10 @@ function renderWelcome() {
       </div>
     </div>
     ${getFooterHTML("Tap a level!")}`;
+  // Re-arm Other Games handoff every time the home re-renders (the link
+  // nodes are inside a static overlay in markup, but rebinding is cheap
+  // and idempotent thanks to NinjaUI.armOnLinks's capture-phase listener).
+  NinjaUI.armOnLinks('a.game-link-btn');
 }
 
 function initGame(count, ninja, phantom, speedster) {
@@ -284,6 +357,8 @@ function initGame(count, ninja, phantom, speedster) {
   state.isSpeedster = speedster; state.isGameOver = false;
   state.words = shuffle(ALL_WORDS).slice(0, 10);
   state.round = 0; state.score = 0; state.lives = 3;
+  state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
+  state.streak = 0; state.sessionBonusXp = 0;
   if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
   else { if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; } }
   nextRound();
@@ -296,6 +371,16 @@ function startSpeedsterTimer() {
     updateSpeedsterBar();
     if (state.speedsterTimeLeft <= 0) {
       clearInterval(state.speedsterInterval); state.speedsterInterval = null;
+      // ── Type-Blitz-style time-up bookkeeping for the CURRENT word ──
+      // Mirrors the eigo-ninja Type Blitz spec: when the timer hits 0 with
+      // a word still on screen and the user hasn't picked anything yet,
+      // count it as "unanswered" → surface on the result screen AND feed
+      // it into Analysis Scroll as a missed word so the SRS will resurface
+      // it. We dedupe so the same word never logs twice.
+      if (state.current && !state.revealed) {
+        if (!state.unanswered.includes(state.current)) state.unanswered.push(state.current);
+        try { Ninja.recordAnswer({ word: state.current }, false, SPEEDSTER_SECONDS * 1000); } catch (e) {}
+      }
       state.isGameOver = true; renderSpeedsterEnd();
     }
   }, 1000);
@@ -320,6 +405,8 @@ function nextRound() {
   pickRandomMascot();
   state.current = state.words[state.round];
   state.revealed = false;
+  state.attemptedWrongThisRound = false; // reset per-round wrong-then-right tracker
+  state.currentStartedAt = Date.now(); // for SRS slow-tracking via Ninja.recordAnswer
   const wrongs = shuffle(ALL_WORDS.filter(w => w !== state.current)).slice(0, state.choiceCount - 1);
   state.choices = shuffle([state.current, ...wrongs]);
   render();
@@ -336,11 +423,54 @@ function handleChoice(word, idx) {
   if (word === state.current) {
     state.revealed = true; state.score++;
     btn.classList.add('correct'); playSfx('correctsound');
+    // ── Analysis Scroll: log a correct hit (with elapsed ms for slow-detection) ──
+    let flags = { firstTimeCorrect: false, recovered: false };
+    try { flags = Ninja.recordAnswer({ word: state.current }, true,  Date.now() - state.currentStartedAt) || flags; } catch (e) {}
+    // ── Suppress same-question wrong-then-right "recovered" claim ──
+    // recordAnswer reports recovered=true if w.lastWrong was true at the
+    // moment of the correct click. But within the SAME question, that
+    // just means the player tried a wrong option first — not a real SRS
+    // recovery. Real recovery is only "missed in an earlier round →
+    // correct in a later round". So we override the flag here when the
+    // user already clicked wrong in this same round.
+    if (state.attemptedWrongThisRound) {
+      flags.recovered        = false;
+      flags.firstTimeCorrect = false; // also redundantly false; kept for clarity
+    }
+    // ── Per-question XP with eigo-ninja-style bonuses ──
+    // base 5, streak ×(1+0.05/streak), +2 firstTime, +3 recovered.
+    state.streak = (state.streak || 0) + 1;
+    try {
+      const rawXp = Ninja.calculateAnswerExp({
+        base: 5, isCorrect: true,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak - 1,  // streak bonus starts after the 1st correct
+      });
+      Ninja.addExp(rawXp);
+      state.sessionBonusXp += rawXp;
+      // Eigo-ninja-parity feedback toast: "+N XP · 弱点突破！+3" etc.
+      // Display the SCALED amount the player actually earned (raw × 0.5).
+      const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
+      NinjaUI.flashAnswerXp({
+        gainedXp:         scaled,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak,
+      });
+    } catch (e) {}
     if (state.isPhantom || state.isSpeedster) { const tt = document.getElementById('target-text'); if (tt) tt.innerText = state.current; }
     setTimeout(() => { state.round++; nextRound(); }, state.isSpeedster ? 600 : 1200);
   } else {
     if (btn.classList.contains('wrong')) return;
     btn.classList.add('wrong'); playSfx('wrongsound');
+    // ── Analysis Scroll: log a miss against the *target* word (not the wrong pick) ──
+    if (!state.mistakes.includes(state.current)) state.mistakes.push(state.current);
+    state.attemptedWrongThisRound = true; // arm wrong-then-right suppression
+    try { Ninja.recordAnswer({ word: state.current }, false, Date.now() - state.currentStartedAt); } catch (e) {}
+    // Soft "💔 streak broken" feedback when a long run ends.
+    try { NinjaUI.flashStreakBreak(state.streak); } catch (e) {}
+    state.streak = 0;  // wrong answer breaks the streak
     if (state.isSpeedster) {
       state.speedsterTimeLeft = Math.max(0, state.speedsterTimeLeft - 2);
       updateSpeedsterBar();
@@ -384,6 +514,10 @@ function render() {
       <div class="${cardClass}">${cardHTML}</div><br>
       ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')">🔊 Listen</button>` : ''}
     </div>
+    <!-- Inline XP-bonus feedback row (NinjaUI.flashAnswerXp targets this).
+         Sits between the question and the choices so the bonus message
+         appears right below the question — eigo-ninja parity. -->
+    <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
     <div class="choices-grid">
       ${state.choices.map((w, i) => `<button class="choice-btn" id="btn-${i}" onclick="handleChoice('${w}', ${i})">${w}</button>`).join('')}
     </div>
@@ -395,6 +529,35 @@ function renderSpeedsterEnd() {
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   const n = state.score;
   const rank = n >= 10 ? ['🥷','Ninja Speedster!!','Unbelievable speed!'] : n >= 7 ? ['🎉','Swift Ninja!',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
+
+  // Per-question XP was awarded inside handleChoice (with streak +
+  // recovery bonuses).  Speedster gets a small completion bonus when
+  // the player crushes it (10+ words in 20s).
+  let gainedLv = 0;
+  try {
+    if (n >= 10) gainedLv = Ninja.addExp(6);
+    Ninja.touchTrained();
+  } catch (e) {}
+
+  // ── Type-Blitz-style review block (mistakes + unanswered words) ──
+  const mistakes   = (state.mistakes   || []).filter(w => w);
+  const unanswered = (state.unanswered || []).filter(w => w);
+  const makeCard = (w, tag, color, bg) => `
+    <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+      <img src="images/${getFileKey(w)}.png" alt="${w}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
+      <div style="flex:1;font-weight:900;color:#2b2d42;">${w}</div>
+      <span style="font-size:10px;font-weight:800;color:${color};letter-spacing:0.5px;">${tag}</span>
+    </div>`;
+  const reviewHTML = (mistakes.length || unanswered.length) ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review</div>
+      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
+      ${unanswered.map(w => makeCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
+      ${mistakes.map(w => makeCard(w, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
+      <div style="margin-top:10px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
+
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
       <div style="font-size:80px;">${rank[0]}</div>
@@ -402,8 +565,19 @@ function renderSpeedsterEnd() {
       <p style="font-size:14px;color:#888;margin:6px 0 4px;font-weight:bold;">⚡ Speedster Result</p>
       <p style="font-size:36px;font-weight:bold;color:#E63946;margin:10px 0 4px;">${n}</p>
       <p style="font-size:16px;color:#2b2d42;font-weight:bold;margin-bottom:6px;">word${n!==1?'s':''} in 20 seconds!</p>
-      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:20px;">${rank[1]}</p>
-      <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>
+      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
+      <!-- Ninja XP / level pill -->
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
+      ${reviewHTML}
+      <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooterHTML(rank[2])}`;
 }
@@ -411,17 +585,46 @@ function renderSpeedsterEnd() {
 function renderEnd() {
   state.isGameOver = true;
   const emoji = state.lives > 0 ? '🎉' : '🥀';
+  // ── End-of-game XP (per-question XP was already awarded inside
+  //    handleChoice with streak / firstTime / recovered bonuses). Here
+  //    we add only the perfect-run completion bonus on top. ──
+  let gainedLv = 0;
+  try {
+    const isPerfect = state.lives === 3 && state.score === 10;
+    if (isPerfect) gainedLv = Ninja.addExp(10);
+    Ninja.touchTrained();
+  } catch (e) {}
+  // ── Mistakes review (already wired into Analysis Scroll via handleChoice) ──
+  const mistakes = (state.mistakes || []).filter(w => w);
+  const reviewHTML = mistakes.length ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#E63946;margin-bottom:8px;letter-spacing:1px;">❌ MISTAKES (${mistakes.length})</div>
+      ${mistakes.map(w => `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff5f5;border-radius:8px;margin-bottom:4px;"><img src="images/${getFileKey(w)}.png" alt="${w}" style="width:28px;height:28px;object-fit:contain;" onerror="this.style.display='none'"><span style="font-weight:900;color:#2b2d42;">${w}</span></div>`).join('')}
+      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
       <div style="font-size:80px;">${emoji}</div>
       <div class="welcome-title">Word Ninja</div>
-      <p style="font-size:24px;margin:20px 0;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
-      <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>
+      <p style="font-size:24px;margin:14px 0 6px;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
+      ${reviewHTML}
+      <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooterHTML(state.lives > 0 ? "You're a master!" : "Try again!")}`;
 }
 
 renderWelcome();
+// First-run / post-reset: prompt the design picker so the user picks a starter ninja.
+NinjaUI.maybePromptStarter(300);
 </script>
 </body>
 </html>

@@ -6,6 +6,10 @@
   <meta name="google" content="notranslate">
   <meta name="color-scheme" content="light">
   <title>Word Ninja Vol. 2 - ELKえいご王国</title>
+  <!-- Match eigo-ninja's typography. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
   :root { color-scheme: light; }
   html, body { background-color: #ffffff !important; color: #2b2d42 !important; }
@@ -21,6 +25,12 @@
   .start-screen { text-align: center; width: 100%; padding: 10px 0; }
   .welcome-title { font-size: 40px; font-weight: bold; color: #2b2d42 !important; margin-bottom: 5px; }
   .vol-tag { font-size: 20px; color: #E63946 !important; font-weight: bold; margin-bottom: 15px; display: block; }
+  /* Eigo-ninja hero title style. The universal `*` selector forces
+     font-family on all elements, so spans need their own rule. */
+  .home-header { text-align: center; padding: 12px 0 14px; }
+  .game-title { font-family: 'Bangers', cursive; font-size: 56px; letter-spacing: 3px; line-height: 1; color: #2b2d42; text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
+  .game-title span { font-family: 'Bangers', cursive; color: #E63946; }
+  .game-title .vol-mini { display:block; font-family:'Bangers',cursive; font-size:24px; letter-spacing:2px; color:#E63946; margin-top:4px; }
 
   .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .level-btn {
@@ -219,6 +229,10 @@
     </div><!-- ↓↓ リンクをここに入れてください ↓↓ --> <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a> <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a> <a class="game-link-btn link-sn" href="https://eigo-oukoku.github.io/Eigo-Ninja/sentence-ninja" style="background:#FF8FA3 !important;">💬 Sentence Ninja</a> <a class="game-link-btn link-en" href="https://eigo-oukoku.github.io/Eigo-Ninja/eigo-ninja" style="background:#6A5ACD !important;">📚 Eigo-Ninja (Vocab Quiz)</a> <!-- ↑↑ リンクをここに入れてください ↑↑ --> <button class="links-close" onclick="closeLinks()">Close</button>
    </div>
   </div>
+  <!-- Ninja shared progression modules (cross-game).
+       Backward compatible with eigo-ninja's Shadow Clone Scroll format. -->
+  <script src="ninja-core.js"></script>
+  <script src="ninja-ui.js"></script>
   <script>
 function openHow()   { document.getElementById('how-overlay').style.display='flex'; }
 function closeHow()  { document.getElementById('how-overlay').style.display='none'; }
@@ -249,6 +263,27 @@ document.addEventListener('click', function(ev){
   if (ev.target.closest(sel)) playClick();
 }, true);
 
+// ── Configure Ninja for Word Ninja Vol.2 ──
+// xpMultiplier 0.5 → matches Vol.1; the shared progress key carries
+// level/exp/words across both Vols and the other Ninja games.
+Ninja.configure({
+  gameId:          'word-ninja-v2',
+  storageKey:      'word_ninja_v2_progress_v1',
+  xpMultiplier:    0.5,
+  slowMs:          8000,
+  imagePathPrefix: 'images/',
+  gameLabel:       'Word Ninja Vol.2',
+});
+Ninja.boot();
+window.onNinjaProgressChanged = function () { try { renderWelcome(); } catch (e) {} };
+window.getNinjaCatalogs = function () {
+  return [{
+    namespace: 'word-ninja-v2',
+    label:     'WN2',
+    entries:   ALL_WORDS.map(function (w) { return { word: w }; }),
+  }];
+};
+
 function playSfx(f) { if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
 function speak(w)   { if(_muted) return; if(!w) return; new Audio(`audio/${getFileKey(w)}.mp3`).play().catch(()=>{}); }
 
@@ -267,7 +302,21 @@ let state = {
   choiceCount: 4, isNinja: false, isPhantom: false, revealed: false,
   isGameOver: false, avatar: 'fox',
   isSpeedster: false, speedsterTimeLeft: SPEEDSTER_SECONDS, speedsterInterval: null,
-  mistakes: []
+  // mistakes: words wrongly chosen this session.
+  // unanswered: Speedster only — current word when timer hits 0 with no pick.
+  // currentStartedAt: per-question start ms for SRS slow-tracking.
+  // streak / sessionBonusXp: feed Ninja.calculateAnswerExp for in-a-row /
+  //   firstTime / recovered bonuses, mirrored after eigo-ninja.
+  mistakes: [], unanswered: [], currentStartedAt: 0,
+  streak: 0, sessionBonusXp: 0,
+  // ── Per-round wrong-attempt flag ──
+  // Word Ninja keeps the same word on screen until the player picks the
+  // correct option. A wrong-then-right within the SAME question must
+  // NOT count as 弱点突破 / "recovered" (real recovery = wrong in an
+  // earlier round, then correct later). Flipped to true on the first
+  // wrong of the round, reset by nextRound(). Used in handleChoice to
+  // suppress flags.recovered on the eventual correct click.
+  attemptedWrongThisRound: false,
 };
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
@@ -292,11 +341,14 @@ function renderWelcome() {
   state.isGameOver = false;
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   pickRandomMascot();
+  // Phone-friendly home screen: hero title (eigo-ninja style) on top,
+  // status card immediately below (tap → profile hub).
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
-      <div style="font-size: 60px; margin-bottom: 5px;">🥷</div>
-      <div class="welcome-title">Word Ninja</div>
-      <span class="vol-tag">Vol. 2</span>
+      <div class="home-header">
+        <div class="game-title">Word-<span>Ninja</span><span class="vol-mini">Vol. 2</span></div>
+      </div>
+      <div style="margin: 4px 0 14px;">${NinjaUI.statusBadgeHTML()}</div>
       <div class="level-box">
         <button class="level-btn btn-easy"      onclick="initGame(4,false,false,false)">Easy<span class="sub">Choose from 4 options</span></button>
         <button class="level-btn btn-normal"    onclick="initGame(6,false,false,false)">Normal<span class="sub">Choose from 6 options</span></button>
@@ -312,11 +364,14 @@ function renderWelcome() {
       </div>
     </div>
     ${getFooterHTML("Tap a level!")}`;
+  NinjaUI.armOnLinks('a.game-link-btn');
 }
 
 function initGame(count, ninja, phantom, speedster) {
   state.choiceCount  = count; state.isNinja = ninja; state.isPhantom = phantom;
-  state.isSpeedster  = speedster; state.isGameOver = false; state.mistakes = [];
+  state.isSpeedster  = speedster; state.isGameOver = false;
+  state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
+  state.streak = 0; state.sessionBonusXp = 0;
   state.words = shuffle(ALL_WORDS).slice(0, 10);
   state.round = 0; state.score = 0; state.lives = 3;
   if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
@@ -331,6 +386,12 @@ function startSpeedsterTimer() {
     updateSpeedsterBar();
     if (state.speedsterTimeLeft <= 0) {
       clearInterval(state.speedsterInterval); state.speedsterInterval = null;
+      // Type-Blitz-style time-up bookkeeping: word on screen + no pick yet
+      // → mark as unanswered AND feed into Analysis Scroll as a miss.
+      if (state.current && !state.revealed) {
+        if (!state.unanswered.includes(state.current)) state.unanswered.push(state.current);
+        try { Ninja.recordAnswer({ word: state.current }, false, SPEEDSTER_SECONDS * 1000); } catch (e) {}
+      }
       state.isGameOver = true; renderSpeedsterEnd();
     }
   }, 1000);
@@ -355,6 +416,8 @@ function nextRound() {
   pickRandomMascot();
   state.current = state.words[state.round];
   state.revealed = false;
+  state.attemptedWrongThisRound = false;  // reset per-round wrong-then-right tracker
+  state.currentStartedAt = Date.now();   // SRS slow-tracking
   const wrongs = shuffle(ALL_WORDS.filter(w => w !== state.current)).slice(0, state.choiceCount - 1);
   state.choices = shuffle([state.current, ...wrongs]);
   render();
@@ -371,12 +434,44 @@ function handleChoice(word, idx) {
   if (word === state.current) {
     state.revealed = true; state.score++;
     btn.classList.add('correct'); playSfx('correctsound');
+    let flags = { firstTimeCorrect: false, recovered: false };
+    try { flags = Ninja.recordAnswer({ word: state.current }, true,  Date.now() - state.currentStartedAt) || flags; } catch (e) {}
+    // Suppress same-question wrong-then-right "recovered" claim — see
+    // index.html for the rationale (real SRS recovery only applies when
+    // the word reappears in a LATER round and is then answered right).
+    if (state.attemptedWrongThisRound) {
+      flags.recovered        = false;
+      flags.firstTimeCorrect = false;
+    }
+    // Per-question XP with streak / firstTime / recovered bonuses (eigo-ninja parity).
+    state.streak = (state.streak || 0) + 1;
+    try {
+      const rawXp = Ninja.calculateAnswerExp({
+        base: 5, isCorrect: true,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak - 1,
+      });
+      Ninja.addExp(rawXp);
+      state.sessionBonusXp += rawXp;
+      const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
+      NinjaUI.flashAnswerXp({
+        gainedXp:         scaled,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak,
+      });
+    } catch (e) {}
     if (state.isPhantom || state.isSpeedster) { const tt = document.getElementById('target-text'); if (tt) tt.innerText = state.current; }
     setTimeout(() => { state.round++; nextRound(); }, state.isSpeedster ? 600 : 1200);
   } else {
     if (btn.classList.contains('wrong')) return;
     btn.classList.add('wrong'); playSfx('wrongsound');
     if (!state.mistakes.includes(state.current)) state.mistakes.push(state.current);
+    state.attemptedWrongThisRound = true;  // arm wrong-then-right suppression
+    try { Ninja.recordAnswer({ word: state.current }, false, Date.now() - state.currentStartedAt); } catch (e) {}
+    try { NinjaUI.flashStreakBreak(state.streak); } catch (e) {}
+    state.streak = 0;  // wrong answer breaks the streak
     if (state.isSpeedster) {
       state.speedsterTimeLeft = Math.max(0, state.speedsterTimeLeft - 2);
       updateSpeedsterBar();
@@ -420,6 +515,10 @@ function render() {
       <div class="${cardClass}">${cardHTML}</div><br>
       ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')">🔊 Listen</button>` : ''}
     </div>
+    <!-- Inline XP-bonus feedback row (NinjaUI.flashAnswerXp targets this).
+         Sits between the question and the choices so the bonus message
+         appears right below the question — eigo-ninja parity. -->
+    <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
     <div class="choices-grid">
       ${state.choices.map((w, i) => `<button class="choice-btn" id="btn-${i}" onclick="handleChoice('${w}', ${i})">${w}</button>`).join('')}
     </div>
@@ -431,6 +530,28 @@ function renderSpeedsterEnd() {
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   const n = state.score;
   const rank = n >= 10 ? ['🥷','Ninja Speedster!!','Unbelievable speed!'] : n >= 7 ? ['🎉','Swift Ninja!',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
+  // Per-question XP was awarded inside handleChoice. Add a small
+  // completion bonus when the player crushes Speedster (10+ words).
+  let gainedLv = 0;
+  try { if (n >= 10) gainedLv = Ninja.addExp(6); Ninja.touchTrained(); } catch (e) {}
+  // Type-Blitz-style review block: unanswered + mistakes
+  const mistakes   = (state.mistakes   || []).filter(w => w);
+  const unanswered = (state.unanswered || []).filter(w => w);
+  const makeCard = (w, tag, color, bg) => `
+    <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+      <img src="images/${getFileKey(w)}.png" alt="${w}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
+      <div style="flex:1;font-weight:900;color:#2b2d42;">${w}</div>
+      <span style="font-size:10px;font-weight:800;color:${color};letter-spacing:0.5px;">${tag}</span>
+    </div>`;
+  const reviewHTML = (mistakes.length || unanswered.length) ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review</div>
+      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
+      ${unanswered.map(w => makeCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
+      ${mistakes.map(w => makeCard(w, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
+      <div style="margin-top:10px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
       <div style="font-size:80px;">${rank[0]}</div>
@@ -438,8 +559,18 @@ function renderSpeedsterEnd() {
       <p style="font-size:14px;color:#888;margin:6px 0 4px;font-weight:bold;">⚡ Speedster Result</p>
       <p style="font-size:36px;font-weight:bold;color:#E63946;margin:10px 0 4px;">${n}</p>
       <p style="font-size:16px;color:#2b2d42;font-weight:bold;margin-bottom:6px;">word${n!==1?'s':''} in 20 seconds!</p>
-      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:20px;">${rank[1]}</p>
-      <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>
+      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
+      ${reviewHTML}
+      <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooterHTML(rank[2])}`;
 }
@@ -462,18 +593,36 @@ function getWordMistakesHTML() {
 function renderEnd() {
   state.isGameOver = true;
   const emoji = state.lives > 0 ? '🎉' : '🥀';
+  // Per-question XP was awarded inside handleChoice.  Here we only add
+  // the perfect-run completion bonus on top.
+  let gainedLv = 0;
+  try {
+    const isPerfect = state.lives === 3 && state.score === 10;
+    if (isPerfect) gainedLv = Ninja.addExp(10);
+    Ninja.touchTrained();
+  } catch (e) {}
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
       <div style="font-size:80px;">${emoji}</div>
       <div class="welcome-title">Word Ninja</div>
-      <p style="font-size:24px;margin:20px 0;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
+      <p style="font-size:24px;margin:14px 0 6px;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
       <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>
       ${getWordMistakesHTML()}
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
     </div>
     ${getFooterHTML(state.lives > 0 ? "You're a master!" : "Try again!")}`;
 }
 
 renderWelcome();
+NinjaUI.maybePromptStarter(300);
 </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f2c42af50f600a5',t:'MTc3NzI3NjQ4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

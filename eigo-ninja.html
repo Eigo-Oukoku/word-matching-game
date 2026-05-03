@@ -111,6 +111,23 @@
     .cat-def   { background: #f5eaff; color: #5a2880; border: 2px solid var(--purple); }
     .mode-badge { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; background: rgba(0,0,0,0.07); border-radius: 6px; padding: 2px 7px; color: #666; margin-bottom: 6px; display: inline-block; }
 
+    /* ── Quiz screen layout: choices anchored ONE ROW ABOVE true centre,
+       which puts them in a comfortable reading-and-tapping position
+       (slightly closer to the question, while still leaving room for
+       the feedback line below). The asymmetric spacer ratio of 1 : 2
+       pushes the choices up to roughly 1/3 from the top of the
+       viewport. ──────────────────────────────────────────────────── */
+    .screen.quiz-screen {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100dvh - 20px);
+      min-height: calc(100vh - 20px);  /* fallback for browsers w/o dvh */
+    }
+    .screen.quiz-screen .quiz-top           { flex: 0 0 auto; }
+    .screen.quiz-screen .quiz-spacer-top    { flex: 1 1 0; min-height: 12px; }
+    .screen.quiz-screen .choices-grid       { flex: 0 0 auto; }
+    .screen.quiz-screen .feedback-row       { flex: 0 0 auto; }
+    .screen.quiz-screen .quiz-spacer-bottom { flex: 2 1 0; min-height: 24px; }
     .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
     .choice-btn { background: white; border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); cursor: pointer; min-height: 66px; box-shadow: 0 4px 0 var(--border); transition: 0.1s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; }
     .choice-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--border); }
@@ -1770,6 +1787,79 @@ function ninjaApplyNameFromModal() {
   else if (state.screen === 'weak') renderWeakList();
 }
 
+// ─────────────────────────────────────────────────────
+// Profile Hub — unified entry point reachable by tapping the home
+// status card. Modelled on the sibling games' NinjaUI.openProfile() UX
+// (per user feedback, that style is preferred): no redundant title,
+// just an embedded identity card followed by four flat action buttons.
+//
+// PURELY ADDITIVE: this function only reads existing eigo-ninja state
+// and calls existing functions (showNameModal, shadowNinjaShowPicker,
+// renderWeakList, showScrollModal). It does NOT touch the scroll codec,
+// storage keys, or any persistence logic — so existing Shadow Clone
+// Scroll strings continue to load identically.
+// ─────────────────────────────────────────────────────
+function showProfileHub() {
+  // Tear down any pre-existing hub instance so re-tapping is idempotent.
+  const stale = document.getElementById('ninja-profile-hub');
+  if (stale) stale.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'ninja-profile-hub';
+  overlay.style.zIndex = '9999';
+  overlay.onclick = function(ev) { if (ev.target === overlay) overlay.remove(); };
+  // Compact identity card with no extra "STATUS" sub-label — the avatar
+  // + name + Lv/XP are self-explanatory.
+  const safeName  = (progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const avatarSrc = (typeof shadowNinjaSelectedFile === 'function') ? shadowNinjaSelectedFile() : '';
+  const avatarBox = avatarSrc
+    ? `<img src="${avatarSrc}" alt="忍者" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`
+    : `<span style="font-size:11px;font-weight:800;color:#fff;text-align:center;padding:6px;">未選択</span>`;
+  const nameLockMark = progress.nameLocked
+    ? `<span style="font-family:'Nunito',sans-serif;font-size:14px;opacity:0.85;font-weight:800;">🔒</span>`
+    : `<span style="font-family:'Nunito',sans-serif;font-size:14px;opacity:0.85;font-weight:800;">✏️</span>`;
+  const idCard = `
+    <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:0 4px 0 #5B21B6;display:flex;gap:14px;align-items:center;">
+      <div style="width:80px;height:80px;flex:0 0 80px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.35);">
+        ${avatarBox}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;display:flex;align-items:center;gap:8px;">
+          <span>${safeName}</span>${nameLockMark}
+        </div>
+        <div style="font-size:14px;font-weight:900;margin-top:4px;">Lv ${progress.level} · ${progress.exp.toLocaleString()} XP</div>
+      </div>
+    </div>`;
+  // Same button styling vocabulary as NinjaUI.openProfile (sibling games).
+  // Larger margin (14px) + padding (15px) for easier thumb taps on phone.
+  const btnBase = 'display:block;width:100%;padding:15px 14px;font-family:\'Nunito\',sans-serif;font-size:15px;font-weight:900;border:none;border-radius:14px;cursor:pointer;transition:0.1s;color:#fff;margin-bottom:14px;letter-spacing:0.3px;';
+  overlay.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;padding:18px 16px;">
+      ${idCard}
+      <button style="${btnBase}background:#A78BFA;box-shadow:0 4px 0 #7C3AED;"
+              onclick="document.getElementById('ninja-profile-hub').remove(); shadowNinjaShowPicker({firstRun:false});">
+        🎨 忍者デザイン / Change Design
+      </button>
+      <button style="${btnBase}background:#7C3AED;box-shadow:0 4px 0 #5B21B6;"
+              onclick="document.getElementById('ninja-profile-hub').remove(); ${progress.nameLocked ? "showToast('🔒 名前は登録済み — 原点回帰でリセットできます')" : "showNameModal()"};">
+        📝 忍者の名前 / Name ${progress.nameLocked ? '🔒' : ''}
+      </button>
+      <button style="${btnBase}background:#FFB000;box-shadow:0 4px 0 #b07a00;"
+              onclick="document.getElementById('ninja-profile-hub').remove(); renderWeakList();">
+        🎯 Analysis Scroll
+      </button>
+      <button style="${btnBase}background:#3A8EE8;box-shadow:0 4px 0 #2060b0;"
+              onclick="document.getElementById('ninja-profile-hub').remove(); showScrollModal();">
+        📜 Shadow Clone Scroll
+      </button>
+      <button style="display:block;width:100%;margin-top:18px;padding:14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;"
+              onclick="this.closest('.overlay').remove()">
+        閉じる / Close
+      </button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
 function ninjaApplyName() {
   if (progress.nameLocked) {
     showToast('🔒 名前はすでに登録済みです');
@@ -2405,24 +2495,29 @@ function renderHome() {
       <div class="home-header">
         <div class="game-title">Eigo-<span>Ninja</span></div>
       </div>
-      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:22px;padding:18px 18px 16px;box-shadow:0 6px 0 #5B21B6;margin-bottom:16px;">
+      <!-- ── Home status card (sibling-game-parity UX) ──
+           One tap target = whole card → showProfileHub(). The avatar
+           and the name are NO LONGER independently tappable; users get
+           to the name modal via the Profile Hub's "📝 忍者の名前"
+           button, mirroring NinjaUI.statusBadgeHTML in the sibling
+           games (Word/Spelling/Sentence Ninja). The "忍者 / NINJA"
+           sub-label is also removed — the avatar is enough identity.
+           Visuals (gradient, padding, shadow) are unchanged so the
+           Shadow Clone Scroll codec & all persisted state are not
+           affected in any way. -->
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:22px;padding:18px 18px 16px;box-shadow:0 6px 0 #5B21B6;margin-bottom:16px;cursor:pointer;" onclick="showProfileHub()" title="プロフィールメニュー / Profile menu">
         <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:120px;height:120px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;border:3px solid rgba(255,255,255,0.35);" onclick="shadowNinjaShowPicker({firstRun:false})" title="忍者デザインを変更">
+          <div style="width:120px;height:120px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);">
             ${(typeof shadowNinjaSelectedFile==='function' && shadowNinjaSelectedFile())
               ? `<img src="${shadowNinjaSelectedFile()}" alt="忍者" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=&quot;font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;&quot;>Tap to<br>choose</span>';">`
               : `<span style="font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;">Tap to<br>choose</span>`}
           </div>
           <div style="min-width:0;flex:1;">
-            <div style="font-size:13px;font-weight:800;letter-spacing:1.5px;opacity:0.9;">忍者 / NINJA</div>
-            <!-- Tap-to-name area: opens showNameModal() unless the name is
-                 already locked, in which case a small 🔒 indicator is
-                 shown and a tap surfaces a "locked" toast. -->
-            <div onclick="showNameModal()" title="${progress.nameLocked ? '🔒 名前は登録済み（原点回帰でリセット可）' : 'タップして名前を登録 / tap to name'}"
-                 style="font-family:'Bangers',cursive;font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;cursor:pointer;display:flex;align-items:center;gap:8px;">
+            <div style="font-family:'Bangers',cursive;font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;">
               <span>${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
               <span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${progress.nameLocked ? '🔒' : '✏️'}</span>
             </div>
-            ${progress.nameLocked ? '' : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">タップして名前を登録 / tap to name</div>'}
+            ${progress.nameLocked ? '' : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:3px;">タップして名前を登録 / tap to name</div>'}
             <div style="font-size:16px;font-weight:900;margin-top:6px;">Lv ${lvl}${lvl >= NINJA_LEVEL_CAP ? ' ★MAX' : ''} &nbsp;·&nbsp; <span style="font-size:14px;opacity:0.9;">${cur.toLocaleString()} XP</span></div>
           </div>
         </div>
@@ -2456,14 +2551,13 @@ function renderHome() {
           <span class="sub">上級・Advanced</span>
         </button>
       </div>
+      <!-- Bottom utility row.  Shadow Clone Scroll, Analysis Scroll, and
+           Ninja Design are reachable via the status-card profile hub —
+           they were removed from this row to avoid duplicate entry
+           points.  Only How-To-Play and Other Games remain. -->
       <div class="util-row">
         <button class="util-btn" onclick="toggleModal(true)">❓ 遊びかた</button>
-        <button class="util-btn" onclick="showScrollModal()" style="background:#F3E8FF; border-color:#A78BFA; color:#4C1D95; box-shadow:0 3px 0 #A78BFA;">📜 Shadow Clone Scroll</button>
-        <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other</button>
-      </div>
-      <div class="util-row">
-        <button class="util-btn" onclick="renderWeakList()" style="background:#FFF1E6; border-color:#FFB870; color:#7a4400; box-shadow:0 3px 0 #FFB870;">🎯 Analysis Scroll</button>
-        <button class="util-btn" onclick="shadowNinjaShowPicker({firstRun:false})" style="background:#F3E8FF; border-color:#A78BFA; color:#4C1D95; box-shadow:0 3px 0 #A78BFA;">🥷 Ninja Design</button>
+        <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other Games</button>
       </div>
       <div class="footer-strip">ELKえいご王国</div>
     </div>
@@ -2701,19 +2795,27 @@ function renderQuestion() {
        </div>`
     : '';
 
+  // ── Middle-of-screen quiz layout ──
+  // The screen is a flex column. Two equal-flex spacers (top + bottom)
+  // sandwich the answer choices so they sit at roughly the vertical
+  // centre of the viewport — comfortable thumb reach without being
+  // pinned to the very bottom.
   document.getElementById('game-area').innerHTML = `
-    <div class="screen">
-      <div class="top-bar">
-        <button class="menu-btn" onclick="renderHome()">🏠 Menu</button>
-        <span class="mode-badge">${modeLabel}</span>
-        <div class="progress-pill">⭐ ${state.score} &nbsp;|&nbsp; ${state.currentIndex + 1}/${total}</div>
+    <div class="screen quiz-screen">
+      <div class="quiz-top">
+        <div class="top-bar">
+          <button class="menu-btn" onclick="renderHome()">🏠 Menu</button>
+          <span class="mode-badge">${modeLabel}</span>
+          <div class="progress-pill">⭐ ${state.score} &nbsp;|&nbsp; ${state.currentIndex + 1}/${total}</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:${pct}%"></div>
+        </div>
+        ${catStrip}
+        <div class="quiz-card ${cardClass}">${qText}</div>
+        ${hintHTML}
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width:${pct}%"></div>
-      </div>
-      ${catStrip}
-      <div class="quiz-card ${cardClass}">${qText}</div>
-      ${hintHTML}
+      <div class="quiz-spacer-top"></div>
       <div class="choices-grid">
         ${options.map((opt, i) => `
           <button class="choice-btn" id="cb-${i}"
@@ -2722,6 +2824,7 @@ function renderQuestion() {
           </button>`).join('')}
       </div>
       <div class="feedback-row" id="feedback-row"></div>
+      <div class="quiz-spacer-bottom"></div>
     </div>
   `;
 }
@@ -3686,7 +3789,10 @@ function shadowNinjaPickAction(action, id) {
     shadowNinja.unlocked.push(id);
     shadowNinja.selected = id;
     shadowNinjaSave();
-    showToast('🥷 ' + (ninjaAssetLabel(id) || ('Ninja #' + (NINJA_ASSET_IDS.indexOf(id) + 1))) + ' を選びました！');
+    // ── Per user request, the "Ninja #N を選びました！" confirmation
+    //    toast on starter pick is suppressed (eigo-ninja side). Kept
+    //    commented for easy re-enable if we ever want it back. ──
+    // showToast('🥷 ' + (ninjaAssetLabel(id) || ('Ninja #' + (NINJA_ASSET_IDS.indexOf(id) + 1))) + ' を選びました！');
     // Close after starter pick — friendly "you're done" experience.
     shadowNinjaClosePicker();
     return;

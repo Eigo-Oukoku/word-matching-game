@@ -1,0 +1,922 @@
+/* =========================================================================
+ * NinjaUI — drop-in UI module for the Ninja-family games
+ * -------------------------------------------------------------------------
+ * Pairs with NinjaCore. Provides:
+ *   • Shadow Clone Scroll modal     (NinjaUI.openScroll())
+ *   • Analysis Scroll modal/screen  (NinjaUI.openAnalysis(catalogs))
+ *   • Character Maker picker        (NinjaUI.openDesignPicker())
+ *   • Name lock modal               (NinjaUI.openNameModal())
+ *   • Profile chip / status badge   (NinjaUI.statusBadgeHTML())
+ *
+ * All UI strings are kept in Japanese as per the original eigo-ninja design.
+ *
+ * The modal CSS is injected once on first call. Modals overlay the host
+ * game without touching its layout, so this module is pure additive.
+ * ========================================================================= */
+
+(function (global) {
+  'use strict';
+
+  if (!global.Ninja) { console.warn('[NinjaUI] requires NinjaCore (window.Ninja) to be loaded first'); return; }
+  var N = global.Ninja;
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Shared CSS — injected once. Mirrors eigo-ninja's `.overlay` /
+  // `.modal-box` styling so the modal renders as a centred popup with a
+  // dim backdrop (NOT as page-bottom content scrollable inline). Scoped
+  // under `.ninja-ui-*` so it cannot collide with the host game's CSS.
+  // ───────────────────────────────────────────────────────────────────────
+  var STYLE_ID = 'ninja-ui-styles';
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    var s = document.createElement('style');
+    s.id = STYLE_ID;
+    s.textContent = [
+      // ── pop-in animation (matches eigo-ninja's @keyframes popIn) ──
+      '@keyframes ninjaUiPopIn{0%{transform:scale(0.78);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}',
+      // ── backdrop overlay: full-viewport, fixed, centred. Use both
+      //    `inset:0` and explicit top/left/right/bottom so older mobile
+      //    Safari (which treats inset poorly) still pins the overlay. ──
+      // Use Nunito (loaded by host games) as the default font for all
+      // NinjaUI overlays — matches eigo-ninja's body typography.
+      '.ninja-ui-overlay{position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;inset:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:flex-start;justify-content:center;z-index:100000;padding:max(4vh,16px) 14px;font-family:"Nunito","Helvetica Neue",Arial,sans-serif;-webkit-overflow-scrolling:touch;overflow-y:auto;}',
+      // ── modal box: matches eigo-ninja's .modal-box dimensions, with
+      //    a max-height + internal scroll so long content (the design
+      //    grid, the scroll modal) NEVER pushes content past viewport. ──
+      '.ninja-ui-modal{background:#fff;border-radius:22px;padding:22px 18px;max-width:420px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 16px 48px rgba(0,0,0,0.3);color:#2b2d42;animation:ninjaUiPopIn 0.25s ease;}',
+      '.ninja-ui-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:10px;color:#4C1D95;letter-spacing:0.5px;}',
+      '.ninja-ui-close{display:block;width:100%;margin-top:12px;padding:13px;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;}',
+      '.ninja-ui-close:active{transform:translateY(1px);}',
+      '.ninja-ui-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,0.18);transition:0.1s;}',
+      '.ninja-ui-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.18);}',
+      '.ninja-ui-btn.primary{background:#7C3AED;color:#fff;box-shadow:0 3px 0 #5B21B6;}',
+      '.ninja-ui-btn.retry{background:#FFB000;color:#fff;box-shadow:0 3px 0 #b07a00;}',
+      '.ninja-ui-btn.danger{background:#FFE5E7;color:#E63946;border:2px solid #E63946;box-shadow:0 3px 0 #a02030;}',
+      '.ninja-ui-ta{width:100%;min-height:90px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f8f8f5;box-sizing:border-box;}',
+      '.ninja-ui-ta[readonly]{background:#f3f1ec;}',
+      '.ninja-ui-input{flex:1;padding:11px 12px;font-size:15px;font-weight:800;border:2px solid #ddd;border-radius:12px;outline:none;color:#2b2d42;box-sizing:border-box;}',
+      '.ninja-ui-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2b2d42;color:#fff;padding:10px 18px;border-radius:24px;font-weight:800;font-size:13px;z-index:100001;box-shadow:0 6px 16px rgba(0,0,0,0.3);animation:ninjaUiPopIn 0.2s ease;}',
+      '.ninja-ui-row{display:flex;gap:8px;margin-bottom:6px;align-items:center;}',
+      // ── Status card (matches eigo-ninja's home profile card style) ──
+      // Bigger card with internal padding, drop-shadow accent, and a row
+      // for the avatar + identity text. The XP progress bar + meta row
+      // live below the main row.
+      // Card padding mirrors eigo-ninja's `padding:18px 18px 16px` so the
+      // bottom edge matches when the XP bar / meta rows are present.
+      '.ninja-ui-card{background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:22px;padding:18px 18px 16px;box-shadow:0 6px 0 #5B21B6;}',
+      '.ninja-ui-card-row{display:flex;gap:14px;align-items:center;}',
+      // ── Status-card avatar: fixed 120×120 box (matches eigo-ninja
+      //    home profile card byte-for-byte) with consistent inner image
+      //    sizing across all 14 ninja designs. ──
+      '.ninja-ui-avatar{width:120px;height:120px;flex:0 0 120px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);}',
+      '.ninja-ui-avatar img{width:100%;height:100%;object-fit:contain;display:block;}',
+      // Compact variant for in-modal usage where space is tight.
+      '.ninja-ui-avatar.compact{width:80px;height:80px;flex:0 0 80px;border-width:2px;}',
+      // ── XP progress bar ──
+      '.ninja-ui-xpbar{margin-top:12px;height:10px;background:rgba(255,255,255,0.18);border-radius:999px;overflow:hidden;}',
+      '.ninja-ui-xpfill{height:100%;background:linear-gradient(90deg,#FFD54F,#FFB000);transition:width 0.5s;}',
+      '.ninja-ui-meta{display:flex;justify-content:space-between;font-size:12px;font-weight:700;opacity:0.92;margin-top:6px;gap:8px;}',
+      '.ninja-ui-table{width:100%;border-collapse:collapse;font-size:12px;}',
+      '.ninja-ui-table th,.ninja-ui-table td{padding:6px 4px;border-bottom:1px solid #eee;text-align:left;}',
+      '.ninja-ui-table th{background:#f8f8f5;font-weight:900;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.5px;}',
+      '.ninja-ui-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}',
+      '.ninja-ui-pickcard{border:3px solid #eee;border-radius:18px;padding:14px 10px;text-align:center;cursor:pointer;background:#fff;transition:0.1s;box-shadow:0 3px 0 #eee;}',
+      '.ninja-ui-pickcard:active{transform:translateY(2px);box-shadow:0 1px 0 #ddd;}',
+      '.ninja-ui-pickcard.selected{border-color:#7C3AED;background:#F3E8FF;box-shadow:0 4px 0 #7C3AED;}',
+      '.ninja-ui-pickcard.unlocked{border-color:#dee2e6;}',
+      '.ninja-ui-pickcard.starter{border-color:#FFD54F;background:#FFFDE7;box-shadow:0 4px 0 #FFD54F;}',
+      '.ninja-ui-pickcard.token{border-color:#A78BFA;background:#F3E8FF;box-shadow:0 4px 0 #A78BFA;}',
+      '.ninja-ui-pickcard.locked{border-color:#eee;opacity:0.5;cursor:not-allowed;box-shadow:none;}',
+      // ── Pick image: fixed 110×110 round frame, image fills container.
+      //    `width:100%;height:100%;object-fit:contain` guarantees every
+      //    avatar renders at the same visual size regardless of the
+      //    underlying PNG's intrinsic dimensions. ──
+      '.ninja-ui-pickimg{width:110px;height:110px;margin:0 auto 6px;background:#f8f8f5;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;}',
+      '.ninja-ui-pickimg img{width:100%;height:100%;object-fit:contain;display:block;}',
+      '.ninja-ui-banner{border-radius:12px;padding:9px 12px;text-align:center;font-size:12px;font-weight:800;line-height:1.5;margin-bottom:14px;}',
+      // ── Inline XP feedback row (placed by host games right below the
+      //    question card). Mirrors eigo-ninja's `.feedback-row`. ──
+      '.ninja-xp-feedback{text-align:center;min-height:28px;font-size:17px;font-weight:900;margin:6px 0 4px;line-height:1.25;}',
+      '.ninja-xp-fb-ok{color:#0a5c2d;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
+      '.ninja-xp-fb-bad{color:#E63946;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
+      '.ninja-xp-fb-ok .xp-amount{color:#7C3AED;font-weight:900;margin-left:6px;}',
+      '.ninja-xp-fb-ok .xp-tag{color:#666;font-weight:700;font-size:13px;}',
+      // ── Body lock — applied to <body> when an overlay is open so the
+      //    background page doesn't scroll behind the modal. ──
+      'body.ninja-ui-modal-open{overflow:hidden!important;}',
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+  // Body scroll lock helpers — count concurrent overlays so we only
+  // unlock when the LAST overlay closes.
+  var _overlayCount = 0;
+  function lockBodyScroll() {
+    _overlayCount++;
+    document.body.classList.add('ninja-ui-modal-open');
+  }
+  function unlockBodyScroll() {
+    _overlayCount = Math.max(0, _overlayCount - 1);
+    if (_overlayCount === 0) document.body.classList.remove('ninja-ui-modal-open');
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // helpers
+  // ───────────────────────────────────────────────────────────────────────
+  function htmlEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
+    });
+  }
+  function showToast(msg) {
+    var t = document.createElement('div');
+    t.className = 'ninja-ui-toast';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2400);
+  }
+
+  // _findVisibleFeedback — locate the right `.ninja-xp-feedback` slot.
+  //
+  // Multiple host games render the slot in DIFFERENT containers (e.g.
+  // sentence-ninja has both a normal `#game-area` slot and a separate
+  // `#blitz-panel` slot). Only one container is visible at a time, but
+  // both elements may be in the DOM simultaneously, which would cause
+  // `document.getElementById` to return the wrong one.
+  //
+  // This helper:
+  //   1. Honours an explicit `targetId` if it points at a visible node.
+  //   2. Otherwise scans every `.ninja-xp-feedback` element and returns
+  //      the first one whose `offsetParent` is non-null (visible).
+  //   3. Falls back to the first DOM match (so something always renders
+  //      even if visibility detection fails on exotic layouts).
+  function _findVisibleFeedback(targetId) {
+    if (targetId) {
+      var byId = document.getElementById(targetId);
+      if (byId && byId.offsetParent !== null) return byId;
+    }
+    var nodes = document.querySelectorAll('.ninja-xp-feedback');
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].offsetParent !== null) return nodes[i]; // first visible wins
+    }
+    return nodes.length > 0 ? nodes[0] : null;
+  }
+
+  // flashAnswerXp — eigo-ninja-parity per-question feedback.
+  //
+  // Renders something like:
+  //   "Nice! 🔥  +5 XP"                        (regular correct)
+  //   "Amazing! ⭐  +7 XP · 初成功+2"          (firstTimeCorrect)
+  //   "Yes! 💪  +8 XP · 弱点突破！+3"          (recovered → SRS overcame)
+  //   "Great! 🌟  +6 XP · 🔥 streak ×4"        (streak bonus)
+  //
+  // Display location:
+  //   1. INLINE (preferred): if the host game has a `#ninja-xp-feedback`
+  //      element on screen, the message is injected into it — mirrors
+  //      eigo-ninja's `.feedback-row` placement directly under the
+  //      question card.
+  //   2. TOAST fallback: if no inline target exists, a bottom-of-screen
+  //      toast is shown so feedback is never lost.
+  //
+  // Caller passes:
+  //   { gainedXp:        scaled XP just awarded (after Ninja.addExp)
+  //     firstTimeCorrect: bool (from recordAnswer return)
+  //     recovered:        bool (from recordAnswer return)
+  //     streak:           current consecutive-correct count
+  //     targetId:         optional — override of '#ninja-xp-feedback' }
+  function flashAnswerXp(opts) {
+    if (!opts || !opts.gainedXp || opts.gainedXp <= 0) return;
+    injectStyles();
+    var msgs = ['Great! 🌟', 'Amazing! ⭐', 'Correct! 🎉', 'Nice! 🔥', 'Yes! 💪'];
+    var headline = msgs[Math.floor(Math.random() * msgs.length)];
+    // Tags are now CONCATENATED so a 3-in-a-row that's also a first-time
+    // correct shows BOTH (e.g. "初成功+2 · 🔥 streak ×3"). Previously the
+    // if/else-if chain hid the streak tag whenever firstTimeCorrect or
+    // recovered were also true — so during normal play (where most words
+    // are unseen) the streak tag almost never appeared.
+    var tagParts = [];
+    if (opts.recovered)               tagParts.push('弱点突破！+3');
+    if (opts.firstTimeCorrect)        tagParts.push('初成功+2');
+    if ((opts.streak || 0) >= 3)      tagParts.push('🔥 streak ×' + opts.streak);
+    var bonusTag = tagParts.length ? ' · ' + tagParts.join(' · ') : '';
+    // ── Inline mode ──
+    // Pick the FIRST VISIBLE .ninja-xp-feedback element. Multiple games
+    // render the slot in different panels (normal play vs Type Blitz
+    // panel), so picking only the visible one avoids duplicate-ID
+    // ambiguity and keeps the feedback in the right place.
+    var inline = _findVisibleFeedback(opts.targetId);
+    if (inline) {
+      inline.innerHTML = '<span class="ninja-xp-fb-ok">' + headline
+        + '<span class="xp-amount">+' + opts.gainedXp + ' XP</span>'
+        + '<span class="xp-tag">' + bonusTag + '</span>'
+        + '</span>';
+      return;
+    }
+    // ── Toast fallback ──
+    var t = document.createElement('div');
+    t.className = 'ninja-ui-toast';
+    t.innerHTML = headline +
+      '&nbsp;&nbsp;<span style="color:#FFD54F;font-weight:900;">+' + opts.gainedXp + ' XP</span>' +
+      '<span style="color:#fff;opacity:0.85;font-weight:700;">' + bonusTag + '</span>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 1500);
+  }
+  // flashStreakBreak — softer feedback when a long streak ends.
+  // Only fires when the streak that just broke was ≥ 4. Uses the same
+  // inline-then-toast strategy as flashAnswerXp.
+  function flashStreakBreak(brokenStreak, opts) {
+    if (!brokenStreak || brokenStreak < 4) return;
+    injectStyles();
+    var inline = _findVisibleFeedback(opts && opts.targetId);
+    if (inline) {
+      inline.innerHTML = '<span class="ninja-xp-fb-bad">💔 streak ×' + brokenStreak + ' broken</span>';
+      return;
+    }
+    var t = document.createElement('div');
+    t.className = 'ninja-ui-toast';
+    t.style.background = '#3a2030';
+    t.innerHTML = '💔 streak ×' + brokenStreak + ' broken';
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 1300);
+  }
+  function openOverlay(innerHTML, opts) {
+    injectStyles();
+    var ov = document.createElement('div');
+    ov.className = 'ninja-ui-overlay';
+    ov.innerHTML = '<div class="ninja-ui-modal">' + innerHTML + '</div>';
+    if (!(opts && opts.lockBackdrop)) {
+      // Tap on backdrop closes the modal — but never on a tap that
+      // started inside the modal box (prevents accidental dismissal
+      // when dragging to scroll long content).
+      ov.addEventListener('click', function (ev) { if (ev.target === ov) closeOverlay(ov); });
+    }
+    document.body.appendChild(ov);
+    lockBodyScroll();
+    return ov;
+  }
+  function closeOverlay(node) {
+    var ov = node && node.classList && node.classList.contains('ninja-ui-overlay')
+      ? node
+      : (node && node.closest ? node.closest('.ninja-ui-overlay') : null);
+    if (ov) {
+      ov.remove();
+      unlockBodyScroll();
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Profile chip — embed in the host game's home screen
+  // ───────────────────────────────────────────────────────────────────────
+  // Big home status card. Matches eigo-ninja's home profile card layout:
+  //   • 110×110 avatar (uniform across all 14 designs via CSS)
+  //   • Big tappable name with 🔒/✏️ indicator
+  //   • Lv · XP line
+  //   • XP progress bar to next level
+  //   • Meta row: words trained / XP needed for next level
+  //   • Last trained timestamp
+  // No internal "忍者 / NINJA" label — the avatar already conveys identity.
+  function statusBadgeHTML() {
+    // CRITICAL: host games (index.html / game2.html / spelling-ninja /
+    // sentence-ninja) embed this card into their welcome screen via
+    // innerHTML at FIRST render — before any NinjaUI overlay/toast has
+    // run injectStyles(). Without the styles, .ninja-ui-card and
+    // .ninja-ui-avatar have no rules at all, so the inner <img> renders
+    // at its natural pixel size, looking like a giant character splash
+    // instead of the 120×120 profile chip. Force-inject here so the
+    // status card always renders correctly on cold start.
+    injectStyles();
+    var p = N.progress;
+    var avatarFile = N.designSelectedFile();
+    var avatarHTML = avatarFile
+      ? '<img src="' + htmlEsc(avatarFile) + '" alt="忍者" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=&quot;font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;&quot;>Tap to<br>choose</span>\';">'
+      : '<span style="font-size:14px;font-weight:800;color:#fff;text-align:center;padding:6px;line-height:1.3;">Tap to<br>choose</span>';
+    // XP progress within current level
+    var lvl   = p.level;
+    var cur   = p.exp;
+    var nextE = N.expForLevel(Math.min(N.constants.LEVEL_CAP, lvl + 1));
+    var baseE = N.expForLevel(lvl);
+    var span  = Math.max(1, nextE - baseE);
+    var pctXp = Math.min(100, Math.round(((cur - baseE) / span) * 100));
+    var seenCount = 0;
+    try {
+      var words = N.progress.words || {};
+      for (var k in words) { if (words[k] && words[k].seen) seenCount++; }
+    } catch (e) {}
+    var lastTrained = p.lastTrainedAt ? N.formatTimestamp(p.lastTrainedAt) : '— まだ修行していません';
+    var nameMarker  = p.nameLocked
+      ? '<span style="font-size:13px;opacity:0.85;font-weight:800;">🔒</span>'
+      : '<span style="font-size:13px;opacity:0.85;font-weight:800;">✏️</span>';
+    return [
+      '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;" onclick="NinjaUI.openProfile()">',
+        '<div class="ninja-ui-card-row">',
+          '<div class="ninja-ui-avatar">', avatarHTML, '</div>',
+          '<div style="flex:1;min-width:0;">',
+            // Name row — Bangers display font matches eigo-ninja's hero
+            // typography. NOTE: the host games declare a global
+            //   * { font-family: 'Helvetica Neue', ... }
+            // selector that BEATS inheritance from the parent div, so
+            // the Bangers rule MUST be applied directly to the inner
+            // <span> (specificity 1,0,0,0 from inline style) — putting
+            // it only on the parent leaves the span rendered in
+            // Helvetica Neue.
+            '<div style="font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;">',
+              '<span style="font-family:\'Bangers\',cursive;">', htmlEsc(p.name || 'Ninja'), '</span>',
+              '<span style="font-family:\'Nunito\',sans-serif;">', nameMarker, '</span>',
+            '</div>',
+            (p.nameLocked
+              ? ''
+              : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:3px;">タップして名前を登録 / tap to name</div>'),
+            '<div style="font-size:16px;font-weight:900;margin-top:6px;">Lv ', lvl, (lvl >= N.constants.LEVEL_CAP ? ' ★MAX' : ''),
+              ' &nbsp;·&nbsp; <span style="font-size:14px;opacity:0.9;">', cur.toLocaleString(), ' XP</span></div>',
+          '</div>',
+        '</div>',
+        // XP progress bar
+        '<div class="ninja-ui-xpbar"><div class="ninja-ui-xpfill" style="width:', pctXp, '%;"></div></div>',
+        // Meta: words trained / XP-to-next
+        '<div class="ninja-ui-meta">',
+          '<span>', seenCount, ' 単語修行済 / words trained</span>',
+          '<span>', (lvl >= N.constants.LEVEL_CAP ? 'MAX' : (nextE - cur).toLocaleString() + ' XP → Lv ' + (lvl + 1)), '</span>',
+        '</div>',
+        '<div style="margin-top:5px;font-size:12px;font-weight:700;opacity:0.92;">',
+          '⏱ 最後に修行した日時 / Last trained: <span style="opacity:0.95;">', htmlEsc(lastTrained), '</span>',
+        '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  // identityHeaderHTML — compact card for use INSIDE modals (Analysis
+  // Scroll, Profile Hub, etc). No big XP bar / metadata since space is
+  // already cramped, and the surrounding modal title provides context.
+  // The optional `label` param is now ignored (kept for backward compat
+  // with existing callers); the card reads the player identity directly.
+  function identityHeaderHTML(/*label*/) {
+    // Same cold-start risk as statusBadgeHTML — guarantee styles are in.
+    injectStyles();
+    var p = N.progress;
+    var avatarFile = N.designSelectedFile();
+    var avatarHTML = avatarFile
+      ? '<img src="' + htmlEsc(avatarFile) + '" alt="忍者" onerror="this.style.display=\'none\'">'
+      : '<span style="font-size:11px;font-weight:800;color:#fff;text-align:center;">未選択</span>';
+    return [
+      '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;">',
+        '<div class="ninja-ui-card-row">',
+          '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
+          '<div style="flex:1;min-width:0;">',
+            // Same anti-`*`-selector pattern as statusBadgeHTML: Bangers
+            // applied directly to the inner span containing the name.
+            '<div style="font-size:26px;letter-spacing:1px;line-height:1.05;">',
+              '<span style="font-family:\'Bangers\',cursive;">', htmlEsc(p.name || 'Ninja'), '</span>',
+              (p.nameLocked ? ' <span style="font-family:\'Nunito\',sans-serif;font-size:14px;">🔒</span>' : ''),
+            '</div>',
+            '<div style="font-size:14px;font-weight:900;margin-top:4px;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</div>',
+          '</div>',
+        '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Profile menu — single tap from home, opens a hub of all NinjaUI features
+  // ───────────────────────────────────────────────────────────────────────
+  // openProfile — unified hub reachable by tapping the home status card.
+  // No "🥷 [gameLabel]" title and no "忍者ステータス / STATUS" sub-label;
+  // the embedded identity card already shows who the player is, and the
+  // four buttons below speak for themselves.
+  function openProfile() {
+    // Larger margin between buttons (14px) for easier thumb taps —
+    // matches phone-screen ergonomics and prevents accidental
+    // mis-taps. Each button is also a hair taller via padding bump.
+    var btnGap = 'margin-bottom:14px;padding:14px;font-size:15px;';
+    var html = [
+      identityHeaderHTML(),
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#A78BFA;box-shadow:0 3px 0 #7C3AED;" onclick="NinjaUI.openDesignPicker()">🎨 忍者デザイン / Change Design</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + '" onclick="NinjaUI.openNameModal()">📝 忍者の名前 / Name ' + (N.progress.nameLocked ? '🔒' : '') + '</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#FFB000;box-shadow:0 3px 0 #b07a00;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#3A8EE8;box-shadow:0 3px 0 #2060b0;" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>',
+      '<button class="ninja-ui-close" style="margin-top:18px;">閉じる / Close</button>',
+    ].join('');
+    var ov = openOverlay(html);
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Shadow Clone Scroll modal
+  // ───────────────────────────────────────────────────────────────────────
+  function openScroll() {
+    var p = N.progress;
+    var code = N.generateScrollCode(N.exportData());
+    var html = [
+      '<div class="ninja-ui-title">📜 Shadow Clone Scroll</div>',
+      '<div style="font-size:12px;color:#666;text-align:center;margin-bottom:10px;line-height:1.5;">',
+        '修行の記録を影として巻物に封じよう<br>',
+        '<span style="font-size:11px;color:#888;">Save / Load Your Training Progress.</span>',
+      '</div>',
+      // Name section
+      '<div style="font-size:13px;font-weight:900;color:#333;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">',
+        '<span>🥷 忍者の名前 / Ninja Name</span>',
+        (p.nameLocked
+          ? '<span style="font-size:10px;color:#7C3AED;font-weight:800;">🔒 LOCKED</span>'
+          : '<span style="font-size:10px;color:#b07a00;font-weight:800;">⚠️ ONE-TIME</span>'),
+      '</div>',
+      '<div class="ninja-ui-row">',
+        '<input id="ninja-name-input-modal" type="text" maxlength="20" value="', htmlEsc(p.name || 'Ninja'), '" ',
+          (p.nameLocked ? 'readonly disabled ' : ''),
+          'placeholder="名前を入れる / your name" class="ninja-ui-input" ',
+          'style="background:', (p.nameLocked ? '#F3E8FF' : '#fff'), ';">',
+        '<button class="ninja-ui-btn primary" style="width:auto;padding:11px 14px;', (p.nameLocked ? 'opacity:0.4;' : ''), '" ',
+          (p.nameLocked ? 'disabled' : 'onclick="NinjaUI._applyName()"'), '>決定</button>',
+      '</div>',
+      '<div style="font-size:10px;color:#888;font-weight:700;line-height:1.5;margin-bottom:14px;">',
+        (p.nameLocked
+          ? '名前は一度きり登録できます。変更したい場合は 原点回帰 が必要です。<br>Name is locked once set — only resetting can change it.'
+          : '⚠️ 一度登録するとこの名前は変更できません。慎重に！<br>You can name your ninja only ONCE — choose carefully.'),
+      '</div>',
+      // Save scroll
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">',
+        '<span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Scrollを作る</span>',
+        '<span style="font-size:11px;color:#7C3AED;font-weight:800;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</span>',
+      '</div>',
+      '<textarea class="ninja-ui-ta" id="ninja-scroll-out" readonly>', htmlEsc(code), '</textarea>',
+      '<button class="ninja-ui-btn primary" style="margin-top:6px;" onclick="NinjaUI._copyScroll()">📋 Shadow Clone Scrollを写し取る</button>',
+      // Load scroll
+      '<div style="font-size:13px;font-weight:900;color:#333;margin:14px 0 6px;">⬆ Shadow Clone Scrollを読み込む</div>',
+      '<textarea class="ninja-ui-ta" id="ninja-scroll-in" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>',
+      '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._applyLoad()">🥷 修行記録を呼び戻す</button>',
+      // Persistence note
+      '<div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:12px;padding:9px 12px;margin-top:14px;font-size:11px;color:#7a5800;font-weight:700;line-height:1.5;">',
+        '💡 ブラウザの記録はページを閉じても残りますが、<br>',
+        '「閲覧履歴の削除 → サイトデータ」を消すと失われます。<br>',
+        '大事な巻物はコピーして外に保存しておくと安心 ✨',
+      '</div>',
+      // Reset
+      '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed #ddd;">',
+        '<button class="ninja-ui-btn danger" onclick="NinjaUI._resetProgress()">🌅 原点回帰 — Reset All Progress</button>',
+        '<div style="font-size:10px;color:#888;text-align:center;margin-top:6px;line-height:1.4;">',
+          '全ての修行記録を消去します。確認は2回行います。<br>',
+          'Will erase Lv, EXP, and all word stats. Confirms twice.',
+        '</div>',
+      '</div>',
+      '<button class="ninja-ui-close">閉じる</button>',
+    ].join('');
+    var ov = openOverlay(html, { lockBackdrop: false });
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+  }
+  function _copyScroll() {
+    var ta = document.getElementById('ninja-scroll-out'); if (!ta) return;
+    ta.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(
+        function () { showToast('📋 Scrollをコピーしました！'); },
+        function () { try { document.execCommand('copy'); showToast('📋 Scrollをコピーしました！'); } catch (e) {} }
+      );
+    } else {
+      try { document.execCommand('copy'); showToast('📋 Scrollをコピーしました！'); } catch (e) {}
+    }
+  }
+  function _applyLoad() {
+    var ta = document.getElementById('ninja-scroll-in'); if (!ta) return;
+    var code = (ta.value || '').trim();
+    if (!code) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
+    try {
+      var data = N.loadFromScrollCode(code);
+      N.importData(data);
+      showToast('🥷 ' + (N.progress.name || 'Ninja') + ' Lv ' + N.progress.level + ' を呼び戻しました！');
+      // Refresh the modal to reflect new state, and notify the host game
+      closeOverlay(ta);
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+    } catch (e) {
+      showToast('⚠️ 読み込み失敗: ' + e.message);
+    }
+  }
+  function _applyName() {
+    var inp = document.getElementById('ninja-name-input-modal'); if (!inp) return;
+    if (N.setName(inp.value)) {
+      showToast('🥷 名前を「' + N.progress.name + '」に登録！🔒');
+      closeOverlay(inp);
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+    } else {
+      showToast('⚠️ 名前を入れてね（または既にロック済み）');
+    }
+  }
+  function _resetProgress() {
+    if (!confirm('⚠️ 原点回帰\n\nすべての修行記録（レベル・経験値・全単語の正答記録）をゼロに戻します。\nこの操作は取り消せません！\n\nWipe ALL training progress?\nThis cannot be undone.')) return;
+    if (!confirm('⚠️ 本当に消去してよろしいですか？\n\nThis will permanently erase your training scroll. Continue?')) return;
+    N.resetProgress();
+    showToast('🌅 原点回帰しました — Reset complete.');
+    var any = document.querySelector('.ninja-ui-overlay');
+    if (any) any.remove();
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+    setTimeout(openDesignPicker.bind(null, { firstRun: true }), 250);
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Standalone name modal (for tapping the profile chip)
+  // ───────────────────────────────────────────────────────────────────────
+  function openNameModal() {
+    var p = N.progress;
+    if (p.nameLocked) { showToast('🔒 名前は登録済みです · 原点回帰でリセットできます'); return; }
+    var html = [
+      '<div class="ninja-ui-title">🥷 名前を決める / Name your Ninja</div>',
+      '<div style="font-size:12px;color:#666;text-align:center;margin-bottom:14px;line-height:1.5;">',
+        '⚠️ 一度登録するとこの名前は変更できません<br>',
+        '<span style="font-size:11px;color:#888;">Name your ninja just once.</span>',
+      '</div>',
+      '<div class="ninja-ui-row">',
+        '<input id="ninja-name-input-solo" type="text" maxlength="20" value="', htmlEsc(p.name || ''), '" ',
+          'placeholder="名前を入れる / your name" class="ninja-ui-input">',
+        '<button class="ninja-ui-btn primary" style="width:auto;padding:11px 14px;" onclick="NinjaUI._applyNameSolo()">決定</button>',
+      '</div>',
+      '<button class="ninja-ui-close">後で / Later</button>',
+    ].join('');
+    var ov = openOverlay(html);
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+    setTimeout(function () { var i = document.getElementById('ninja-name-input-solo'); if (i) i.focus(); }, 80);
+  }
+  function _applyNameSolo() {
+    var inp = document.getElementById('ninja-name-input-solo'); if (!inp) return;
+    if (N.setName(inp.value)) {
+      showToast('🥷 名前を「' + N.progress.name + '」に登録！🔒');
+      closeOverlay(inp);
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+    } else {
+      showToast('⚠️ 名前を入れてね');
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Character Maker (design picker)
+  // ───────────────────────────────────────────────────────────────────────
+  function openDesignPicker(opts) {
+    var firstRun = !!(opts && opts.firstRun);
+    injectStyles();
+    // Tear down any stale picker (post-reset re-mounts) and reset the
+    // body-scroll lock counter so we don't double-count.
+    var stale = document.getElementById('ninja-ui-design-pick');
+    if (stale) {
+      stale.remove();
+      unlockBodyScroll();
+    }
+    var ov = document.createElement('div');
+    ov.id = 'ninja-ui-design-pick';
+    ov.className = 'ninja-ui-overlay';
+    ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-ui-design-box"></div>';
+    // Tap on backdrop closes — same UX as openOverlay
+    ov.addEventListener('click', function (ev) { if (ev.target === ov) _closeDesignPicker(); });
+    document.body.appendChild(ov);
+    lockBodyScroll();
+    refreshDesignPicker(firstRun);
+  }
+  function refreshDesignPicker(firstRun) {
+    var box = document.getElementById('ninja-ui-design-box'); if (!box) return;
+    var tokens   = N.designTokensAvailable();
+    var xpToNext = N.designXpToNextToken();
+    var hasNoPick = !N.design.selected;
+    // ── Three modes (mutually exclusive) ──
+    //   • starter    : the player has NEVER claimed a design in any Ninja
+    //                  game (unlocked is empty). They get one free pick.
+    //   • adopt      : the player has unlocked designs (e.g. carried over
+    //                  from another game via the shared design key) but
+    //                  no active selection. Force them to pick from the
+    //                  unlocked list — no extra free starter.
+    //   • regular    : a design is active; level-based tokens may unlock
+    //                  more designs.
+    var canStarter  = N.designHasStarterAvailable();
+    var starterMode = (firstRun || hasNoPick) && canStarter;
+    var adoptMode   = hasNoPick && !canStarter; // unlocked.length > 0 but selected null
+    var prefix = N.profile.imagePathPrefix || 'images/';
+    var cards = N.assetIds.map(function (id) {
+      var def = N.assets[id];
+      var unlocked = N.designIsUnlocked(id);
+      var selected = N.design.selected === id;
+      var cls = 'ninja-ui-pickcard';
+      var status, action = '';
+      if (selected) {
+        cls += ' selected'; status = '✅ Selected';
+      } else if (unlocked) {
+        cls += ' unlocked'; status = 'Tap to switch'; action = "NinjaUI._designAction('select','" + id + "')";
+      } else if (starterMode) {
+        cls += ' starter'; status = '🆓 Free starter'; action = "NinjaUI._designAction('starter','" + id + "')";
+      } else if (adoptMode) {
+        // No starter slot left → can only adopt from unlocked list. Locked others.
+        cls += ' locked'; status = '🔒 Locked';
+      } else if (tokens > 0) {
+        cls += ' token'; status = '🔓 Tap to unlock'; action = "NinjaUI._designAction('unlock','" + id + "')";
+      } else {
+        cls += ' locked'; status = '🔒 Need token';
+      }
+      var num = N.assetIds.indexOf(id) + 1;
+      var fileSrc = prefix + def.file.replace(/^images\//, '');
+      return [
+        '<div class="', cls, '"', (action ? ' onclick="' + action + '"' : ''), '>',
+          '<div class="ninja-ui-pickimg">',
+            '<img src="', htmlEsc(fileSrc), '" alt="Ninja ', num, '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=&quot;font-size:13px;color:#999;font-weight:800;&quot;>#' + num + '</span>\';">',
+          '</div>',
+          '<div style="font-size:12px;font-weight:700;color:#666;">', status, '</div>',
+        '</div>'
+      ].join('');
+    }).join('');
+    var banner;
+    if (starterMode) {
+      banner = '<div class="ninja-ui-banner" style="background:#FFF8E1;border:2px solid #FFD54F;color:#7a5800;">🆓 まずは1つ自由に選ぼう！<br>Pick any design as your free starter.</div>';
+    } else if (adoptMode) {
+      banner = '<div class="ninja-ui-banner" style="background:#F3E8FF;border:2px solid #A78BFA;color:#4C1D95;">🥷 解放済みのデザインから選んでください<br>Pick your active design from your unlocks.</div>';
+    } else {
+      banner = '<div class="ninja-ui-banner" style="background:' + (tokens>0 ? '#F3E8FF' : '#f8f8f5')
+        + ';border:2px solid ' + (tokens>0 ? '#A78BFA' : '#ddd')
+        + ';color:' + (tokens>0 ? '#4C1D95' : '#666')
+        + ';">🎟 Unlock tokens: <span style="font-size:18px;">' + tokens + '</span> &nbsp;·&nbsp; Lv ' + N.progress.level
+        + '<br><span style="font-size:11px;font-weight:700;opacity:0.85;">'
+        + (tokens>0
+            ? '好きなデザインを選んで解放しよう！<br>Earned across all Ninja games.'
+            : 'あと ' + xpToNext.toLocaleString() + ' XP で次のトークン獲得')
+        + '</span></div>';
+    }
+    box.innerHTML = [
+      '<div class="ninja-ui-title">🥷 Ninja Design', (starterMode ? ' — Welcome!' : ''), '</div>',
+      '<p style="text-align:center;font-size:12px;color:#666;font-weight:700;margin-bottom:10px;line-height:1.5;">',
+        (starterMode
+          ? '好きな忍者を選んで修行を始めよう！<br>Pick your favorite ninja to start training.'
+          : adoptMode
+            ? '別ゲームで獲得したデザインから今のメインを選ぼう。<br>Choose your active design from previously unlocked picks.'
+            : 'いつでも解放済みデザインに切り替え可能<br>Switch between any unlocked design anytime.'),
+      '</p>',
+      banner,
+      '<div class="ninja-ui-grid2" style="margin-bottom:12px;">', cards, '</div>',
+      '<button class="ninja-ui-btn primary" onclick="NinjaUI._closeDesignPicker()">',
+        (starterMode ? '後で / Later' : '✅ 決定 / Done'),
+      '</button>',
+    ].join('');
+  }
+  function _closeDesignPicker() {
+    var ov = document.getElementById('ninja-ui-design-pick');
+    if (ov) {
+      ov.remove();
+      unlockBodyScroll();
+    }
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+  }
+  function _designAction(action, id) {
+    if (action === 'select') {
+      if (N.designSelect(id)) refreshDesignPicker(false);
+      return;
+    }
+    if (action === 'starter') {
+      // Defence in depth: NinjaCore.designStarter already refuses if the
+      // starter slot has been used in any other Ninja game, but we double-
+      // check here so the picker UI never silently no-ops.
+      if (!N.designHasStarterAvailable()) {
+        showToast('⚠️ スターターは別のゲームで使用済みです');
+        refreshDesignPicker(false);
+        return;
+      }
+      if (N.designStarter(id)) {
+        // ── Per user request, the "Ninja #N を選びました！" confirmation
+        //    toast on starter pick is suppressed. Kept commented for
+        //    easy re-enable if we ever want it back. ──
+        // showToast('🥷 Ninja #' + (N.assetIds.indexOf(id) + 1) + ' を選びました！');
+        _closeDesignPicker();
+      }
+      return;
+    }
+    if (action === 'unlock') {
+      if (N.designTokensAvailable() <= 0) { showToast('⚠️ トークンが足りません'); return; }
+      var num = N.assetIds.indexOf(id) + 1;
+      if (!confirm('「Ninja #' + num + '」を解放してこのデザインに切り替えますか？\n（解放トークンを1つ使います）\n\nUnlock and switch to this design? Spends 1 token.')) return;
+      if (N.designUnlock(id)) {
+        showToast('🔓 Ninja #' + num + ' を解放！');
+        refreshDesignPicker(false);
+      }
+      return;
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Analysis Scroll  —  weak words list with CSV / Copy export
+  // ───────────────────────────────────────────────────────────────────────
+  // The host can either:
+  //   (a) call NinjaUI.openAnalysis(catalogs) to render a modal, or
+  //   (b) call NinjaUI.analysisHTML(catalogs) and embed it themselves.
+  // catalogs default to a single namespace = the current game.
+  function _resolveCatalogs(catalogs) {
+    if (!catalogs && typeof global.getNinjaCatalogs === 'function') catalogs = global.getNinjaCatalogs();
+    return catalogs || [];
+  }
+
+  function analysisHTML(catalogs) {
+    catalogs = _resolveCatalogs(catalogs);
+    var items = N.weakWords(catalogs, 60);
+    var mastered = N.masteredCount(catalogs);
+    var rows = items.length
+      ? items.map(function (it) {
+          var w = it.w;
+          var accColor = it.acc >= 0.6 ? '#0a5c2d' : it.acc >= 0.3 ? '#b07a00' : '#E63946';
+          return [
+            '<tr', (w.lastWrong ? ' style="background:#fff5f5;"' : ''), '>',
+              '<td>', htmlEsc(it.entry.word || ''), (w.lastWrong ? ' 🔥' : ''), '</td>',
+              '<td>', htmlEsc(it.entry.jp || ''), '</td>',
+              '<td style="text-align:center;font-weight:800;color:#7C3AED;">', htmlEsc(it.label || ''), '</td>',
+              '<td style="text-align:center;color:#0a5c2d;font-weight:800;">', w.correct, '</td>',
+              '<td style="text-align:center;color:#E63946;font-weight:800;">', w.wrong, '</td>',
+              '<td style="text-align:center;color:#b07a00;font-weight:800;">', w.slow, '</td>',
+              '<td style="text-align:center;font-weight:900;color:', accColor, ';">', (it.acc * 100).toFixed(0), '%</td>',
+            '</tr>'
+          ].join('');
+        }).join('')
+      : '<tr><td colspan="7" style="padding:24px;text-align:center;color:#888;font-weight:700;">まだ弱点はありません 🎉<br><span style="font-size:11px;font-weight:600;">Play more to see your weakness scroll.</span></td></tr>';
+    // stash for export
+    _lastAnalysisItems = items;
+    return [
+      identityHeaderHTML('Analysis Scroll / WEAK SPOTS'),
+      '<p style="text-align:center;font-size:11px;color:#888;font-weight:700;margin-bottom:6px;">',
+        items.length, ' 修行待ち · <span style="color:#0a5c2d;">', mastered, ' 習得済</span> · cross-game memory',
+      '</p>',
+      '<p style="text-align:center;font-size:10px;color:#aaa;font-weight:600;margin-bottom:10px;">',
+        '✅ ', N.constants.MASTERY_THRESHOLD, '回以上正解で自動で消えます · 間違えると再登場<br>',
+        '🔥=直前で間違えた · ○=正解数 · ×=間違い数 · ⏱=遅かった回数',
+      '</p>',
+      (items.length ? [
+        '<div style="display:flex;justify-content:flex-end;gap:7px;margin-bottom:8px;">',
+          '<button class="ninja-ui-btn primary" style="width:auto;padding:8px 12px;font-size:12px;" onclick="NinjaUI._weakExportCSV()">⬇ CSV</button>',
+          '<button class="ninja-ui-btn retry" style="width:auto;padding:8px 12px;font-size:12px;" onclick="NinjaUI._weakCopyText()">📋 Copy</button>',
+        '</div>'
+      ].join('') : ''),
+      '<div style="overflow-x:auto;"><table class="ninja-ui-table">',
+        '<thead><tr><th>Word</th><th>意味</th><th style="text-align:center;">Lv</th><th style="text-align:center;">○</th><th style="text-align:center;">×</th><th style="text-align:center;">⏱</th><th style="text-align:center;">Acc</th></tr></thead>',
+        '<tbody>', rows, '</tbody>',
+      '</table></div>',
+    ].join('');
+  }
+
+  var _lastAnalysisItems = [];
+
+  function openAnalysis(catalogs) {
+    var html = [
+      '<div class="ninja-ui-title">🎯 Analysis Scroll · Words to Master</div>',
+      analysisHTML(catalogs),
+      '<button class="ninja-ui-close">閉じる</button>',
+    ].join('');
+    var ov = openOverlay(html);
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+  }
+
+  function _weakExportCSV() {
+    var items = _lastAnalysisItems;
+    if (!items.length) { showToast('⚠️ まだ弱点がありません'); return; }
+    var header = ['word','jp','source','correct','wrong','slow','accuracy_pct','synonym','example','exJP','definition','last_wrong'];
+    var rows = items.map(function (it) {
+      var w = it.w, e = it.entry;
+      return [
+        N.csvEscape(e.word),
+        N.csvEscape(e.jp || ''),
+        N.csvEscape(it.label || ''),
+        w.correct, w.wrong, w.slow,
+        (it.acc * 100).toFixed(0),
+        N.csvEscape(e.syn || ''),
+        N.csvEscape(e.ex || ''),
+        N.csvEscape(e.exJP || ''),
+        N.csvEscape(e.def || ''),
+        w.lastWrong ? '1' : '0',
+      ].join(',');
+    });
+    var csv = N.statusCSVMeta('Analysis Scroll / Weak Spots').concat([header.join(',')]).concat(rows).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var safeName = (N.progress.name || 'Ninja').replace(/[^a-zA-Z0-9_-]/g, '');
+    a.download = 'WeakSpots_' + safeName + '_Lv' + N.progress.level + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('⬇ Analysis Scroll CSVを保存しました！');
+  }
+  function _weakCopyText() {
+    var items = _lastAnalysisItems;
+    if (!items.length) { showToast('⚠️ まだ弱点がありません'); return; }
+    var lines = N.statusTextHeader('Analysis Scroll / Words to Master');
+    items.forEach(function (it, i) {
+      var w = it.w, e = it.entry;
+      lines.push((i + 1) + '. ' + (e.word || '') + (w.lastWrong ? ' 🔥' : '') + '　[' + (it.label || '') + ']　' + (e.jp || ''));
+      lines.push('   ○' + w.correct + ' × ' + w.wrong + ' ⏱ ' + w.slow + '   acc ' + (it.acc * 100).toFixed(0) + '%');
+      if (e.syn) lines.push('   syn: ' + e.syn);
+      if (e.ex)  lines.push('   ex: ' + e.ex);
+      if (e.def) lines.push('   def: ' + e.def);
+      lines.push('');
+    });
+    var text = lines.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { showToast('📋 Analysis Scrollを写し取りました！'); },
+        function () { showToast('⚠️ コピー失敗 — テキストを手動で選択してください'); }
+      );
+    } else {
+      showToast('⚠️ クリップボードが使えません');
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Training Scroll (per-session result CSV/copy helper)
+  // ───────────────────────────────────────────────────────────────────────
+  // host calls NinjaUI.exportSessionCSV({label, header, rows})
+  function exportSessionCSV(opts) {
+    var header = opts.header || [];
+    var rows   = opts.rows || [];
+    var label  = opts.label || 'Training Scroll';
+    var csv    = N.statusCSVMeta(label).concat([header.join(',')]).concat(rows.map(function (r) {
+      return r.map(function (c) { return N.csvEscape(c); }).join(',');
+    })).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    var safeName = (N.progress.name || 'Ninja').replace(/[^a-zA-Z0-9_-]/g, '');
+    a.download = (opts.filename || 'TrainingScroll') + '_' + safeName + '_Lv' + N.progress.level + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('⬇ ' + (opts.filename || 'Training Scroll') + ' CSVを保存しました！');
+  }
+  function copySessionText(opts) {
+    var label = opts.label || 'Training Scroll';
+    var lines = N.statusTextHeader(label);
+    (opts.lines || []).forEach(function (l) { lines.push(l); });
+    var text = lines.join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () { showToast('📋 ' + label + 'をコピーしました！'); },
+        function () { showToast('⚠️ コピー失敗'); }
+      );
+    } else {
+      showToast('⚠️ クリップボードが使えません');
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Boot helpers
+  // ───────────────────────────────────────────────────────────────────────
+  // Auto-prompt the design picker on first boot when the player has no
+  // active design selected. Two valid trigger states:
+  //   • Brand-new player (unlocked.length === 0)        → starter mode
+  //   • Imported state with unlocks but no active pick  → adopt mode
+  // In both cases we want to surface the picker once so the user lands
+  // with a real design active before entering gameplay.
+  function maybePromptStarter(delayMs) {
+    if (!N.design.selected) {
+      setTimeout(function () { openDesignPicker({ firstRun: true }); }, delayMs || 250);
+    }
+  }
+  // Auto-prompt the name modal once the player has a design but no name.
+  function maybePromptName(delayMs) {
+    if (!N.progress.nameLocked && N.design.selected) {
+      setTimeout(function () { openNameModal(); }, delayMs || 250);
+    }
+  }
+  // Wire up Other Games handoff — call this in your link click handler.
+  // Use armOnLinks(querySelector) to hook all matching links automatically.
+  function armOnLinks(selector) {
+    var links = document.querySelectorAll(selector || 'a.game-link-btn, .game-link-btn');
+    links.forEach(function (a) {
+      a.addEventListener('click', function () { try { N.armHandoff(); } catch (e) {} }, { capture: true });
+    });
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Public API
+  // ───────────────────────────────────────────────────────────────────────
+  global.NinjaUI = {
+    // chrome
+    statusBadgeHTML:  statusBadgeHTML,
+    identityHeaderHTML: identityHeaderHTML,
+    showToast:        showToast,
+    flashAnswerXp:    flashAnswerXp,
+    flashStreakBreak: flashStreakBreak,
+
+    // hub
+    openProfile:        openProfile,
+
+    // modals
+    openScroll:         openScroll,
+    openNameModal:      openNameModal,
+    openDesignPicker:   openDesignPicker,
+    openAnalysis:       openAnalysis,
+    analysisHTML:       analysisHTML,
+
+    // exports
+    exportSessionCSV:   exportSessionCSV,
+    copySessionText:    copySessionText,
+
+    // boot helpers
+    maybePromptStarter: maybePromptStarter,
+    maybePromptName:    maybePromptName,
+    armOnLinks:         armOnLinks,
+
+    // private callbacks (referenced by inline onclick handlers)
+    _copyScroll:    _copyScroll,
+    _applyLoad:     _applyLoad,
+    _applyName:     _applyName,
+    _applyNameSolo: _applyNameSolo,
+    _resetProgress: _resetProgress,
+    _designAction:      _designAction,
+    _closeDesignPicker: _closeDesignPicker,
+    _weakExportCSV: _weakExportCSV,
+    _weakCopyText:  _weakCopyText,
+  };
+
+})(typeof window !== 'undefined' ? window : this);
