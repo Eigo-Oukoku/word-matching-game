@@ -81,8 +81,8 @@
   .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #dee2e6; }
   .util-btn.links-btn { background: #E0F4FF; border-color: #7CC3F0; color: #064E8A; box-shadow: 0 3px 0 #7CC3F0; }
 
-  .how-overlay, .links-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
-  .how-box, .links-box { background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  .how-overlay, .links-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); touch-action: none; }
+  .how-box, .links-box { background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
   .how-title { font-size: 22px; font-weight: bold; color: #E63946; margin-bottom: 12px; text-align: center; }
   .how-intro { font-size: 13px; color: #444; margin-bottom: 14px; line-height: 1.6; }
   .how-item { margin-bottom: 10px; }
