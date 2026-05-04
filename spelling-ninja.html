@@ -23,13 +23,13 @@
   .game-title .vol-mini { display:block; font-family:'Bangers',cursive; font-size:22px; letter-spacing:2px; color:#E63946; margin-top:4px; }
   .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .level-btn {
-    font-size: 14px; font-weight: bold; color: white; border: none; border-radius: 15px;
+    font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 15px;
     padding: 14px 8px; cursor: pointer; transition: 0.1s;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     position: relative; gap: 2px;
   }
   .level-btn:active { transform: scale(0.97); }
-  .level-btn .sub { font-size: 10px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
+  .level-btn .sub { font-size: 12px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
   .btn-easy      { background: #2DD368; border-bottom: 4px solid #24A652; }
   .btn-normal    { background: #FFB000; border-bottom: 4px solid #D18F00; }
   .btn-hard      { background: #E63946; border-bottom: 4px solid #B52D37; }
@@ -96,8 +96,8 @@
   .links-close { display: block; width: 100%; margin-top: 6px; padding: 11px; font-size: 15px; font-weight: bold; background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; border-radius: 12px; cursor: pointer; }
 
   .top-bar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; }
-  .menu-btn { font-size:14px; font-weight:bold; background:#f1f3f5; color:#495057; border:1px solid #dee2e6; border-radius:8px; padding:5px 12px; cursor:pointer; box-shadow:0 2px 0 #dee2e6; }
-  .score-pill { font-size:12px; font-weight:bold; background:#FFF3B0; color:#9B5E00; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; }
+  .menu-btn { font-size:15px; font-weight:bold; background:#f1f3f5; color:#495057; border:1px solid #dee2e6; border-radius:8px; padding:5px 12px; cursor:pointer; box-shadow:0 2px 0 #dee2e6; }
+  .score-pill { font-size:14px; font-weight:bold; background:#FFF3B0; color:#9B5E00; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; }
   .hearts-row { width:100%; text-align:center; margin-bottom:0.4rem; font-size:22px; line-height:1; min-height:28px; }
   .hearts-row.shake { animation: heartShake 0.5s ease; }
   @keyframes heartShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-6px) rotate(-6deg);} 30%{transform:translateX(6px) rotate(6deg);} 45%{transform:translateX(-5px) rotate(-4deg);} 60%{transform:translateX(5px) rotate(4deg);} 75%{transform:translateX(-3px);} }
@@ -120,7 +120,7 @@
   .spelling-area { margin:12px 0; min-height:50px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
   .letter-slot { width:30px; height:40px; border-bottom:3px solid #adb5bd; font-size:24px; font-weight:bold; color:#2b2d42; display:flex; align-items:center; justify-content:center; }
   .letters-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; margin-top:8px; }
-  .letter-btn { width:42px; height:42px; font-size:20px; font-weight:bold; border-radius:10px; border:2px solid #dee2e6; background:white; cursor:pointer; box-shadow:0 3px 0 #dee2e6; display:flex; align-items:center; justify-content:center; color:#2b2d42; }
+  .letter-btn { width:46px; height:46px; font-size:22px; font-weight:bold; border-radius:10px; border:2px solid #dee2e6; background:white; cursor:pointer; box-shadow:0 3px 0 #dee2e6; display:flex; align-items:center; justify-content:center; color:#2b2d42; }
   .letter-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #dee2e6; }
   .letter-btn.wrong-flash { animation:wrongFlash 0.35s ease; }
   @keyframes wrongFlash { 0%{background:white} 30%{background:#FFD6D9;border-color:#E63946} 100%{background:white} }
@@ -164,7 +164,7 @@
   }
   .kb-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #5B21B6; }
   .kb-fb   { min-height:24px; text-align:center; font-size:15px; font-weight:bold; }
-  .kb-hint { font-size:11px; color:#adb5bd; text-align:center; }
+  .kb-hint { font-size:13px; color:#adb5bd; text-align:center; }
   .blitz-hint-row {
     text-align:center; letter-spacing:4px; min-height:36px;
     display:flex; align-items:center; justify-content:center; gap:3px; flex-wrap:wrap;
@@ -174,9 +174,9 @@
   .footer-area { margin-top:auto; padding-top:16px; text-align:center; width:100%; display:flex; flex-direction:column; align-items:center; }
   .mascot-row { display:flex; align-items:center; justify-content:center; margin-bottom:5px; }
   .footer-mascot-svg { width:56px; height:56px; margin-right:8px; display:block; }
-  .mascot-bubble { background:#f1f3f5; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold; color:#495057; position:relative; border:1px solid #dee2e6; transition:background 0.2s, border-color 0.2s; }
+  .mascot-bubble { background:#f1f3f5; padding:4px 10px; border-radius:12px; font-size:14px; font-weight:bold; color:#495057; position:relative; border:1px solid #dee2e6; transition:background 0.2s, border-color 0.2s; }
   .mascot-bubble.hint-active { background:#FFF8E1; border-color:#F5C842; color:#7A5000; }
-  .mascot-tap-hint { font-size:10px; color:#adb5bd; text-align:center; margin-top:3px; font-weight:normal; }
+  .mascot-tap-hint { font-size:12px; color:#adb5bd; text-align:center; margin-top:3px; font-weight:normal; }
   .footer-mascot-svg.tappable { cursor:pointer; }
   .footer-mascot-svg.tappable:active { transform:scale(0.9); }
   .mascot-bubble::after { content:''; position:absolute; left:-6px; top:50%; transform:translateY(-50%); border-width:6px 6px 6px 0; border-style:solid; border-color:transparent #f1f3f5 transparent transparent; }
@@ -265,7 +265,7 @@
 <!-- How to Play Overlay -->
 <div class="how-overlay" id="how-overlay" style="display:none;" onclick="if(event.target===this)closeHow()">
  <div class="how-box">
-  <div class="how-title">📖 How to Play — Spelling Ninja（遊び方）</div>
+  <div class="how-title">🥷 忍びの心得 — Spelling Ninja</div>
 
   <p class="how-intro">
     Tap letters in order to spell each word — or in Ninja Type Blitz mode, just type it!<br>
@@ -348,7 +348,48 @@
     </div>
   </div>
 
-  <button class="how-close" onclick="closeHow()">
+
+  <div class="how-item">
+    <div class="how-item-title">⭐ XP per Letter — モードごとの経験値</div>
+    <div class="how-item-desc">
+      Regular modes: 3.5 XP / letter &nbsp;(Easy 10-word perfect ≈ 170 XP)<br>
+      Type Blitz ⌨️: 8 XP / letter &nbsp;+ rank bonus (≥60/≥45/≥30 chars)<br>
+      Speedmaster ⚡: 11 XP / letter &nbsp;+ rank bonus (≥35/≥25/≥20 chars)<br>
+      通常モード: 1文字3.5XP ／ Type Blitz: 1文字8XP ／ Speedmaster: 1文字11XP<br>
+      ランクに応じたボーナスXPが加算されます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">📊 Status Card — ステータスカード</div>
+    <div class="how-item-desc">
+      <b>Lv.</b> — Your ninja level. Earn XP to level up (up to Lv. 1000!).<br>
+      経験値を貯めてレベルアップ！最大Lv.1000まで成長できます。<br>
+      <b>ACC</b> — Accuracy. Your correct-answer rate across all attempts.<br>
+      正答率。これまでの全解答に対する正解の割合。<br>
+      <b>Streak 🔥</b> — Consecutive correct answers. Longer streaks = bonus XP!<br>
+      連続正解数。連続で正解するとボーナスXPが加算されます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">📜 Shadow Clone Scroll — 分身の書</div>
+    <div class="how-item-desc">
+      Save all ninja data (level, name, design) as an encrypted code and restore it any time.<br>
+      Works across every game in the Ninja series — one ninja, all games.<br>
+      レベル・名前・キャラデザインを暗号化して保存・復元。<br>
+      シリーズ全ゲームで同じ忍者データを引き継げます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">🎯 Analysis Scroll — 分析の巻物</div>
+    <div class="how-item-desc">
+      Records words you answered wrong or slowly, and shows them more often in future sessions.<br>
+      <b>ACC</b> = Accuracy (正答率) &nbsp;·&nbsp; <b>SRS</b> = Review weight / 復習の重み<br>
+      間違えた単語・時間がかかった単語を記録し、出題頻度を自動調整。<br>
+      Copy または CSVエクスポートにも対応しています。
+    </div>
+  </div>
+
+    <button class="how-close" onclick="closeHow()">
     Got it! Let's play 🎉<br>
     わかった！あそぼう！
   </button>
@@ -376,12 +417,12 @@
   <script src="ninja-ui.js"></script>
   <script>
 // ── Configure Ninja for Spelling Ninja ──
-// xpMultiplier 0.65 = 65% of eigo-ninja's per-correct XP rate (per spec).
-// slowMs 10s — typing/letter-tap takes longer than multi-choice.
+// xpMultiplier 1.0 — XP is calibrated by per-char formula (9 XP/char regular, 2 XP/char timed) so
+// the game multiplier stays at full rate. slowMs 10s — typing takes longer.
 Ninja.configure({
   gameId:          'spelling-ninja',
   storageKey:      'spelling_ninja_progress_v1',
-  xpMultiplier:    0.65,
+  xpMultiplier:    1.0,
   slowMs:          10000,
   imagePathPrefix: 'images/',
   gameLabel:       'Spelling Ninja',
@@ -593,7 +634,9 @@ let state = {
 // Helper: log a successful word into Analysis Scroll AND award per-question
 // bonus XP (eigo-ninja parity: streak ×, +2 firstTime, +3 recovered).
 // Also surfaces a "+N XP · 弱点突破！+3" toast for instant feedback.
-function ninjaLogCorrect(word, ms){
+// charCount: optional actual typed char count (Blitz may accept alternatives
+// of different length than the canonical word). Falls back to word.length.
+function ninjaLogCorrect(word, ms, charCount){
   let flags = { firstTimeCorrect: false, recovered: false };
   try { flags = Ninja.recordAnswer({word:word}, true,  ms||0) || flags; } catch(e){}
   // Suppress same-question wrong-then-right "recovered" claim. Sense
@@ -606,17 +649,20 @@ function ninjaLogCorrect(word, ms){
   }
   state.streak = (state.streak || 0) + 1;
   try {
-    const rawXp = Ninja.calculateAnswerExp({
-      base: 6, isCorrect: true,                         // Spelling base = 6
-      firstTimeCorrect: flags.firstTimeCorrect,
-      recovered:        flags.recovered,
-      streak:           state.streak - 1,
-    });
+    // Per-char XP (LEVEL_FACTOR=50 calibration):
+    //   Regular modes (letter-tap, sense): 3.5 XP/char → Easy 10-word perfect ≈ 170 XP
+    //   Type Blitz (keyboard): 8 XP/char — 3rd rank (≥30 chars) ≈ 240 XP
+    //   Speedmaster (speedster): 11 XP/char — 3rd rank (≥20 chars) ≈ 220 XP
+    const wordLen  = (charCount > 0 ? charCount : 0) || word.length;
+    const isBlitz       = state.mode === 'keyboard';
+    const isSpeedmaster = state.mode === 'speedster';
+    const xpPerChar  = isBlitz ? 8 : isSpeedmaster ? 11 : 3.5;
+    const penalty    = Ninja.ninjaLevelPenalty(Ninja.progress.level);
+    const rawXp      = Math.max(1, Math.round(wordLen * xpPerChar * penalty));
     Ninja.addExp(rawXp);
     state.sessionBonusXp += rawXp;
-    const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
     NinjaUI.flashAnswerXp({
-      gainedXp:         scaled,
+      gainedXp:         rawXp,
       firstTimeCorrect: flags.firstTimeCorrect,
       recovered:        flags.recovered,
       streak:           state.streak,
@@ -933,7 +979,7 @@ function checkKeyboard(){
     state.kbLocked=true;
     playSfx('correctsound');
     // Analysis Scroll: log correct typed word.
-    ninjaLogCorrect(state.currentWord, state.currentStartedAt ? (Date.now() - state.currentStartedAt) : 0);
+    ninjaLogCorrect(state.currentWord, state.currentStartedAt ? (Date.now() - state.currentStartedAt) : 0, charCount);
     inp.className='kb-input done';
     if(card) card.className='correct-frame';
     const disp=document.getElementById('blitz-word-display');
@@ -1002,7 +1048,7 @@ function renderWelcome(){
         <button class="level-btn btn-blitz"     onclick="initGame('keyboard')">🥷 Ninja Type Blitz<span class="sub">Beat the clock · type for points!</span></button>
       </div>
       <div class="util-btn-row">
-        <button class="util-btn" onclick="openHow()">📖 How to Play</button>
+        <button class="util-btn" onclick="openHow()">🥷 忍びの心得</button>
         <button class="util-btn links-btn" onclick="openLinks()">🎮 Other Games</button>
       </div>
     </div>
@@ -1139,9 +1185,14 @@ function tapLetter(letter,index){
   while(state.userInput[targetIdx]!==undefined && targetIdx<state.currentWord.length) targetIdx++;
   const targetLetter=state.currentWord[targetIdx];
 
-  if(letter===targetLetter){
+  // Case-insensitive match: 'T' and 't' tiles both satisfy position needing 'T'
+  // (e.g. "T-shirt" has both tiles; player shouldn't lose a life for tapping 't' first).
+  // Always place the canonical expected letter so the stored answer stays correct.
+  const letterMatches = letter === targetLetter ||
+                        letter.toLowerCase() === targetLetter.toLowerCase();
+  if(letterMatches){
     // ── Correct sequential tap ──
-    state.userInput[targetIdx]=letter;
+    state.userInput[targetIdx]=targetLetter;  // use canonical case, not tapped case
     state.shuffledLetters[index]=null;
     state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
     playSfx('correctsound_short');
@@ -1150,12 +1201,16 @@ function tapLetter(letter,index){
       state.score++;
       if(state.mode==='speedster') state.speedsterTotal+=state.currentWord.length;
       playSfx('correctsound');
-      // Analysis Scroll: log a successful word with elapsed ms.
+      // Render first so the XP flash from ninjaLogCorrect is visible over the
+      // completed word state and not immediately overwritten by a subsequent render().
+      render();
+      if(state.mode==='speedster') updateSpeedsterBar();
       ninjaLogCorrect(state.currentWord, Date.now() - state.currentStartedAt);
       setTimeout(()=>{ state.round++; nextRound(); },state.mode==='speedster'?600:1200);
+    } else {
+      render();
+      if(state.mode==='speedster') updateSpeedsterBar();
     }
-    render();
-    if(state.mode==='speedster') updateSpeedsterBar();
   } else {
     // ── Wrong tap ──
     const issense = state.mode === 'sense';
@@ -1179,8 +1234,8 @@ function tapLetter(letter,index){
             state.senseAltWord = playerWord;
             state.score++;
             playSfx('correctsound');
-            ninjaLogCorrect(state.currentWord, Date.now() - state.currentStartedAt);
             render();
+            ninjaLogCorrect(state.currentWord, Date.now() - state.currentStartedAt);
             setTimeout(()=>{ state.round++; nextRound(); }, 1200);
           } else {
             playSfx('wrongsound');
@@ -1344,15 +1399,17 @@ function renderBlitzEnd(){
   hideBlitzPanel();
   const n=state.letterScore;
   const w=state.score;
-  const emoji=n>=40?'🏆':n>=30?'🥇':n>=20?'🥈':'🥷';
-  const msg=n>=40?'Blitz Master!':n>=30?'Spelling Star!':n>=15?'Nice typing!':'Keep going!';
+  const emoji=n>=60?'🏆':n>=45?'🥇':n>=30?'🥈':'🥷';
+  const msg=n>=60?'Blitz Master!':n>=45?'Spelling Star!':n>=30?'Nice typing!':'Keep going!';
 
-  // Per-question XP was awarded inside ninjaLogCorrect (with streak +
-  // recovery bonuses). Add a small Type-Blitz completion bonus on top.
+  // Per-word XP (8 XP/char for Blitz) was awarded inside ninjaLogCorrect.
+  // Rank completion bonus: Blitz Master ≥60 chars → +25 XP; Spelling Star ≥45 → +12 XP.
   let gainedLv = 0;
+  let blitzBonus = 0;
   try {
-    const bonus = Math.floor(Math.sqrt(Math.max(0, n)));  // sqrt curve like eigo-ninja Blitz
-    if (bonus > 0) gainedLv = Ninja.addExp(bonus);
+    if      (n >= 60) blitzBonus = 25;
+    else if (n >= 45) blitzBonus = 12;
+    if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
   } catch (e) {}
 
@@ -1401,9 +1458,9 @@ function renderBlitzEnd(){
       <p style="font-size:15px;color:#444;font-weight:bold;margin-bottom:4px">${n===1?'character':'characters'} spelled correctly!</p>
       <p style="font-size:13px;color:#888;margin-bottom:8px">(${w} / 10 ${w===1?'word':'words'} correct)</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:0 auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.65×</div>
-        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.65))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
-        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + blitzBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
       <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:14px">${msg}</p>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
@@ -1422,14 +1479,16 @@ function renderBlitzEnd(){
 function renderSpeedsterEnd(){
   if(state.timer) clearTimeout(state.timer);
   const n=state.speedsterTotal;
-  const emoji=n>=25?'🏆':n>=15?'🥈':'⚡';
-  const msg=n>=25?'Ninja Speedster!':n>=15?'Swift Ninja!':'Keep training!';
-  // Per-question XP was awarded inside ninjaLogCorrect.  Add a small
-  // Speedster completion bonus on top.
+  const emoji=n>=35?'🏆':n>=25?'🥇':n>=20?'🥈':'⚡';
+  const msg=n>=35?'Ninja Speedster!':n>=25?'Swift Ninja!':n>=20?'Keep it up!':'Keep training!';
+  // Per-word XP (11 XP/char for Speedmaster) was awarded inside ninjaLogCorrect.
+  // Rank completion bonus: Ninja Speedster ≥35 chars → +25 XP; Swift Ninja ≥25 → +12 XP.
   let gainedLv = 0;
+  let speedsterBonus = 0;
   try {
-    const bonus = Math.floor(Math.sqrt(Math.max(0, n)));
-    if (bonus > 0) gainedLv = Ninja.addExp(bonus);
+    if      (n >= 35) speedsterBonus = 25;
+    else if (n >= 25) speedsterBonus = 12;
+    if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
   } catch (e) {}
   // Speedster review block (unanswered + mistakes) per Type Blitz spec
@@ -1456,9 +1515,9 @@ function renderSpeedsterEnd(){
       <p style="font-size:18px;color:#FF6B00;font-weight:bold;margin:8px 0">${msg}</p>
       <p style="font-size:26px;margin:10px 0 8px;font-weight:bold">⚡ ${n} character${n!==1?'s':''} spelled!</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:6px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.65×</div>
-        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.65))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
-        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + speedsterBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="level-btn btn-speedster" style="width:auto;padding:12px 28px" onclick="initGame('speedster')">Play Again</button>
@@ -1488,9 +1547,9 @@ function renderEnd(){
       <div class="welcome-title">Well Done!</div>
       <p style="font-size:24px;margin:14px 0 6px;font-weight:bold">Score: ${state.score} / 10</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:6px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.65×</div>
-        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.65))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
-        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP included</div>
       </div>
       <button class="level-btn btn-normal" style="width:auto;padding:12px 40px;margin:0 auto" onclick="renderWelcome()">Play Again</button>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
