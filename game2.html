@@ -34,13 +34,13 @@
 
   .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   .level-btn {
-    font-size: 15px; font-weight: bold; color: #ffffff !important;
+    font-size: 17px; font-weight: bold; color: #ffffff !important;
     border: none; border-radius: 15px; padding: 14px 5px; cursor: pointer;
     box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.1s; position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   }
   .level-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
-  .level-btn .sub { font-size: 10px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
+  .level-btn .sub { font-size: 12px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
 
   .btn-easy     { background: #2DD368 !important; }
   .btn-normal   { background: #FFB000 !important; }
@@ -104,8 +104,8 @@
   .links-close { display: block; width: 100%; margin-top: 6px; padding: 11px; font-size: 15px; font-weight: bold; background: #f1f3f5 !important; color: #495057 !important; border: 1px solid #dee2e6; border-radius: 12px; cursor: pointer; }
 
   .top-bar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; }
-  .menu-btn { font-size: 13px; font-weight: bold; background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-  .score-pill { font-size:12px; font-weight:bold; background:#FFF3B0 !important; color:#9B5E00 !important; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; }
+  .menu-btn { font-size: 15px; font-weight: bold; background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  .score-pill { font-size:14px; font-weight:bold; background:#FFF3B0 !important; color:#9B5E00 !important; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; }
 
   .timer-wrap { width: 100%; margin-bottom: 8px; }
   .timer-label { font-size: 14px; font-weight: bold; color: #E63946; text-align: center; margin-bottom: 3px; }
@@ -125,7 +125,7 @@
   .listen-btn { margin-top: 5px; font-size: 14px; background: #E0F4FF !important; border: 2px solid #7CC3F0; border-radius: 999px; padding: 8px 25px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 0 #7CC3F0; color: #0077B6 !important; }
 
   .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 15px 0; }
-  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 15px 5px; font-size: 20px; background: #ffffff !important; color: #212529 !important; min-height: 75px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(18px, 4.5vw, 24px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
   .choice-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #dee2e6; }
   .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
   .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
@@ -134,7 +134,7 @@
   .mascot-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
   .footer-mascot-svg { width: 56px; height: 56px; margin-right: 8px; animation: mascotBounce 2s infinite ease-in-out; }
   .mascot-excited { animation-duration: 0.4s !important; }
-  .mascot-bubble { background: #f8f9fa !important; padding: 6px 15px; border-radius: 12px; font-size: 13px; font-weight: bold; color: #343a40 !important; border: 1px solid #dee2e6; animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .mascot-bubble { background: #f8f9fa !important; padding: 6px 15px; border-radius: 12px; font-size: 15px; font-weight: bold; color: #343a40 !important; border: 1px solid #dee2e6; animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .brand-footer { font-weight: bold; color: #6A5ACD !important; font-size: 24px; letter-spacing: 1px; }
   /* ── Mute button ─────────────────────────────────────── */
   .mute-btn { position:fixed; top:10px; right:10px; z-index:9000; background:white; border:2px solid #dee2e6; border-radius:50%; width:38px; height:38px; font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; align-items:center; justify-content:center; transition:0.15s; padding:0; }
@@ -161,7 +161,7 @@
   <div class="how-overlay" id="how-overlay" style="display:none;" onclick="if(event.target===this)closeHow()">
    <div class="how-box">
     <div class="how-title">
-     📖 How to Play — Word Ninja
+     🥷 忍びの心得 — Word Ninja
     </div>
     <p class="how-intro">Choose your level and aim to become an English Ninja! Select the correct English word from the choices shown.自分に合ったレベルを選んで英語忍者を目指すことができます!</p>
     <div class="how-item">
@@ -219,7 +219,46 @@
      <div class="how-item-desc">
       How many words can you get right in 20 seconds?(20秒間で何単語正解できるかな?)
      </div>
-    </div><button class="how-close" onclick="closeHow()">Got it! Let's play 🎉</button>
+    </div>
+  <div class="how-item">
+    <div class="how-item-title">⭐ XP per Question — モードごとの経験値</div>
+    <div class="how-item-desc">
+      Easy: 7 &nbsp;/ Normal: 10 &nbsp;/ Hard: 14 &nbsp;/ Very Hard: 17<br>
+      Ninja &amp; Phantom: 21 &nbsp;/ Speedster: 3 + rank bonus (+5/+10/+20)<br>
+      ※ Streak and first-time bonuses are added automatically.<br>
+      連続正解・初正解ボーナスXPが自動で加算されます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">📊 Status Card — ステータスカード</div>
+    <div class="how-item-desc">
+      <b>Lv.</b> — Your ninja level. Earn XP to level up (up to Lv. 1000!).<br>
+      経験値を貯めてレベルアップ！最大Lv.1000まで成長できます。<br>
+      <b>ACC</b> — Accuracy. Your correct-answer rate across all attempts.<br>
+      正答率。これまでの全解答に対する正解の割合。<br>
+      <b>Streak 🔥</b> — Consecutive correct answers. Longer streaks = bonus XP!<br>
+      連続正解数。連続で正解するとボーナスXPが加算されます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">📜 Shadow Clone Scroll — 分身の書</div>
+    <div class="how-item-desc">
+      Save all ninja data (level, name, design) as an encrypted code and restore it any time.<br>
+      Works across every game in the Ninja series — one ninja, all games.<br>
+      レベル・名前・キャラデザインを暗号化して保存・復元。<br>
+      シリーズ全ゲームで同じ忍者データを引き継げます。
+    </div>
+  </div>
+  <div class="how-item">
+    <div class="how-item-title">🎯 Analysis Scroll — 分析の巻物</div>
+    <div class="how-item-desc">
+      Records words you answered wrong or slowly, and shows them more often in future sessions.<br>
+      <b>ACC</b> = Accuracy (正答率) &nbsp;·&nbsp; <b>SRS</b> = Review weight / 復習の重み<br>
+      間違えた単語・時間がかかった単語を記録し、出題頻度を自動調整。<br>
+      Copy または CSVエクスポートにも対応しています。
+    </div>
+  </div>
+    <button class="how-close" onclick="closeHow()">Got it! Let's play 🎉</button>
    </div>
   </div><!-- Other Games Overlay -->
   <div class="links-overlay" id="links-overlay" style="display:none;" onclick="if(event.target===this)closeLinks()">
@@ -264,12 +303,12 @@ document.addEventListener('click', function(ev){
 }, true);
 
 // ── Configure Ninja for Word Ninja Vol.2 ──
-// xpMultiplier 0.5 → matches Vol.1; the shared progress key carries
-// level/exp/words across both Vols and the other Ninja games.
+// xpMultiplier 1.0 — Word Ninja is the baseline game; the shared progress
+// key carries level/exp/words across both Vols and the other Ninja games.
 Ninja.configure({
   gameId:          'word-ninja-v2',
   storageKey:      'word_ninja_v2_progress_v1',
-  xpMultiplier:    0.5,
+  xpMultiplier:    1.0,
   slowMs:          8000,
   imagePathPrefix: 'images/',
   gameLabel:       'Word Ninja Vol.2',
@@ -359,7 +398,7 @@ function renderWelcome() {
         <button class="level-btn btn-speedster" onclick="initGame(4,false,false,true)">⚡ Speedster Mode<span class="sub">20 second challenge!</span></button>
       </div>
       <div class="util-btn-row">
-        <button class="util-btn" onclick="openHow()">📖 How to Play</button>
+        <button class="util-btn" onclick="openHow()">🥷 忍びの心得</button>
         <button class="util-btn links-btn" onclick="openLinks()">🎮 Other Games</button>
       </div>
     </div>
@@ -386,11 +425,16 @@ function startSpeedsterTimer() {
     updateSpeedsterBar();
     if (state.speedsterTimeLeft <= 0) {
       clearInterval(state.speedsterInterval); state.speedsterInterval = null;
-      // Type-Blitz-style time-up bookkeeping: word on screen + no pick yet
-      // → mark as unanswered AND feed into Analysis Scroll as a miss.
+      // Time-up bookkeeping: word on screen + no pick yet → mark as unanswered.
+      // Only feed Analysis Scroll if player actually attempted (wrong) OR spent
+      // meaningful time on the word (>2 s), to avoid penalising the last word
+      // that simply ran out when time was already almost zero.
       if (state.current && !state.revealed) {
         if (!state.unanswered.includes(state.current)) state.unanswered.push(state.current);
-        try { Ninja.recordAnswer({ word: state.current }, false, SPEEDSTER_SECONDS * 1000); } catch (e) {}
+        const elapsed = Date.now() - state.currentStartedAt;
+        if (state.attemptedWrongThisRound || elapsed > 2000) {
+          try { Ninja.recordAnswer({ word: state.current }, false, elapsed); } catch (e) {}
+        }
       }
       state.isGameOver = true; renderSpeedsterEnd();
     }
@@ -443,20 +487,28 @@ function handleChoice(word, idx) {
       flags.recovered        = false;
       flags.firstTimeCorrect = false;
     }
-    // Per-question XP with streak / firstTime / recovered bonuses (eigo-ninja parity).
+    // Per-question XP with streak / firstTime / recovered bonuses.
+    // Base XP by difficulty (LEVEL_FACTOR=50 calibration):
+    //   Easy=7, Normal=10, Hard=14, VH=17, Phantom/Ninja=21, Speedster=3
     state.streak = (state.streak || 0) + 1;
     try {
+      let qBase;
+      if      (state.isSpeedster)                        qBase = 3;
+      else if (state.isPhantom || state.isNinja)         qBase = 21;
+      else if (state.choiceCount >= 10)                  qBase = 17;
+      else if (state.choiceCount >= 8)                   qBase = 14;
+      else if (state.choiceCount >= 6)                   qBase = 10;
+      else                                               qBase = 7;
       const rawXp = Ninja.calculateAnswerExp({
-        base: 5, isCorrect: true,
+        base: qBase, isCorrect: true,
         firstTimeCorrect: flags.firstTimeCorrect,
         recovered:        flags.recovered,
         streak:           state.streak - 1,
       });
       Ninja.addExp(rawXp);
       state.sessionBonusXp += rawXp;
-      const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
       NinjaUI.flashAnswerXp({
-        gainedXp:         scaled,
+        gainedXp:         rawXp,
         firstTimeCorrect: flags.firstTimeCorrect,
         recovered:        flags.recovered,
         streak:           state.streak,
@@ -530,10 +582,17 @@ function renderSpeedsterEnd() {
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   const n = state.score;
   const rank = n >= 10 ? ['🥷','Ninja Speedster!!','Unbelievable speed!'] : n >= 7 ? ['🎉','Swift Ninja!',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
-  // Per-question XP was awarded inside handleChoice. Add a small
-  // completion bonus when the player crushes Speedster (10+ words).
+  // Per-question XP was awarded inside handleChoice.
+  // Add rank completion bonus:
+  //   Top rank (≥10 words) → +20 XP;  2nd rank (≥7) → +10 XP;  3rd rank (≥5) → +5 XP.
   let gainedLv = 0;
-  try { if (n >= 10) gainedLv = Ninja.addExp(6); Ninja.touchTrained(); } catch (e) {}
+  let speedsterBonus = 0;
+  try {
+    const rankBonus = n >= 10 ? 20 : n >= 7 ? 10 : n >= 5 ? 5 : 0;
+    speedsterBonus  = rankBonus;
+    if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
+    Ninja.touchTrained();
+  } catch (e) {}
   // Type-Blitz-style review block: unanswered + mistakes
   const mistakes   = (state.mistakes   || []).filter(w => w);
   const unanswered = (state.unanswered || []).filter(w => w);
@@ -561,9 +620,9 @@ function renderSpeedsterEnd() {
       <p style="font-size:16px;color:#2b2d42;font-weight:bold;margin-bottom:6px;">word${n!==1?'s':''} in 20 seconds!</p>
       <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
-        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
-        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + speedsterBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / rank bonus included</div>
       </div>
       ${reviewHTML}
       <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
@@ -607,8 +666,8 @@ function renderEnd() {
       <div class="welcome-title">Word Ninja</div>
       <p style="font-size:24px;margin:14px 0 6px;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
-        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
-        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
       </div>
       <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>

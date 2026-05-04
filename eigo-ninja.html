@@ -2,7 +2,7 @@
 <html lang="ja" translate="no">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="google" content="notranslate">
   <title>Eigo-Ninja - ELKえいご王国</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -65,7 +65,7 @@
     .lb-2  { background: var(--grade2);  box-shadow: 0 5px 0 var(--grade2-shadow); }
 
     .util-row { display: flex; gap: 10px; width: 100%; margin-top: 12px; }
-    .util-btn { flex: 1; font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 12px; padding: 11px 6px; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 var(--border); transition: 0.1s; text-align: center; }
+    .util-btn { flex: 1; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 12px; padding: 11px 6px; cursor: pointer; color: var(--ink); box-shadow: 0 3px 0 var(--border); transition: 0.1s; text-align: center; }
     .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
 
     .mode-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; }
@@ -91,8 +91,8 @@
     .challenge-info { background: #FFF8E1; border: 2px solid #FFD54F; border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 700; color: #7a5800; text-align: center; margin-bottom: 4px; }
 
     .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 10px; }
-    .menu-btn { font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 5px 12px; cursor: pointer; color: #666; box-shadow: 0 2px 0 var(--border); }
-    .progress-pill { font-size: 13px; font-weight: 800; background: #FFF3B0; color: #9B5E00; border-radius: 999px; padding: 4px 12px; border: 2px solid var(--yellow); }
+    .menu-btn { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 5px 12px; cursor: pointer; color: #666; box-shadow: 0 2px 0 var(--border); }
+    .progress-pill { font-size: 14px; font-weight: 800; background: #FFF3B0; color: #9B5E00; border-radius: 999px; padding: 4px 12px; border: 2px solid var(--yellow); }
 
     .progress-track { width: 100%; height: 10px; background: #e8e5de; border-radius: 999px; margin-bottom: 12px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.4s ease; }
@@ -129,7 +129,7 @@
     .screen.quiz-screen .feedback-row       { flex: 0 0 auto; }
     .screen.quiz-screen .quiz-spacer-bottom { flex: 2 1 0; min-height: 24px; }
     .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; width: 100%; }
-    .choice-btn { background: white; border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; font-weight: 600; color: var(--ink); cursor: pointer; min-height: 66px; box-shadow: 0 4px 0 var(--border); transition: 0.1s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; }
+    .choice-btn { background: white; border: 2.5px solid var(--border); border-radius: 16px; padding: 16px 8px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 600; color: var(--ink); cursor: pointer; min-height: 76px; box-shadow: 0 4px 0 var(--border); transition: 0.1s; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3; }
     .choice-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--border); }
     .choice-btn.correct { background: #E8FFF2; border-color: var(--green); box-shadow: 0 4px 0 #1a9647; color: #0a5c2d; animation: popIn 0.2s ease; }
     .choice-btn.wrong { background: #FFE5E7; border-color: var(--red); box-shadow: 0 4px 0 #a02030; color: var(--red); animation: shake 0.35s ease; }
@@ -168,7 +168,7 @@
     .ab-challenge { background: linear-gradient(135deg, #E63946 0%, #8E44AD 100%); box-shadow: 0 5px 0 #6a0050; }
     .ab-menu      { background: #8d99ae; box-shadow: 0 5px 0 #5a6070; }
 
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
     .modal-box { background: white; border-radius: 22px; padding: 24px 20px; max-width: 400px; width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,0.3); animation: popIn 0.25s ease; }
     .modal-title { font-family: 'Bangers', cursive; font-size: 26px; letter-spacing: 1px; color: var(--red); margin-bottom: 14px; text-align: center; }
     .how-item { margin-bottom: 12px; }
@@ -291,7 +291,7 @@
 
 <div id="how-modal" style="display:none;" class="overlay">
   <div class="modal-box">
-    <div class="modal-title">🥷 遊びかた (How To Play)</div>
+    <div class="modal-title">🥷 忍びの心得</div>
     <div class="how-item">
       <div class="how-item-title">📖 1. Vocabulary (英→日)</div>
       <div class="how-item-desc">英単語を見て、正しい日本語の意味を4択から選ぼう！</div>
@@ -317,6 +317,32 @@
       <div class="how-item-desc">40秒で何文字タイプできるかに挑戦！最初の文字はヒントとして表示されます。3種のモードから選ぼう：①日本語→英語 ②定義→英語 ③日本語文→空所の単語。スペルを正確に！</div>
     </div>
     <p class="modal-note">※ 終了後に間違えた単語の Ninja Training Scroll が表示されます。CSVダウンロードまたはコピーで復習に使おう！Analysis Scrollは苦手な単語のリストです。復習して次はうまく答えられるようにしよう！３回答えるとリストから消えます。</p>
+    <div class="how-item">
+      <div class="how-item-title">⚡ 獲得 XP の目安</div>
+      <div class="how-item-desc">
+        通常モード：難易度に応じて約 7〜21 XP /問 ＋ 正答率ボーナス<br>
+        Ninja Type Blitz：1文字あたり約 10 XP × コンボ倍率 × グレード倍率
+      </div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">📊 ステータスカード</div>
+      <div class="how-item-desc">
+        Lv. = 総 XP から算出（Lv. 1000 まで）<br>
+        ACC = 正答率（Accuracy）<br>
+        Streak 🔥 = 連続正解数
+      </div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">📜 Shadow Clone Scroll</div>
+      <div class="how-item-desc">忍者のレベル・名前・デザイン・Analysis Scrollのデータをすべて暗号化して保存。他のゲームにペーストすれば記録を引き継げます。Other Games から移動した場合は自動で引き継がれます。</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🔬 Analysis Scroll</div>
+      <div class="how-item-desc">
+        苦手な単語を自動記録・優先出題。<br>
+        ACC = 正答率　／　SRS = 復習の重み（高いほど優先）
+      </div>
+    </div>
     <button class="modal-close" onclick="toggleModal(false)">わかった！ Let's go! 🥷</button>
   </div>
 </div>
@@ -1036,20 +1062,39 @@ function ninjaRecordAnswer(entry, isCorrect, timeMs, modeKey) {
   };
 }
 
-// EXP formula
-function calculateExp({correct, mode, grade, streak, isPerfect, firstTimeCorrect, recovered}) {
-  let exp = (correct || 0);
-  const modeMul  = ({vocab:1.0, fill:1.5, synonym:2.0, definition:2.5, blitz:1.0})[mode]  || 1.0;
-  const gradeMul = ({grade4:1.0, grade3:1.3, pre2:1.7, grade2:2.2})[grade] || 1.0;
-  const streakMul = 1 + ((streak || 0) * 0.05);
-  exp = exp * modeMul * gradeMul * streakMul;
-  if (firstTimeCorrect) exp += 2;
-  if (recovered)        exp += 3;
-  if (isPerfect)        exp *= 1.3;
-  return Math.round(exp);
+// ── Level penalty ──────────────────────────────────────────────────────────
+// Applied inside calculateExp and renderBlitzEnd.
+//   Lv < 15 : × 0.85  (15% cut — first ~2 weeks of daily play)
+//   Lv ≥ 15 : × 1.00  (full rate)
+function ninjaEigoLevelPenalty(lv) {
+  if (lv < 15) return 0.85;
+  return 1.0;
 }
-// Level curve: level = floor(sqrt(exp / 50))  →  Lv 1 = 50 XP, Lv 10 = 5,000 XP
-// (factor was 100; reduced 50% so leveling is twice as fast)
+
+// ── EXP formula (regular quiz mode) ────────────────────────────────────────
+// Calibrated with NINJA_LEVEL_FACTOR = 50 (Lv1000 = 50,000,000 XP):
+//   G4  Vocab 20Q no-miss → ~1,008 XP/sess  (anchor: 1,010)
+//   G4  Def   20Q no-miss → ~1,310 XP/sess  (anchor: 1,310)
+//   G3  Vocab 20Q no-miss → ~1,310 XP/sess  (anchor: 1,310)
+//   Pre-2 Vocab 20Q       → ~1,714 XP/sess  (anchor: 1,700)
+//   G2  Vocab 20Q no-miss → ~2,218 XP/sess  (anchor: 2,210)
+//
+// Base = 48 XP/question (G4 Vocab, zero streak).
+// gradeMul: G4=1.0, G3=1.30, Pre-2=1.70, G2=2.20
+// modeMul:  vocab=1.0, synonym=1.1, fill=1.2, definition=1.3
+//           fill+hint = 1.2×0.9 = 1.08  (hintUsed flag passed by caller)
+// streakMul = 1 + min(streak × 0.005, 0.20)  (+0.5% per correct, cap +20%)
+const EIGO_BASE_XP = 48;
+function calculateExp({correct, mode, grade, streak, hintUsed}) {
+  if (!correct) return 0;
+  const modeMul  = ({vocab:1.0, fill:1.2, synonym:1.1, definition:1.3})[mode] || 1.0;
+  const hintMul  = (hintUsed && mode === 'fill') ? 0.9 : 1.0;
+  const gradeMul = ({grade4:1.0, grade3:1.30, pre2:1.70, grade2:2.20})[grade] || 1.0;
+  const streakMul = 1 + Math.min((streak || 0) * 0.005, 0.20);
+  const penalty  = ninjaEigoLevelPenalty(progress.level);
+  return Math.max(1, Math.round(EIGO_BASE_XP * modeMul * hintMul * gradeMul * streakMul * penalty));
+}
+// Level curve: level = floor(sqrt(exp / 50))  →  Lv1000 = 50,000,000 XP
 const NINJA_LEVEL_FACTOR = 50;
 function ninjaLevelFromExp(e) { return Math.min(NINJA_LEVEL_CAP, Math.floor(Math.sqrt(Math.max(0, e|0) / NINJA_LEVEL_FACTOR))); }
 function ninjaExpForLevel(L)  { return L * L * NINJA_LEVEL_FACTOR; }
@@ -1108,6 +1153,13 @@ function ninjaSaveLocal() {
       lastTrainedAt: progress.lastTrainedAt,
       updatedAt: Date.now(),
     }));
+    // Per-slot clan save — keeps active slot in sync
+    _eigoSaveSlotProgress(_eigoClanActiveSlot, {
+      name: progress.name, nameLocked: progress.nameLocked,
+      exp: progress.exp, level: progress.level, words: progress.words,
+      globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
+      lastTrainedAt: progress.lastTrainedAt,
+    });
   } catch(e) {}
 }
 function ninjaLoadLocal() {
@@ -1202,6 +1254,7 @@ function ninjaExportData() {
     words:      progress.words,
     lastTrainedAt: progress.lastTrainedAt,
     design:     designBlock,
+    lf:         NINJA_LEVEL_FACTOR,   // scroll version stamp for XP migration
   };
 }
 function ninjaImportData(d) {
@@ -1209,7 +1262,14 @@ function ninjaImportData(d) {
   if (d.name) progress.name = String(d.name).slice(0, 40);
   if (typeof d.nameLocked === 'boolean') progress.nameLocked = d.nameLocked;
   else if (d.name) progress.nameLocked = true; // older scrolls without flag → name was set
-  if (typeof d.exp === 'number')   progress.exp   = Math.max(progress.exp, d.exp);
+  if (typeof d.exp === 'number') {
+    var importedExp = d.exp;
+    var scrollLF = typeof d.lf === 'number' ? d.lf : 50; // 50 = legacy default
+    if (scrollLF !== NINJA_LEVEL_FACTOR && scrollLF > 0) {
+      importedExp = Math.round(importedExp * NINJA_LEVEL_FACTOR / scrollLF);
+    }
+    progress.exp = Math.max(progress.exp, importedExp);
+  }
   progress.level = ninjaLevelFromExp(progress.exp);
   if (d.words) ninjaMergeWords(d.words);
   if (typeof d.lastTrainedAt === 'number' && d.lastTrainedAt > (progress.lastTrainedAt || 0)) {
@@ -1459,6 +1519,9 @@ function ninjaResetProgress() {
     if (typeof NINJA_DESIGN_STORAGE_KEY !== 'undefined') {
       localStorage.removeItem(NINJA_DESIGN_STORAGE_KEY);
     }
+    // Clear only the active clan slot — other members are unaffected
+    localStorage.removeItem('ninja_clan_slot_' + _eigoClanActiveSlot + '_v1');
+    localStorage.removeItem('ninja_clan_design_' + _eigoClanActiveSlot + '_v1');
     if (typeof shadowNinjaResetState === 'function') shadowNinjaResetState();
   } catch(e) {}
   showToast('🌅 原点回帰しました — Reset complete.');
@@ -1852,6 +1915,10 @@ function showProfileHub() {
               onclick="document.getElementById('ninja-profile-hub').remove(); showScrollModal();">
         📜 Shadow Clone Scroll
       </button>
+      <button style="${btnBase}background:#059669;box-shadow:0 4px 0 #065f46;"
+              onclick="document.getElementById('ninja-profile-hub').remove(); showVillageModal();">
+        🏯 忍者の里 / Village
+      </button>
       <button style="display:block;width:100%;margin-top:18px;padding:14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;"
               onclick="this.closest('.overlay').remove()">
         閉じる / Close
@@ -2190,6 +2257,119 @@ function levelWords() {
   return wordStock[state.level] || [];
 }
 
+// ─── SEMANTIC CONFLICT MAP ────────────────────────────────────────────────
+// Prevents near-synonyms from appearing as co-distractors in the same
+// choice set (e.g. diminish / decline / decrease all meaning "become less").
+// Built once per pool reference; cached in a WeakMap so it is never
+// recomputed for the same grade level.
+//
+// Three detection signals (Signal 1c — shared syn — is intentionally
+// omitted: "stop", "move", "use" etc. are polysemous hub-words that would
+// generate far too many false positives):
+//
+//   1a  A.syn (single word) == B.word          e.g. refuse.syn = "decline"
+//   1b  B.syn (single word) == A.word          e.g. diminish.syn = "reduce"
+//   2   JP segment overlap  (same kanji chunk) e.g. 減らす in reduce & diminish
+//   3   Def meaningful-word overlap ≥ 3        e.g. {become, less, smaller}
+
+const _DEF_STOPWORDS = new Set([
+  'to','a','an','the','or','and','in','of','something','someone',
+  'is','are','be','it','its','that','this','which','when','how',
+  'by','as','at','on','from','for','with','you','your','very',
+  'not','no','more','most','so','than','do','does','has','have',
+  'had','been','get','gets','got','into','up','out','off',
+  'over','time','way','one','two','feel','well','give','take',
+  'come','goes','go','put','say','know','see','use','used'
+]);
+
+function _defWords(def) {
+  if (!def) return new Set();
+  return new Set(
+    def.toLowerCase()
+       .replace(/[^a-z\s]/g, '')
+       .split(/\s+/)
+       .filter(w => w.length > 2 && !_DEF_STOPWORDS.has(w))
+  );
+}
+
+function _jpSegs(jp) {
+  if (!jp) return [];
+  const segs = [];
+  for (const raw of jp.split('・')) {
+    const seg = raw.replace(/^〜[をにがはもの]?/, '').trim();
+    if (seg.length >= 2) segs.push(seg);
+  }
+  return segs;
+}
+
+function _buildConflictMap(pool) {
+  const map = new Map();
+  const add = (a, b) => {
+    if (a === b) return;
+    if (!map.has(a)) map.set(a, new Set());
+    if (!map.has(b)) map.set(b, new Set());
+    map.get(a).add(b);
+    map.get(b).add(a);
+  };
+
+  for (let i = 0; i < pool.length; i++) {
+    const A    = pool[i];
+    const wA   = A.word.toLowerCase();
+    const synA = (A.syn || '').toLowerCase().trim();
+    const segsA = _jpSegs(A.jp || '');
+    const dwA   = _defWords(A.def || '');
+
+    for (let j = i + 1; j < pool.length; j++) {
+      const B    = pool[j];
+      const wB   = B.word.toLowerCase();
+      const synB = (B.syn || '').toLowerCase().trim();
+
+      // Signal 1a: A's single-word syn IS B's word
+      if (synA && !synA.includes(' ') && synA === wB) { add(wA, wB); continue; }
+      // Signal 1b: B's single-word syn IS A's word
+      if (synB && !synB.includes(' ') && synB === wA) { add(wA, wB); continue; }
+
+      // Signal 2: JP segment overlap (identical kanji/kana chunk)
+      const segsB = _jpSegs(B.jp || '');
+      if (segsA.length && segsB.length && segsA.some(s => segsB.includes(s))) {
+        add(wA, wB); continue;
+      }
+
+      // Signal 3: def meaningful-word overlap (threshold: ≥ 3 shared words)
+      const dwB = _defWords(B.def || '');
+      if (dwA.size && dwB.size) {
+        let shared = 0;
+        for (const w of dwA) { if (dwB.has(w)) shared++; }
+        if (shared >= 3) add(wA, wB);
+      }
+    }
+  }
+
+  // ── Manual overrides: fill-mode ambiguities that auto-detection misses ───
+  // These are verb pairs where both words fit the same sentence blank even
+  // though their synonyms, JP meanings, and definitions don't overlap enough
+  // to trigger the three signals above.
+  // Example: "Let's ___ sandwiches together." — both 'make' and 'eat' fit.
+  const MANUAL_FILL_CONFLICTS = [
+    ['make', 'eat'],   // food-creation vs food-consumption context
+    ['make', 'cook'],  // food-preparation context
+    ['buy',  'get'],   // acquisition context (often interchangeable in sentences)
+    ['say',  'tell'],  // speech-act context
+    ['look', 'seem'],  // appearance context
+  ];
+  for (const [a, b] of MANUAL_FILL_CONFLICTS) add(a, b);
+
+  return map;
+}
+
+const _conflictCache = new WeakMap();
+function _getConflictMap(pool) {
+  if (_conflictCache.has(pool)) return _conflictCache.get(pool);
+  const m = _buildConflictMap(pool);
+  _conflictCache.set(pool, m);
+  return m;
+}
+
 // ─── GENERATE OPTIONS (FIXED) ────────────────────────────
 // Level-appropriate: only draws from the current grade's wordStock
 // Fill-in-blank: only uses real verb inflections as distractors
@@ -2302,40 +2482,66 @@ function generateOptions(correct, field) {
       }
   // For vocab / synonym / definition modes
   const correctEntryPOS = pool.find(w => w[field] === correct);
-    const correctPOS = correctEntryPOS ? getPOS(correctEntryPOS) : null;
+  const correctPOS = correctEntryPOS ? getPOS(correctEntryPOS) : null;
 
-    const samePosList = correctPOS
-      ? pool.filter(w => getPOS(w) === correctPOS && w[field] !== correct && w[field])
-      : pool.filter(w => w[field] !== correct && w[field]);
+  // ── Semantic-conflict filter ──────────────────────────────────────────
+  // Look up words too close in meaning to the correct answer and exclude
+  // them from the distractor pool at every tier.  The filter is applied
+  // BEFORE POS-tier fallbacks so that POS-expansion never re-introduces
+  // a conflicting entry.  If the pool is extremely small the emergency
+  // fallback at the end guarantees a full 4-option grid regardless.
+  const conflictMap   = _getConflictMap(pool);
+  const correctWord   = correctEntryPOS ? correctEntryPOS.word.toLowerCase() : null;
+  const conflicted    = correctWord ? (conflictMap.get(correctWord) || new Set()) : new Set();
+  const notConflicted = w => !conflicted.has(w.word.toLowerCase());
 
-    let choices = shuffle([...new Set(samePosList.map(w => w[field]))]).slice(0, 3);
+  const samePosList = (correctPOS
+    ? pool.filter(w => getPOS(w) === correctPOS && w[field] !== correct && w[field])
+    : pool.filter(w => w[field] !== correct && w[field])
+  ).filter(notConflicted);
 
-    // Tier-1 fallback: expand to closely-related POS (adverb ↔ adjective)
-    // before giving up on POS matching entirely.
-    if (choices.length < 3 && correctPOS) {
-      const RELATED = { 'adverb': ['adjective'], 'adjective': ['adverb'], 'noun': [], 'verb': [] };
-      const tier2 = RELATED[correctPOS] || [];
-      if (tier2.length) {
-        const tier2List = pool.filter(w => tier2.includes(getPOS(w)) && w[field] !== correct && w[field]);
-        const extras = shuffle([...new Set(tier2List.map(w => w[field]))])
-          .filter(v => !choices.includes(v))
-          .slice(0, 3 - choices.length);
-        choices = [...choices, ...extras];
-      }
-    }
+  let choices = shuffle([...new Set(samePosList.map(w => w[field]))]).slice(0, 3);
 
-    // Tier-2 fallback (last resort): pad with any remaining word so the
-    // choices grid is always full of 4 options.
-    if (choices.length < 3) {
-      const extras = shuffle(
-        [...new Set(pool.map(w => w[field]).filter(v => v && v !== correct && !choices.includes(v)))]
-      ).slice(0, 3 - choices.length);
+  // Tier-1 fallback: expand to closely-related POS (adverb ↔ adjective)
+  // before giving up on POS matching entirely.
+  if (choices.length < 3 && correctPOS) {
+    const RELATED = { 'adverb': ['adjective'], 'adjective': ['adverb'], 'noun': [], 'verb': [] };
+    const tier2 = RELATED[correctPOS] || [];
+    if (tier2.length) {
+      const tier2List = pool.filter(
+        w => tier2.includes(getPOS(w)) && w[field] !== correct && w[field] && notConflicted(w)
+      );
+      const extras = shuffle([...new Set(tier2List.map(w => w[field]))])
+        .filter(v => !choices.includes(v))
+        .slice(0, 3 - choices.length);
       choices = [...choices, ...extras];
     }
-
-    choices.push(correct);
-    return shuffle(choices);
   }
+
+  // Tier-2 fallback: pad with any remaining non-conflicting word.
+  if (choices.length < 3) {
+    const extras = shuffle(
+      [...new Set(
+        pool.filter(notConflicted)
+            .map(w => w[field])
+            .filter(v => v && v !== correct && !choices.includes(v))
+      )]
+    ).slice(0, 3 - choices.length);
+    choices = [...choices, ...extras];
+  }
+
+  // Emergency fallback (last resort): if the conflict set is so large that
+  // the pool is exhausted, lift the filter to guarantee a full 4-option grid.
+  if (choices.length < 3) {
+    const emergency = shuffle(
+      [...new Set(pool.map(w => w[field]).filter(v => v && v !== correct && !choices.includes(v)))]
+    ).slice(0, 3 - choices.length);
+    choices = [...choices, ...emergency];
+  }
+
+  choices.push(correct);
+  return shuffle(choices);
+}
 
 function toggleModal(show) {
   document.getElementById('how-modal').style.display = show ? 'flex' : 'none';
@@ -2556,7 +2762,7 @@ function renderHome() {
            they were removed from this row to avoid duplicate entry
            points.  Only How-To-Play and Other Games remain. -->
       <div class="util-row">
-        <button class="util-btn" onclick="toggleModal(true)">❓ 遊びかた</button>
+        <button class="util-btn" onclick="toggleModal(true)">🥷 忍びの心得</button>
         <button class="util-btn" onclick="toggleLinks(true)" style="background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0;">🎮 Other Games</button>
       </div>
       <div class="footer-strip">ELKえいご王国</div>
@@ -2698,6 +2904,7 @@ function toggleChallengeMode(mode) {
 function _resetSessionProgress() {
   state.streak = 0;
   state.sessionExp = 0;
+  state.challengeRawXP = 0;   // 100Q: pre-exitMul accumulator (deferred ninjaAddExp)
   state.perAnswerExp = [];
   state.recoveredFlags = [];
   state.firstTimeFlags = [];
@@ -2743,6 +2950,7 @@ function renderQuestion() {
   }
 
   state.locked = false;
+  state.hintUsedThisRound = false;
   state.questionStart = Date.now();
   const current = state.sessionWords[state.currentIndex];
   const effectiveMode = state.mode === 5 ? state.challengeModes[state.currentIndex] : state.mode;
@@ -2835,6 +3043,7 @@ function showHint() {
   if (!bubble) return;
   bubble.style.display = 'block';
   if (btn) btn.style.display = 'none';
+  state.hintUsedThisRound = true;  // triggers ×0.9 XP penalty for fill-in mode
 }
 
 function checkAnswer(btn, selected, correct) {
@@ -2857,20 +3066,32 @@ function checkAnswer(btn, selected, correct) {
     const flags = ninjaRecordAnswer(currentWord, true, elapsed, modeKey);
     if (flags.firstTimeCorrect) state.firstTimeFlags[state.currentIndex] = true;
     if (flags.recovered)        state.recoveredFlags[state.currentIndex] = true;
-    const gained = calculateExp({
-      correct: 1,
-      mode: modeKey,
-      grade: ninjaGradeKey(),
-      streak: state.streak,
-      firstTimeCorrect: flags.firstTimeCorrect,
-      recovered: flags.recovered,
-    });
+    let gained;
+    if (state.mode === 5) {
+      // ── 100Q Challenge: per-question XP (deferred; exitMul applied at renderResults()) ──
+      // Base 37 × modeMul × gradeMul × 1.01^streak (compound, resets on wrong answer)
+      // No hard cap — exitMul table handles early-exit penalty / completion reward.
+      const q100ModeMul  = {vocab:1.0, synonym:1.1, fill:1.2, definition:1.3}[modeKey] || 1.0;
+      const q100GradeMul = {grade4:1.0, grade3:1.30, pre2:1.70, grade2:2.20}[ninjaGradeKey()] || 1.0;
+      const streakMul    = Math.pow(1.01, state.streak);   // compound: 1.01^streak
+      gained = Math.round(37 * q100ModeMul * q100GradeMul * streakMul);
+      state.challengeRawXP += gained;
+      // ninjaAddExp() is deferred — applied as a lump sum in renderResults()
+    } else {
+      gained = calculateExp({
+        correct: 1,
+        mode: modeKey,
+        grade: ninjaGradeKey(),
+        streak: state.streak,
+        hintUsed: state.hintUsedThisRound || false,
+      });
+      ninjaAddExp(gained);
+    }
     state.sessionExp += gained;
     state.perAnswerExp[state.currentIndex] = gained;
-    ninjaAddExp(gained);
     playCorrect();
     const msgs = ['Great! 🌟', 'Amazing! ⭐', 'Correct! 🎉', 'Nice! 🔥', 'Yes! 💪'];
-    const tag = flags.recovered ? ' · 弱点突破！Great!+3' : (flags.firstTimeCorrect ? ' · 初成功+2' : '');
+    const tag = flags.recovered ? ' · 弱点突破！' : (flags.firstTimeCorrect ? ' · 初成功！' : '');
     if (fb) fb.innerHTML = `<span class="fb-ok">${msgs[Math.floor(Math.random()*msgs.length)]} <span style="font-size:13px;color:#7C3AED;">+${gained} XP${tag}</span></span>`;
   } else {
     btn.classList.add('wrong');
@@ -2897,17 +3118,49 @@ function renderResults() {
   else if (pct >= 60) { medal = '🥇'; msg = 'Well done!'; }
   else if (pct >= 40) { medal = '🥈'; msg = 'Good try!'; }
 
-  // Perfect bonus: ×1.3 on session total
-  let perfectBonus = 0;
-  if (total > 0 && state.score === total) {
-    const before = state.sessionExp;
-    const after  = Math.round(before * 1.3);
-    perfectBonus = after - before;
-    if (perfectBonus > 0) {
-      state.sessionExp = after;
-      ninjaAddExp(perfectBonus);
+  const isChallenge = state.mode === 5;
+
+  // ── XP finalization ─────────────────────────────────────────────────────────
+  let bonusLabel = '';
+  if (isChallenge) {
+    // 100Q Challenge: apply exitMul then commit to ninjaAddExp() in one lump sum.
+    // No hard cap — grade × streak already bound the realistic maximum.
+    // exitMul: heavy penalty for early exit; big bonus for 100-question completion.
+    const answered = state.currentIndex;   // questions attempted (including wrong)
+    const exitMul  = answered >= 100 ? 1.40   // 完走ボーナス +40%
+                   : answered >=  80 ? 1.00   // 80〜99問: ペナルティなし
+                   : answered >=  50 ? 0.95   // 50〜79問: 5%減
+                   : answered >=  30 ? 0.85   // 30〜49問: 15%減
+                   : answered >=  10 ? 0.70   // 10〜29問: 30%減
+                   :                   0.50;  // 〜9問:    50%減
+    const finalXP  = Math.max(0,
+                       Math.round(state.challengeRawXP * exitMul * ninjaEigoLevelPenalty(progress.level)));
+    state.sessionExp = finalXP;
+    if (finalXP > 0) ninjaAddExp(finalXP);
+    const exitPct = Math.round((exitMul - 1) * 100);
+    const exitSign = exitPct >= 0 ? '+' : '';
+    bonusLabel = answered >= 100
+      ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FFD54F;">🏆 100問完走ボーナス ×1.40 +40%</div>`
+      : exitMul < 1.0
+      ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FF8A65;">⚠️ 早期終了ペナルティ ×${exitMul.toFixed(2)} ${exitSign}${exitPct}%</div>`
+      : `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FFD54F;">✅ ${answered}問回答 ×${exitMul.toFixed(2)}</div>`;
+  } else {
+    // Regular mode: perfect bonus ×1.3
+    let perfectBonus = 0;
+    if (total > 0 && state.score === total) {
+      const before = state.sessionExp;
+      const after  = Math.round(before * 1.3);
+      perfectBonus = after - before;
+      if (perfectBonus > 0) {
+        state.sessionExp = after;
+        ninjaAddExp(perfectBonus);
+      }
     }
+    bonusLabel = perfectBonus > 0
+      ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FFD54F;">🎊 PERFECT! ×1.3 ボーナス +${perfectBonus} XP</div>`
+      : '';
   }
+
   progress.totalSessions++;
   progress.lastTrainedAt = Date.now();
   ninjaSaveLocal();
@@ -2924,10 +3177,9 @@ function renderResults() {
           <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;line-height:1;">Lv ${progress.level}</div>
         </div>
       </div>
-      ${perfectBonus > 0 ? `<div style="margin-top:6px;font-size:12px;font-weight:800;color:#FFD54F;">🎊 PERFECT! ×1.3 ボーナス +${perfectBonus} XP</div>` : ''}
+      ${bonusLabel}
     </div>`;
 
-  const isChallenge = state.mode === 5;
   // Challenge: always export all session words; regular: only show/export mistakes
   const reviewWords = isChallenge ? state.sessionWords : state.mistakes;
 
@@ -3005,6 +3257,7 @@ let blitz = {
   locked:      false,
   // ── scoring extensions ──
   combo:        0,
+  maxCombo:     0,
   totalTyped:   0,
   correctChars: 0,
   scoreF:       0,
@@ -3221,6 +3474,7 @@ function blitzCheckAnswer() {
     blitz.correctChars += charCount;
     blitz.wordCount++;
     blitz.combo++;
+    if (blitz.combo > blitz.maxCombo) blitz.maxCombo = blitz.combo;
     // Per-word: was this word answered with no wrong attempts? → "perfect word"
     const perfectWord = !blitz.attemptDirty;
     const diffMul = ({vocab:1.0, def:1.5, fill:1.7})[blitz.subMode] || 1.0;
@@ -3360,6 +3614,7 @@ function startBlitz(subMode) {
   blitz.mistakes  = [];
   blitz.locked    = false;
   blitz.combo        = 0;
+  blitz.maxCombo     = 0;
   blitz.totalTyped   = 0;
   blitz.correctChars = 0;
   blitz.scoreF       = 0;
@@ -3422,18 +3677,26 @@ function renderBlitzEnd() {
   hideBlitzPanel();
   const n = blitz.charScore;
   const w = blitz.wordCount;
-  const emoji = n >= 80 ? '🏆' : n >= 50 ? '🥇' : n >= 25 ? '🥈' : '🥷';
-  const msg   = n >= 80 ? 'Blitz Master! 🎊' : n >= 50 ? 'Spelling Star! ⭐' : n >= 25 ? 'Nice typing! 💪' : 'Keep training! 🔥';
+  const emoji = n >= 65 ? '🏆' : n >= 50 ? '🥇' : n >= 25 ? '🥈' : '🥷';
+  const msg   = n >= 65 ? 'Blitz Master! 🎊' : n >= 50 ? 'Spelling Star! ⭐' : n >= 25 ? 'Nice typing! 💪' : 'Keep training! 🔥';
 
   // ── Type Blitz scoring & rank ──
   const accuracy = blitz.totalTyped > 0 ? Math.min(1, blitz.correctChars / blitz.totalTyped) : 0;
   const score    = Math.max(0, Math.round(blitz.scoreF * accuracy));
-  const blitzExp = Math.floor(Math.sqrt(score));
   let rank = 'D';
   if      (score >= 200) rank = 'S';
   else if (score >= 130) rank = 'A';
   else if (score >=  80) rank = 'B';
   else if (score >=  40) rank = 'C';
+  // ── XP calculation (per-char formula, LEVEL_FACTOR=50 calibration) ──
+  // G4 top rank (65 chars, vocab, maxCombo≥10, accuracy≈1.0) ≈ 900 XP.
+  // Grade multipliers apply automatically: G3×1.30, Pre-2×1.70, G2×2.20.
+  const BLITZ_XP_PER_CHAR = 10;
+  const blitzGradeMul  = ({grade4:1.0, grade3:1.30, pre2:1.70, grade2:2.20})[ninjaGradeKey()] || 1.0;
+  const blitzModeMul   = ({vocab:0.9, def:1.5, fill:1.2})[blitz.subMode] || 0.9;
+  const blitzComboMul  = 1 + Math.min(blitz.maxCombo * 0.05, 0.50);
+  const rawBlitzExp    = Math.round(blitz.correctChars * BLITZ_XP_PER_CHAR * blitzGradeMul * blitzModeMul * accuracy * blitzComboMul);
+  const blitzExp       = Math.max(0, Math.round(rawBlitzExp * ninjaEigoLevelPenalty(progress.level)));
   if (blitzExp > 0) ninjaAddExp(blitzExp);
   progress.totalSessions++;
   progress.lastTrainedAt = Date.now();
@@ -3537,6 +3800,9 @@ function renderBlitzEnd() {
 // All XP / level math continues to flow through ninjaAddExp().
 
 const NINJA_DESIGN_STORAGE_KEY = 'shadowNinjaScroll';
+// Clan (忍者の里) — shared key format is identical to ninja-core.js
+const NINJA_CLAN_KEY      = 'ninja_clan_v1';
+const NINJA_MAX_CLAN_SIZE = 10;
 const NINJA_DESIGN_UNLOCK_EVERY = 5; // levels per new unlock token
 
 // ── ninjaAssets: master catalog ──────────────────────────
@@ -3603,6 +3869,12 @@ function shadowNinjaSave() {
       unlocked: shadowNinja.unlocked,
       v: 2,
     }));
+    // Also persist to the active clan slot's design key
+    _eigoSaveSlotDesign(_eigoClanActiveSlot, {
+      selected: shadowNinja.selected,
+      unlocked: shadowNinja.unlocked.slice(),
+      v: 2,
+    });
   } catch(e) {}
 }
 function shadowNinjaLoad() {
@@ -3770,9 +4042,17 @@ function shadowNinjaRefreshPickerUI(isFirstRun) {
       ${starterMode ? '後で / Later' : '✅ 決定 / Done'}
     </button>`;
 }
+// Flag set by eigoAddMember() so shadowNinjaClosePicker() knows to reopen
+// the village modal after the new ninja's starter design has been chosen.
+let _eigoPendingVillageReopen = false;
+
 function shadowNinjaClosePicker() {
   const ov = document.getElementById('shadow-ninja-picker');
   if (ov) ov.remove();
+  if (_eigoPendingVillageReopen) {
+    _eigoPendingVillageReopen = false;
+    setTimeout(showVillageModal, 60);  // reopen village with fresh carousel data
+  }
   if (state.screen === 'home') renderHome();
 }
 // Single click handler — covers select / starter / unlock paths.
@@ -3808,14 +4088,397 @@ function shadowNinjaPickAction(action, id) {
   }
 }
 
+// ─── CLAN SYSTEM (忍者の里) ──────────────────────────────
+// Parallel implementation of ninja-core.js Clan System.
+// Uses the same storage keys (NINJA_CLAN_KEY = 'ninja_clan_v1',
+// 'ninja_clan_slot_N_v1', 'ninja_clan_design_N_v1') so Bloodline
+// Scrolls are mutually compatible across all Ninja games.
+
+let _eigoClanActiveSlot = 0;   // in-memory cache of the active slot index
+
+function _eigoSlotProgressKey(n) { return 'ninja_clan_slot_'   + n + '_v1'; }
+function _eigoSlotDesignKey(n)   { return 'ninja_clan_design_' + n + '_v1'; }
+
+function _eigoGetClanMeta() {
+  try {
+    const raw = localStorage.getItem(NINJA_CLAN_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && typeof d === 'object' && Array.isArray(d.slots) && d.slots.length > 0) return d;
+    }
+  } catch(e) {}
+  return null;
+}
+function _eigoSaveClanMeta(meta) {
+  try { localStorage.setItem(NINJA_CLAN_KEY, JSON.stringify(meta)); } catch(e) {}
+}
+function _eigoLoadSlotProgress(n) {
+  try { const r = localStorage.getItem(_eigoSlotProgressKey(n)); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function _eigoLoadSlotDesign(n) {
+  try { const r = localStorage.getItem(_eigoSlotDesignKey(n)); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+function _eigoSaveSlotProgress(n, data) {
+  try { localStorage.setItem(_eigoSlotProgressKey(n), JSON.stringify(data)); } catch(e) {}
+}
+function _eigoSaveSlotDesign(n, d) {
+  try { localStorage.setItem(_eigoSlotDesignKey(n), JSON.stringify(d)); } catch(e) {}
+}
+
+// Snapshot current in-memory progress + design into a slot
+function _eigoCaptureToSlot(n) {
+  _eigoSaveSlotProgress(n, {
+    name: progress.name, nameLocked: progress.nameLocked,
+    exp: progress.exp, level: progress.level, words: progress.words,
+    globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
+    lastTrainedAt: progress.lastTrainedAt,
+  });
+  _eigoSaveSlotDesign(n, {
+    selected: shadowNinja.selected,
+    unlocked: shadowNinja.unlocked.slice(),
+    v: 2,
+  });
+}
+
+// Load a slot into memory (progress + design)
+function _eigoApplySlot(n) {
+  const d = _eigoLoadSlotProgress(n);
+  if (d) {
+    progress.name          = d.name          || 'Ninja';
+    progress.nameLocked    = !!d.nameLocked;
+    progress.exp           = d.exp           || 0;
+    progress.level         = ninjaLevelFromExp(progress.exp);
+    progress.words         = d.words         || {};
+    progress.globalIndex   = d.globalIndex   || 0;
+    progress.totalSessions = d.totalSessions || 0;
+    progress.lastTrainedAt = d.lastTrainedAt || 0;
+  } else {
+    // Brand-new slot
+    progress.name = 'Ninja'; progress.nameLocked = false;
+    progress.exp = 0; progress.level = 0; progress.words = {};
+    progress.globalIndex = 0; progress.totalSessions = 0; progress.lastTrainedAt = 0;
+  }
+  const des = _eigoLoadSlotDesign(n);
+  shadowNinja.selected = null;
+  shadowNinja.unlocked.splice(0, shadowNinja.unlocked.length);
+  if (des && Array.isArray(des.unlocked)) {
+    des.unlocked.forEach(id => { if (ninjaAssets[id] && shadowNinja.unlocked.indexOf(id) < 0) shadowNinja.unlocked.push(id); });
+    if (des.selected && ninjaAssets[des.selected] && shadowNinja.unlocked.indexOf(des.selected) >= 0) {
+      shadowNinja.selected = des.selected;
+    }
+  }
+  _eigoClanActiveSlot = n;
+}
+
+// clanBoot — called after ninjaLoadLocal + shadowNinjaLoad
+function clanBoot() {
+  const meta = _eigoGetClanMeta();
+  if (meta) {
+    let active = typeof meta.activeSlot === 'number' ? meta.activeSlot : meta.slots[0];
+    if (meta.slots.indexOf(active) < 0) active = meta.slots[0];
+    _eigoApplySlot(active);
+    if (meta.activeSlot !== active) { meta.activeSlot = active; _eigoSaveClanMeta(meta); }
+  } else {
+    // First run — snapshot current state as slot 0
+    _eigoCaptureToSlot(0);
+    _eigoSaveClanMeta({ activeSlot: 0, slots: [0] });
+    _eigoClanActiveSlot = 0;
+  }
+}
+
+// Switch active ninja
+function clanSetActive(n) {
+  const meta = _eigoGetClanMeta();
+  if (!meta || meta.slots.indexOf(n) < 0) return false;
+  _eigoCaptureToSlot(_eigoClanActiveSlot);
+  meta.activeSlot = n;
+  _eigoSaveClanMeta(meta);
+  _eigoApplySlot(n);
+  ninjaSaveLocal();
+  return true;
+}
+
+// Add a new empty slot (returns index, or -1 if full)
+function clanAddMember() {
+  const meta = _eigoGetClanMeta();
+  if (!meta || meta.slots.length >= NINJA_MAX_CLAN_SIZE) return -1;
+  let n = 0; while (meta.slots.indexOf(n) >= 0) n++;
+  meta.slots.push(n); meta.slots.sort((a,b) => a-b);
+  _eigoSaveClanMeta(meta);
+  return n;
+}
+
+// Remove slot n (cannot remove if it is the only member)
+function clanRemoveMember(n) {
+  const meta = _eigoGetClanMeta();
+  if (!meta || meta.slots.length <= 1) return false;
+  const idx = meta.slots.indexOf(n); if (idx < 0) return false;
+  try { localStorage.removeItem(_eigoSlotProgressKey(n)); } catch(e) {}
+  try { localStorage.removeItem(_eigoSlotDesignKey(n)); }  catch(e) {}
+  meta.slots.splice(idx, 1);
+  if (meta.activeSlot === n) {
+    meta.activeSlot = meta.slots[0];
+    _eigoSaveClanMeta(meta);
+    _eigoApplySlot(meta.activeSlot);
+    ninjaSaveLocal();
+  } else { _eigoSaveClanMeta(meta); }
+  return true;
+}
+
+// Summary array for UI rendering
+function clanMembers() {
+  const meta   = _eigoGetClanMeta();
+  const slots  = meta ? meta.slots  : [_eigoClanActiveSlot];
+  const active = meta ? meta.activeSlot : _eigoClanActiveSlot;
+  return slots.map(n => {
+    if (n === active) {
+      return { slot: n, active: true,
+               name: progress.name, nameLocked: progress.nameLocked,
+               exp: progress.exp, level: progress.level,
+               lastTrainedAt: progress.lastTrainedAt,
+               designSelected: shadowNinja.selected,
+               designUnlocked: shadowNinja.unlocked.slice() };
+    }
+    const d = _eigoLoadSlotProgress(n) || {}, des = _eigoLoadSlotDesign(n) || {};
+    return { slot: n, active: false,
+             name: d.name || 'Ninja', nameLocked: !!d.nameLocked,
+             exp: d.exp || 0, level: ninjaLevelFromExp(d.exp || 0),
+             lastTrainedAt: d.lastTrainedAt || 0,
+             designSelected: des.selected || null,
+             designUnlocked: des.unlocked || [] };
+  });
+}
+
+// ── Bloodline Scroll — same codec as ninja-core.js ──
+// lf: NINJA_LEVEL_FACTOR (=10) is stamped so cross-game XP scaling works.
+function generateBloodlineScroll() {
+  _eigoCaptureToSlot(_eigoClanActiveSlot);
+  const meta = _eigoGetClanMeta() || { activeSlot: _eigoClanActiveSlot, slots: [_eigoClanActiveSlot] };
+  const members = meta.slots.map(n => {
+    const d   = _eigoLoadSlotProgress(n) || {};
+    const des = _eigoLoadSlotDesign(n)   || {};
+    return {
+      slot: n,
+      name: d.name || 'Ninja',  nameLocked: !!d.nameLocked,
+      exp:  d.exp  || 0,        level: ninjaLevelFromExp(d.exp || 0),
+      words: d.words || {},     globalIndex: d.globalIndex || 0,
+      totalSessions: d.totalSessions || 0, lastTrainedAt: d.lastTrainedAt || 0,
+      design: { selected: des.selected || null, unlocked: des.unlocked || [] },
+      lf: NINJA_LEVEL_FACTOR,
+    };
+  });
+  const payload = JSON.stringify({ clanV: 1, activeSlot: meta.activeSlot, members });
+  const sum  = ninjaChecksum(payload);
+  const wrap = JSON.stringify({ v: 1, sum, payload });
+  return 'CLAN1.' + _utf8Btoa(wrap);
+}
+
+function parseBloodlineScroll(code) {
+  if (typeof code !== 'string') throw new Error('scroll code missing');
+  const t = code.trim();
+  if (!t.startsWith('CLAN1.')) throw new Error('invalid bloodline scroll header');
+  let wrap;
+  try { wrap = JSON.parse(_utf8Atob(t.slice(6))); } catch(e) { throw new Error('cannot decode bloodline scroll'); }
+  if (!wrap || wrap.v !== 1)                    throw new Error('unsupported bloodline scroll version');
+  if (ninjaChecksum(wrap.payload) !== wrap.sum) throw new Error('checksum mismatch');
+  return JSON.parse(wrap.payload);
+}
+
+function importBloodlineScroll(data) {
+  if (!data || !Array.isArray(data.members) || !data.members.length) return false;
+  data.members.forEach(m => {
+    const n = m.slot;
+    if (typeof n !== 'number' || n < 0 || n >= NINJA_MAX_CLAN_SIZE) return;
+    let importedExp = m.exp || 0;
+    const scrollLF  = typeof m.lf === 'number' ? m.lf : NINJA_LEVEL_FACTOR;
+    if (scrollLF !== NINJA_LEVEL_FACTOR && scrollLF > 0)
+      importedExp = Math.round(importedExp * NINJA_LEVEL_FACTOR / scrollLF);
+    _eigoSaveSlotProgress(n, {
+      name: m.name || 'Ninja', nameLocked: !!m.nameLocked,
+      exp: importedExp, level: ninjaLevelFromExp(importedExp),
+      words: m.words || {}, globalIndex: m.globalIndex || 0,
+      totalSessions: m.totalSessions || 0, lastTrainedAt: m.lastTrainedAt || 0,
+    });
+    if (m.design) _eigoSaveSlotDesign(n, { selected: m.design.selected || null, unlocked: m.design.unlocked || [], v: 2 });
+  });
+  const newSlots = data.members
+    .map(m => m.slot)
+    .filter(n => typeof n === 'number' && n >= 0 && n < NINJA_MAX_CLAN_SIZE)
+    .sort((a,b) => a-b);
+  let activeSlot = typeof data.activeSlot === 'number' ? data.activeSlot : newSlots[0];
+  if (newSlots.indexOf(activeSlot) < 0) activeSlot = newSlots[0];
+  _eigoSaveClanMeta({ activeSlot, slots: newSlots });
+  _eigoApplySlot(activeSlot);
+  ninjaSaveLocal();
+  return true;
+}
+
+// ── Village modal UI ─────────────────────────────────────────────────────
+function showVillageModal() {
+  const stale = document.getElementById('eigo-village-modal');
+  if (stale) stale.remove();
+  const members = clanMembers();
+  const maxSize = NINJA_MAX_CLAN_SIZE;
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'eigo-village-modal';
+  overlay.style.zIndex = '9999';
+  overlay.onclick = ev => { if (ev.target === overlay) overlay.remove(); };
+
+  // Carousel cards
+  const carouselCards = members.map(m => {
+    const avatarSrc = m.designSelected && ninjaAssets[m.designSelected] ? ninjaAssets[m.designSelected].file : '';
+    const avatarBox = avatarSrc
+      ? `<img src="${avatarSrc}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display='none'">`
+      : `<span style="font-size:10px;font-weight:800;color:rgba(255,255,255,0.7);">未選択</span>`;
+    const activeBorder = m.active ? 'border:3px solid #FFD54F;box-shadow:0 4px 0 #FFD54F;' : 'border:3px solid transparent;opacity:0.75;';
+    const activeTag = m.active
+      ? `<div style="margin-top:5px;font-size:10px;font-weight:900;background:rgba(255,213,79,0.25);color:#FFD54F;border-radius:6px;padding:2px 6px;display:inline-block;">▶ 修行中</div>`
+      : `<div style="margin-top:5px;font-size:10px;font-weight:800;opacity:0.65;border-radius:6px;padding:2px 6px;display:inline-block;border:1px solid rgba(255,255,255,0.3);">タップで切替</div>`;
+    const clickAttr = m.active ? '' : `onclick="eigoSwitchSlot(${m.slot})"`;
+    return `<div ${clickAttr} style="flex:0 0 162px;scroll-snap-align:start;background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:18px;padding:13px 12px 11px;cursor:${m.active?'default':'pointer'};${activeBorder}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+        <div style="width:44px;height:44px;flex:0 0 44px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.3);">${avatarBox}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Bangers',cursive;font-size:18px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(m.name||'Ninja').replace(/</g,'&lt;')}</div>
+          <div style="font-size:11px;font-weight:800;opacity:0.9;margin-top:1px;">Lv ${m.level}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;opacity:0.85;">${(m.exp||0).toLocaleString()} XP</div>
+      ${activeTag}
+    </div>`;
+  }).join('');
+
+  const addCard = members.length < maxSize
+    ? `<div onclick="eigoAddMember()" style="flex:0 0 76px;scroll-snap-align:start;background:#f8f8f5;border:3px dashed #ccc;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:116px;gap:4px;color:#999;font-size:11px;font-weight:800;">
+        <span style="font-size:22px;">＋</span><span>新忍者</span>
+      </div>` : '';
+
+  // Manage buttons for non-active members (only if > 1)
+  const manageRows = members.length > 1
+    ? members.filter(m => !m.active).map(m =>
+        `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #f0f0f0;">
+          <span style="font-size:13px;font-weight:800;color:#333;">🥷 ${(m.name||'Ninja').replace(/</g,'&lt;')} (Lv ${m.level})</span>
+          <button onclick="eigoRemoveMember(${m.slot})" style="background:#FFE5E7;color:#E63946;border:2px solid #E63946;border-radius:10px;padding:5px 10px;font-size:11px;font-weight:900;cursor:pointer;">🗑 削除</button>
+        </div>`
+      ).join('')
+    : '';
+
+  const btnBase = `font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;transition:0.1s;color:#fff;padding:12px;width:100%;display:block;margin-top:8px;`;
+  overlay.innerHTML = `
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;padding:18px 16px;">
+      <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:10px;color:#059669;">🏯 忍者の里 / Village</div>
+      <div style="font-size:11px;color:#666;text-align:center;margin-bottom:10px;line-height:1.5;">
+        最大${maxSize}人の忍者を管理できます<br>
+        <span style="font-size:10px;color:#888;">Manage up to ${maxSize} ninjas.</span>
+      </div>
+      <!-- Carousel -->
+      <div style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 2px 10px;">
+        ${carouselCards}${addCard}
+      </div>
+      <!-- Member management -->
+      ${manageRows ? `<div style="font-size:11px;font-weight:900;color:#666;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;">メンバー管理</div><div style="border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:8px;">${manageRows}</div>` : ''}
+      <div style="height:1px;background:#eee;margin:14px 0;"></div>
+      <!-- Bloodline Scroll section -->
+      <div style="font-size:14px;font-weight:900;color:#059669;margin-bottom:8px;">🩸 Bloodline Scroll</div>
+      <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:10px;">
+        一族全員のデータを一本の巻物にまとめます。<br>
+        <span style="color:#888;">Encode all clan members into one scroll.</span>
+      </div>
+      <div style="font-size:12px;font-weight:900;color:#333;margin-bottom:5px;">⬇ Bloodline Scrollを作る</div>
+      <textarea id="eigo-bloodline-out" style="width:100%;min-height:80px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f3f1ec;box-sizing:border-box;" readonly></textarea>
+      <button onclick="eigoBloodlineGenerate()" style="${btnBase}background:#059669;box-shadow:0 3px 0 #065f46;">🩸 Scrollを生成する</button>
+      <button onclick="eigoBloodlineCopy()" id="eigo-bloodline-copy-btn" style="${btnBase}background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;">📋 Bloodline Scrollを写し取る</button>
+      <div style="font-size:12px;font-weight:900;color:#333;margin:12px 0 5px;">⬆ Bloodline Scrollを読み込む</div>
+      <textarea id="eigo-bloodline-in" placeholder="ここにBloodline Scrollを貼り付け / paste CLAN1...." style="width:100%;min-height:80px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f8f8f5;box-sizing:border-box;"></textarea>
+      <button onclick="eigoBloodlineLoad()" style="${btnBase}background:#FFB000;box-shadow:0 3px 0 #b07a00;">🩸 一族を呼び戻す</button>
+      <div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:10px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">
+        💡 Bloodline ScrollはShadow Clone Scrollとは独立した巻物です。<br>
+        個別の忍者にはShadow Clone Scroll、全員まとめてはBloodline Scrollをご利用ください。
+      </div>
+      <button onclick="this.closest('.overlay').remove()" style="display:block;width:100%;margin-top:16px;padding:13px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;">閉じる / Close</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function eigoSwitchSlot(n) {
+  const m = clanMembers().find(x => x.slot === n);
+  if (!confirm('「' + ((m && m.name) || 'Ninja') + '」に切り替えますか？\nSwitch to this ninja?')) return;
+  if (clanSetActive(n)) {
+    showToast('🥷 ' + progress.name + ' Lv' + progress.level + ' に切り替えました');
+    const ov = document.getElementById('eigo-village-modal');
+    if (ov) { ov.remove(); setTimeout(showVillageModal, 50); }
+    if (state.screen === 'home') renderHome();
+  }
+}
+function eigoAddMember() {
+  const n = clanAddMember();
+  if (n < 0) { showToast('⚠️ 里は満員です（最大' + NINJA_MAX_CLAN_SIZE + '人）'); return; }
+  if (clanSetActive(n)) {
+    showToast('🥷 新しい忍者を里に招きました！');
+    // Close the village modal now; shadowNinjaClosePicker() will reopen it
+    // after the new ninja's starter design has been chosen, so the
+    // carousel reflects the fresh design without a double-flash.
+    const ov = document.getElementById('eigo-village-modal');
+    if (ov) ov.remove();
+    _eigoPendingVillageReopen = true;
+    setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 60);
+  }
+}
+function eigoRemoveMember(n) {
+  const m = clanMembers().find(x => x.slot === n);
+  if (!m) return;
+  if (!confirm('🗑 「' + (m.name || 'Ninja') + '」(Lv' + m.level + ') を里から外しますか？\n（この操作は取り消せません）\n\nRemove this ninja from the village?')) return;
+  if (clanRemoveMember(n)) {
+    showToast('🥷 ' + (m.name || 'Ninja') + ' を里から外しました');
+    const ov = document.getElementById('eigo-village-modal');
+    if (ov) { ov.remove(); setTimeout(showVillageModal, 50); }
+    if (state.screen === 'home') renderHome();
+  }
+}
+function eigoBloodlineGenerate() {
+  const ta = document.getElementById('eigo-bloodline-out'); if (!ta) return;
+  try {
+    ta.value = generateBloodlineScroll();
+    ta.select();
+    const btn = document.getElementById('eigo-bloodline-copy-btn');
+    if (btn) btn.style.display = 'block';
+    showToast('🩸 Bloodline Scrollを生成しました！');
+  } catch(e) { showToast('⚠️ 生成失敗: ' + e.message); }
+}
+function eigoBloodlineCopy() {
+  const ta = document.getElementById('eigo-bloodline-out');
+  if (!ta || !ta.value) { showToast('⚠️ まずScrollを生成してください'); return; }
+  ta.select();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value)
+      .then(() => showToast('📋 Bloodline Scrollを写し取りました！'))
+      .catch(() => { try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {} });
+  } else { try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {} }
+}
+function eigoBloodlineLoad() {
+  const ta = document.getElementById('eigo-bloodline-in'); if (!ta) return;
+  const code = (ta.value || '').trim();
+  if (!code) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
+  try {
+    const data = parseBloodlineScroll(code);
+    if (!importBloodlineScroll(data)) throw new Error('import failed');
+    showToast('🩸 ' + clanMembers().length + '人の一族を呼び戻しました！');
+    _removeTransientOverlays();
+    if (state.screen === 'home') renderHome();
+    if (!shadowNinja.selected) setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 250);
+  } catch(e) { showToast('⚠️ 読み込み失敗: ' + e.message); }
+}
+
 // ─── BOOT ────────────────────────────────────────────────
 ninjaLoadLocal();   // restore EXP, level, and shared word memory across sessions / games
-const _hadDesignAtBoot = shadowNinjaLoad();
+shadowNinjaLoad();  // restore design selection
+clanBoot();         // clan init — migrates legacy data or loads active slot
 renderHome();
 // First-time users (or anyone who hasn't picked a starter yet) see the
 // design picker as a friendly welcome. After 原点回帰 this also re-runs
 // because shadowNinjaResetState() clears `selected`.
-if (!_hadDesignAtBoot || !shadowNinja.selected) {
+if (!shadowNinja.selected) {
   setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 200);
 }
 </script>

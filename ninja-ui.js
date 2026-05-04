@@ -94,13 +94,23 @@
       '.ninja-ui-pickimg{width:110px;height:110px;margin:0 auto 6px;background:#f8f8f5;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;}',
       '.ninja-ui-pickimg img{width:100%;height:100%;object-fit:contain;display:block;}',
       '.ninja-ui-banner{border-radius:12px;padding:9px 12px;text-align:center;font-size:12px;font-weight:800;line-height:1.5;margin-bottom:14px;}',
+      // ── Clan carousel ──
+      '.ninja-ui-carousel{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 2px 10px;}',
+      '.ninja-ui-carousel::-webkit-scrollbar{height:4px;}',
+      '.ninja-ui-carousel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.3);border-radius:999px;}',
+      '.ninja-ui-member-card{flex:0 0 168px;scroll-snap-align:start;background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:18px;padding:13px 12px 11px;cursor:pointer;transition:0.15s;border:3px solid transparent;box-shadow:0 4px 0 #5B21B6;}',
+      '.ninja-ui-member-card.active{border-color:#FFD54F;box-shadow:0 4px 0 #FFD54F;}',
+      '.ninja-ui-member-card.inactive{opacity:0.72;}',
+      '.ninja-ui-member-card:active{transform:translateY(2px);}',
+      '.ninja-ui-add-card{flex:0 0 80px;scroll-snap-align:start;background:#f3f1ec;border:3px dashed #ccc;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;min-height:118px;transition:0.15s;color:#999;font-size:11px;font-weight:800;gap:4px;}',
+      '.ninja-ui-add-card:active{border-color:#7C3AED;background:#F3E8FF;color:#7C3AED;}',
       // ── Inline XP feedback row (placed by host games right below the
       //    question card). Mirrors eigo-ninja's `.feedback-row`. ──
-      '.ninja-xp-feedback{text-align:center;min-height:28px;font-size:17px;font-weight:900;margin:6px 0 4px;line-height:1.25;}',
+      '.ninja-xp-feedback{text-align:center;min-height:32px;font-size:21px;font-weight:900;margin:6px 0 4px;line-height:1.25;}',
       '.ninja-xp-fb-ok{color:#0a5c2d;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
       '.ninja-xp-fb-bad{color:#E63946;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
       '.ninja-xp-fb-ok .xp-amount{color:#7C3AED;font-weight:900;margin-left:6px;}',
-      '.ninja-xp-fb-ok .xp-tag{color:#666;font-weight:700;font-size:13px;}',
+      '.ninja-xp-fb-ok .xp-tag{color:#666;font-weight:700;font-size:15px;}',
       // ── Body lock — applied to <body> when an overlay is open so the
       //    background page doesn't scroll behind the modal. ──
       'body.ninja-ui-modal-open{overflow:hidden!important;}',
@@ -392,6 +402,7 @@
       '<button class="ninja-ui-btn primary" style="' + btnGap + '" onclick="NinjaUI.openNameModal()">📝 忍者の名前 / Name ' + (N.progress.nameLocked ? '🔒' : '') + '</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#FFB000;box-shadow:0 3px 0 #b07a00;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#3A8EE8;box-shadow:0 3px 0 #2060b0;" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#059669;box-shadow:0 3px 0 #065f46;" onclick="NinjaUI.openVillage()">🏯 忍者の里 / Village</button>',
       '<button class="ninja-ui-close" style="margin-top:18px;">閉じる / Close</button>',
     ].join('');
     var ov = openOverlay(html);
@@ -646,11 +657,19 @@
       '</button>',
     ].join('');
   }
+  // Flag set by _addMember() so _closeDesignPicker() knows to reopen the
+  // village modal after the new ninja's starter design has been chosen.
+  var _pendingVillageReopen = false;
+
   function _closeDesignPicker() {
     var ov = document.getElementById('ninja-ui-design-pick');
     if (ov) {
       ov.remove();
       unlockBodyScroll();
+    }
+    if (_pendingVillageReopen) {
+      _pendingVillageReopen = false;
+      setTimeout(openVillage, 60);   // reopen village with fresh carousel data
     }
     if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
   }
@@ -688,6 +707,190 @@
       return;
     }
   }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Village (忍者の里)  —  clan carousel + Bloodline Scroll
+  // ───────────────────────────────────────────────────────────────────────
+
+  // clanCarouselHTML — horizontal swipe carousel, one card per member.
+  // imagePathPrefix is forwarded from the host game's profile config.
+  function clanCarouselHTML() {
+    injectStyles();
+    var prefix  = N.profile.imagePathPrefix || 'images/';
+    var members = N.clanMembers();
+    var maxSize = N.constants.MAX_CLAN_SIZE;
+    var cards   = members.map(function (m) {
+      // Avatar
+      var avatarSrc = '';
+      if (m.designSelected && N.assets[m.designSelected]) {
+        avatarSrc = prefix + N.assets[m.designSelected].file.replace(/^images\//, '');
+      }
+      var avatarHTML = avatarSrc
+        ? '<img src="' + htmlEsc(avatarSrc) + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display=\'none\'">'
+        : '<span style="font-size:11px;font-weight:800;color:rgba(255,255,255,0.7);text-align:center;padding:4px;">未選択</span>';
+      var cls     = 'ninja-ui-member-card' + (m.active ? ' active' : ' inactive');
+      var onclick = m.active ? '' : 'onclick="NinjaUI._switchSlot(' + m.slot + ')"';
+      var safeName = htmlEsc(m.name || 'Ninja');
+      return [
+        '<div class="' + cls + '" ' + onclick + '>',
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">',
+            '<div style="width:46px;height:46px;flex:0 0 46px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.35);">',
+              avatarHTML,
+            '</div>',
+            '<div style="flex:1;min-width:0;">',
+              '<div style="font-family:\'Bangers\',cursive;font-size:19px;letter-spacing:1px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + safeName + '</div>',
+              '<div style="font-size:11px;font-weight:800;opacity:0.9;margin-top:1px;">Lv ' + m.level + '</div>',
+            '</div>',
+          '</div>',
+          '<div style="font-size:10px;font-weight:700;opacity:0.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + m.exp.toLocaleString() + ' XP</div>',
+          (m.active
+            ? '<div style="margin-top:5px;font-size:10px;font-weight:900;background:rgba(255,213,79,0.25);color:#FFD54F;border-radius:6px;padding:2px 6px;display:inline-block;">▶ 修行中</div>'
+            : '<div style="margin-top:5px;font-size:10px;font-weight:800;opacity:0.65;border-radius:6px;padding:2px 6px;display:inline-block;border:1px solid rgba(255,255,255,0.3);">タップで切替</div>'),
+        '</div>',
+      ].join('');
+    });
+    // "+" add card (shown only if under the limit)
+    var addCard = members.length < maxSize
+      ? '<div class="ninja-ui-add-card" onclick="NinjaUI._addMember()"><span style="font-size:22px;">＋</span><span>新忍者</span></div>'
+      : '';
+    return '<div class="ninja-ui-carousel">' + cards.join('') + addCard + '</div>';
+  }
+
+  // openVillage — Village management modal
+  function openVillage() {
+    injectStyles();
+    var members = N.clanMembers();
+    var maxSize = N.constants.MAX_CLAN_SIZE;
+    var html = [
+      '<div class="ninja-ui-title">🏯 忍者の里 / Village</div>',
+      '<div style="font-size:12px;color:#666;text-align:center;margin-bottom:10px;line-height:1.5;">',
+        '最大' + maxSize + '人の忍者を管理できます<br>',
+        '<span style="font-size:11px;color:#888;">Manage up to ' + maxSize + ' ninjas.</span>',
+      '</div>',
+      // Member carousel
+      clanCarouselHTML(),
+      // Member remove buttons (non-active members only, if more than 1)
+      (members.length > 1 ? _memberManageHTML(members) : ''),
+      '<div style="height:1px;background:#eee;margin:14px 0;"></div>',
+      // Bloodline Scroll section
+      '<div style="font-size:14px;font-weight:900;color:#059669;margin-bottom:8px;">🩸 Bloodline Scroll</div>',
+      '<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:10px;">',
+        '一族全員のデータを一本の巻物にまとめます。<br>',
+        '<span style="color:#888;">Encode all clan members into one scroll.</span>',
+      '</div>',
+      // Export
+      '<div style="font-size:12px;font-weight:900;color:#333;margin-bottom:5px;">⬇ Bloodline Scrollを作る</div>',
+      '<textarea class="ninja-ui-ta" id="ninja-bloodline-out" readonly></textarea>',
+      '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#059669;box-shadow:0 3px 0 #065f46;" onclick="NinjaUI._bloodlineGenerate()">🩸 Scrollを生成する</button>',
+      '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#0d9488;box-shadow:0 3px 0 #0f766e;" id="ninja-bloodline-copy-btn" onclick="NinjaUI._bloodlineCopy()" style="display:none;">📋 Bloodline Scrollを写し取る</button>',
+      // Import
+      '<div style="font-size:12px;font-weight:900;color:#333;margin:12px 0 5px;">⬆ Bloodline Scrollを読み込む</div>',
+      '<textarea class="ninja-ui-ta" id="ninja-bloodline-in" placeholder="ここにBloodline Scrollを貼り付け / paste CLAN1...."></textarea>',
+      '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._bloodlineLoad()">🩸 一族を呼び戻す</button>',
+      '<div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:10px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">',
+        '💡 Bloodline ScrollはShadow Clone Scrollとは独立した巻物です。<br>',
+        '個別の忍者にはShadow Clone Scroll、全員まとめてはBloodline Scrollをご利用ください。',
+      '</div>',
+      '<button class="ninja-ui-close" style="margin-top:14px;">閉じる / Close</button>',
+    ].join('');
+    var ov = openOverlay(html);
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+  }
+
+  // _memberManageHTML — remove buttons for non-active members
+  function _memberManageHTML(members) {
+    var rows = members.filter(function (m) { return !m.active; }).map(function (m) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #f0f0f0;">' +
+        '<span style="font-size:13px;font-weight:800;color:#333;">🥷 ' + htmlEsc(m.name || 'Ninja') + ' (Lv ' + m.level + ')</span>' +
+        '<button class="ninja-ui-btn danger" style="width:auto;padding:6px 10px;font-size:11px;" onclick="NinjaUI._removeMember(' + m.slot + ')">🗑 削除</button>' +
+        '</div>';
+    });
+    if (!rows.length) return '';
+    return '<div style="font-size:11px;font-weight:900;color:#666;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;">メンバー管理</div>' +
+           '<div style="border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:8px;">' + rows.join('') + '</div>';
+  }
+
+  // Village private handlers
+  function _bloodlineGenerate() {
+    var ta = document.getElementById('ninja-bloodline-out'); if (!ta) return;
+    try {
+      var code = N.generateBloodlineScroll();
+      ta.value = code;
+      ta.select();
+      var btn = document.getElementById('ninja-bloodline-copy-btn');
+      if (btn) btn.style.display = 'block';
+      showToast('🩸 Bloodline Scrollを生成しました！');
+    } catch (e) {
+      showToast('⚠️ 生成失敗: ' + e.message);
+    }
+  }
+  function _bloodlineCopy() {
+    var ta = document.getElementById('ninja-bloodline-out'); if (!ta || !ta.value) { showToast('⚠️ まずScrollを生成してください'); return; }
+    ta.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(
+        function () { showToast('📋 Bloodline Scrollを写し取りました！'); },
+        function () { try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch (e) {} }
+      );
+    } else {
+      try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch (e) {}
+    }
+  }
+  function _bloodlineLoad() {
+    var ta = document.getElementById('ninja-bloodline-in'); if (!ta) return;
+    var code = (ta.value || '').trim();
+    if (!code) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
+    try {
+      var data = N.parseBloodlineScroll(code);
+      if (!N.importBloodlineScroll(data)) throw new Error('import failed');
+      var count = N.clanSlotCount();
+      showToast('🩸 ' + count + '人の一族を呼び戻しました！');
+      closeOverlay(ta);
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+    } catch (e) {
+      showToast('⚠️ 読み込み失敗: ' + e.message);
+    }
+  }
+  function _switchSlot(n) {
+    if (!confirm('「' + (N.clanMembers().filter(function(m){return m.slot===n;})[0] || {}).name + '」に切り替えますか？\nSwitch to this ninja?')) return;
+    if (N.clanSetActiveSlot(n)) {
+      showToast('🥷 ' + N.progress.name + ' Lv' + N.progress.level + ' に切り替えました');
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+      // Refresh the village modal if still open
+      var ov = document.querySelector('.ninja-ui-overlay');
+      if (ov) { closeOverlay(ov); setTimeout(openVillage, 50); }
+    }
+  }
+  function _addMember() {
+    var n = N.clanAddMember();
+    if (n < 0) { showToast('⚠️ 里は満員です（最大' + N.constants.MAX_CLAN_SIZE + '人）'); return; }
+    if (N.clanSetActiveSlot(n)) {
+      showToast('🥷 新しい忍者を里に招きました！');
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+      // Close the village modal now; _closeDesignPicker() will reopen it
+      // after the new ninja's starter design has been chosen, so the
+      // carousel reflects the fresh design without a double-flash.
+      var ov = document.querySelector('.ninja-ui-overlay');
+      if (ov) { closeOverlay(ov); }
+      _pendingVillageReopen = true;
+      setTimeout(function () { openDesignPicker({ firstRun: true }); }, 60);
+    }
+  }
+  function _removeMember(n) {
+    var members = N.clanMembers();
+    var m = members.filter(function(x){return x.slot===n;})[0];
+    if (!m) return;
+    if (!confirm('🗑 「' + (m.name || 'Ninja') + '」(Lv' + m.level + ') を里から外しますか？\n（この操作は取り消せません）\n\nRemove this ninja from the village?')) return;
+    if (N.clanRemoveMember(n)) {
+      showToast('🥷 ' + (m.name || 'Ninja') + ' を里から外しました');
+      if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+      var ov = document.querySelector('.ninja-ui-overlay');
+      if (ov) { closeOverlay(ov); setTimeout(openVillage, 50); }
+    }
+  }
+
+  // switchToSlot — public convenience wrapper
+  function switchToSlot(n) { _switchSlot(n); }
 
   // ───────────────────────────────────────────────────────────────────────
   // Analysis Scroll  —  weak words list with CSV / Copy export
@@ -907,6 +1110,11 @@
     maybePromptName:    maybePromptName,
     armOnLinks:         armOnLinks,
 
+    // village (clan system)
+    clanCarouselHTML: clanCarouselHTML,
+    openVillage:      openVillage,
+    switchToSlot:     switchToSlot,
+
     // private callbacks (referenced by inline onclick handlers)
     _copyScroll:    _copyScroll,
     _applyLoad:     _applyLoad,
@@ -917,6 +1125,12 @@
     _closeDesignPicker: _closeDesignPicker,
     _weakExportCSV: _weakExportCSV,
     _weakCopyText:  _weakCopyText,
+    _bloodlineGenerate: _bloodlineGenerate,
+    _bloodlineCopy:     _bloodlineCopy,
+    _bloodlineLoad:     _bloodlineLoad,
+    _switchSlot:        _switchSlot,
+    _addMember:         _addMember,
+    _removeMember:      _removeMember,
   };
 
 })(typeof window !== 'undefined' ? window : this);

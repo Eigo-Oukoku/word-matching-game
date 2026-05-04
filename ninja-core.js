@@ -11,7 +11,7 @@
  *   2. Configure the per-game profile BEFORE calling Ninja.boot():
  *        Ninja.configure({
  *          gameId:        'sentence-ninja',  // unique per game
- *          xpMultiplier:  0.75,              // sentence:.75, spell:.65, word:.5
+ *          xpMultiplier:  1.0,               // all games use 1.0 (XP calibrated per-char)
  *          slowMs:        12000,             // mode-aware slow threshold
  *          imagePathPrefix: 'images/',       // where ninjaAssets pngs live
  *          gameLabel:     'Sentence Ninja',
@@ -35,9 +35,13 @@
   var DESIGN_KEY              = 'shadowNinjaScroll';
   // Optional one-shot handoff key for cross-page migrations
   var HANDOFF_KEY             = 'ninja_seamless_handoff_v1';
+  // Clan (忍者の里) system — up to 10 ninjas, Bloodline Scroll
+  var CLAN_KEY                = 'ninja_clan_v1';
+  var MAX_CLAN_SIZE           = 10;
 
   var LEVEL_CAP               = 1000;
-  var LEVEL_FACTOR            = 50;     // level = floor(sqrt(exp / 50))
+  var LEVEL_FACTOR            = 50;     // level = floor(sqrt(exp / 50)) → Lv1000 = 50,000,000 XP
+  var LEVEL_FACTOR_LEGACY     = 10;     // Patch1 test builds used lf:10 — scale on import
   var DESIGN_UNLOCK_EVERY     = 5;      // 1 token / 5 levels (+1 free starter)
   var MASTERY_THRESHOLD       = 3;      // ≥3 correct & not lastWrong → drop from weak list
 
@@ -87,6 +91,8 @@
     selected: null,   // id of the currently active design (null = no pick yet)
     unlocked: [],     // ordered list of unlocked design ids
   };
+
+  var _clanActiveSlot = 0;   // in-memory cache of the active clan slot index
 
   // ───────────────────────────────────────────────────────────────────────
   // 3.  SCROLL CODEC  —  byte-identical to eigo-ninja
@@ -146,28 +152,44 @@
     return progress.level - before; // levels gained this call
   }
 
-  // calculateAnswerExp — eigo-ninja-parity per-question bonus XP formula.
+  // calculateAnswerExp — per-question XP for Word Ninja (and similar choice games).
   //
-  //   exp = base × (1 + streak × 0.05)
-  //         + 2 if firstTimeCorrect
-  //         + 3 if recovered (came back from a wrong on this word)
+  //   exp = base × streakMul  (+5 firstTimeCorrect, +8 recovered)
   //
-  // Caller passes the per-game `base` (e.g. 5 for Word Ninja, 6 for
-  // Spelling, 8 for Sentence Ninja). The xpMultiplier is applied later
-  // by addExp(), so don't double-apply.
+  // Word Ninja base values by difficulty:
+  //   Easy=20, Normal=28, Hard=36, Very Hard=46, Ninja/Phantom=56, Speedster=12
   //
-  // Returns 0 for wrong answers — the wrong path contributes 0 XP and
-  // resets the streak counter (caller's responsibility).
+  // Streak: +0.5% per no-miss streak, capped at +20%.
+  //   streakMul = 1 + min(streak × 0.005, 0.20)
+  //
+  // xpMultiplier (1.0 for all games) is applied inside addExp().
   function calculateAnswerExp(opts) {
     opts = opts || {};
     if (!opts.isCorrect) return 0;
-    var base = Math.max(0, opts.base | 0);
+    var base = Math.max(0, +(opts.base) || 0);
     if (!base) return 0;
-    var streakMul = 1 + ((opts.streak || 0) * 0.05);
+    var streakMul = 1 + Math.min((opts.streak || 0) * 0.005, 0.20);
     var exp = base * streakMul;
-    if (opts.firstTimeCorrect) exp += 2;
-    if (opts.recovered)        exp += 3;
+    if (opts.firstTimeCorrect) exp += 5;
+    if (opts.recovered)        exp += 8;
     return Math.round(exp);
+  }
+
+  // ninjaLevelPenalty — early-game XP gate for Spelling / Sentence / Word Ninja.
+  // Prevents brand-new players from grinding the highest-XP-per-minute modes.
+  //
+  //   Lv  < 15 : × 0.85  (15% cut — noticeable but not punishing)
+  //   Lv ≥ 15  : × 1.00  (full rate — reached after ~2–3 weeks of daily play)
+  function ninjaLevelPenalty(level) {
+    if (level < 15) return 0.85;
+    return 1.0;
+  }
+
+  // ninjaEigoLevelPenalty — same threshold, kept separate so eigo-ninja.html
+  // can override independently if the game designer wants finer control later.
+  function ninjaEigoLevelPenalty(level) {
+    if (level < 15) return 0.85;
+    return 1.0;
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -269,6 +291,17 @@
         lastTrainedAt: progress.lastTrainedAt,
         updatedAt:     Date.now(),
       }));
+      // Per-slot clan save — keeps the active slot in sync on every write
+      _saveSlotProgress(_clanActiveSlot, {
+        name:          progress.name,
+        nameLocked:    progress.nameLocked,
+        exp:           progress.exp,
+        level:         progress.level,
+        words:         progress.words,
+        globalIndex:   progress.globalIndex,
+        totalSessions: progress.totalSessions,
+        lastTrainedAt: progress.lastTrainedAt,
+      });
     } catch (e) { /* localStorage may be disabled — fail quietly */ }
   }
   function loadLocal() {
@@ -332,6 +365,7 @@
       words:         progress.words,
       lastTrainedAt: progress.lastTrainedAt,
       design:        { selected: design.selected, unlocked: design.unlocked.slice() },
+      lf:            LEVEL_FACTOR,   // scroll version stamp — used for XP migration
     };
   }
   // importData mirrors eigo-ninja's ninjaImportData semantics:
@@ -345,7 +379,17 @@
     if (d.name) progress.name = String(d.name).slice(0, 40);
     if (typeof d.nameLocked === 'boolean') progress.nameLocked = d.nameLocked;
     else if (d.name)                       progress.nameLocked = true;
-    if (typeof d.exp === 'number')   progress.exp   = Math.max(progress.exp, d.exp);
+    if (typeof d.exp === 'number') {
+      var importedExp = d.exp;
+      // Legacy scroll migration: if the scroll was generated with LEVEL_FACTOR=50
+      // (old system), scale XP down so the player's level stays the same.
+      // New scrolls carry lf:10; old scrolls have no lf field (or lf:50).
+      var scrollLF = typeof d.lf === 'number' ? d.lf : LEVEL_FACTOR_LEGACY;
+      if (scrollLF !== LEVEL_FACTOR && scrollLF > 0) {
+        importedExp = Math.round(importedExp * LEVEL_FACTOR / scrollLF);
+      }
+      progress.exp = Math.max(progress.exp, importedExp);
+    }
     progress.level = levelFromExp(progress.exp);
     if (d.words) mergeWords(d.words);
     if (typeof d.lastTrainedAt === 'number' && d.lastTrainedAt > (progress.lastTrainedAt || 0)) {
@@ -414,6 +458,9 @@
       localStorage.removeItem(SHARED_KEY);
       localStorage.removeItem(DESIGN_KEY);
       localStorage.removeItem(HANDOFF_KEY);
+      // Clear only the active clan slot — other members are unaffected
+      localStorage.removeItem(_slotProgressKey(_clanActiveSlot));
+      localStorage.removeItem(_slotDesignKey(_clanActiveSlot));
     } catch (e) {}
     designReset();
   }
@@ -428,6 +475,8 @@
         unlocked: design.unlocked,
         v: 2,
       }));
+      // Also persist to the per-slot design key
+      _saveSlotDesign(_clanActiveSlot, { selected: design.selected, unlocked: design.unlocked.slice(), v: 2 });
     } catch (e) {}
   }
   function designLoad() {
@@ -620,6 +669,227 @@
   }
 
   // ───────────────────────────────────────────────────────────────────────
+  // 15.  CLAN SYSTEM  —  忍者の里 (up to 10 ninjas, Bloodline Scroll)
+  // ───────────────────────────────────────────────────────────────────────
+  function _slotProgressKey(n) { return 'ninja_clan_slot_'   + n + '_v1'; }
+  function _slotDesignKey(n)   { return 'ninja_clan_design_' + n + '_v1'; }
+
+  function clanGetMeta() {
+    try {
+      var raw = localStorage.getItem(CLAN_KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && typeof d === 'object' && Array.isArray(d.slots) && d.slots.length > 0) return d;
+      }
+    } catch (e) {}
+    return null;
+  }
+  function clanSaveMeta(meta) {
+    try { localStorage.setItem(CLAN_KEY, JSON.stringify(meta)); } catch (e) {}
+  }
+  function _loadSlotProgress(n) {
+    try { var r = localStorage.getItem(_slotProgressKey(n)); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  }
+  function _loadSlotDesign(n) {
+    try { var r = localStorage.getItem(_slotDesignKey(n)); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  }
+  function _saveSlotProgress(n, data) {
+    try { localStorage.setItem(_slotProgressKey(n), JSON.stringify(data)); } catch (e) {}
+  }
+  function _saveSlotDesign(n, d) {
+    try { localStorage.setItem(_slotDesignKey(n), JSON.stringify(d)); } catch (e) {}
+  }
+
+  // _captureCurrentToSlot — snapshot current in-memory state into a slot
+  function _captureCurrentToSlot(n) {
+    _saveSlotProgress(n, {
+      name: progress.name, nameLocked: progress.nameLocked,
+      exp: progress.exp, level: progress.level, words: progress.words,
+      globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
+      lastTrainedAt: progress.lastTrainedAt,
+    });
+    _saveSlotDesign(n, { selected: design.selected, unlocked: design.unlocked.slice(), v: 2 });
+  }
+
+  // _applySlotToMemory — load a slot's data into progress/design state
+  function _applySlotToMemory(n) {
+    var d = _loadSlotProgress(n);
+    if (d) {
+      progress.name          = d.name          || 'Ninja';
+      progress.nameLocked    = !!d.nameLocked;
+      progress.exp           = d.exp           || 0;
+      progress.level         = levelFromExp(progress.exp);
+      progress.words         = d.words         || {};
+      progress.globalIndex   = d.globalIndex   || 0;
+      progress.totalSessions = d.totalSessions || 0;
+      progress.lastTrainedAt = d.lastTrainedAt || 0;
+    } else {
+      // Brand-new empty slot
+      progress.name = 'Ninja'; progress.nameLocked = false;
+      progress.exp = 0; progress.level = 0; progress.words = {};
+      progress.globalIndex = 0; progress.totalSessions = 0; progress.lastTrainedAt = 0;
+    }
+    var des = _loadSlotDesign(n);
+    design.selected = null;
+    design.unlocked.splice(0, design.unlocked.length);
+    if (des && Array.isArray(des.unlocked)) {
+      des.unlocked.forEach(function (id) {
+        if (NINJA_ASSETS[id] && design.unlocked.indexOf(id) < 0) design.unlocked.push(id);
+      });
+      if (des.selected && NINJA_ASSETS[des.selected] && design.unlocked.indexOf(des.selected) >= 0) {
+        design.selected = des.selected;
+      }
+    }
+    _clanActiveSlot = n;
+  }
+
+  // clanBoot — called by boot() to initialise the clan system.
+  //   • If clan meta exists → load active slot (overrides loadLocal data)
+  //   • If no meta          → first-run: register current state as slot 0
+  function clanBoot() {
+    var meta = clanGetMeta();
+    if (meta) {
+      var active = typeof meta.activeSlot === 'number' ? meta.activeSlot : meta.slots[0];
+      if (meta.slots.indexOf(active) < 0) active = meta.slots[0];
+      _applySlotToMemory(active);
+      if (meta.activeSlot !== active) { meta.activeSlot = active; clanSaveMeta(meta); }
+    } else {
+      // Migrate current data (from loadLocal / legacy shared key) to slot 0
+      _captureCurrentToSlot(0);
+      clanSaveMeta({ activeSlot: 0, slots: [0] });
+      _clanActiveSlot = 0;
+    }
+  }
+
+  // clanSetActiveSlot — save current slot then switch to slot n
+  function clanSetActiveSlot(n) {
+    var meta = clanGetMeta();
+    if (!meta || meta.slots.indexOf(n) < 0) return false;
+    _captureCurrentToSlot(_clanActiveSlot);
+    meta.activeSlot = n;
+    clanSaveMeta(meta);
+    _applySlotToMemory(n);
+    saveLocal(); // mirror to SHARED_KEY so cross-game nav stays correct
+    return true;
+  }
+
+  // clanAddMember — allocate the next free slot (up to MAX_CLAN_SIZE)
+  function clanAddMember() {
+    var meta = clanGetMeta();
+    if (!meta || meta.slots.length >= MAX_CLAN_SIZE) return -1;
+    var n = 0; while (meta.slots.indexOf(n) >= 0) n++;
+    meta.slots.push(n); meta.slots.sort(function (a, b) { return a - b; });
+    clanSaveMeta(meta);
+    return n;
+  }
+
+  // clanRemoveMember — delete slot n (cannot remove if it is the only member)
+  function clanRemoveMember(n) {
+    var meta = clanGetMeta();
+    if (!meta || meta.slots.length <= 1) return false;
+    var idx = meta.slots.indexOf(n); if (idx < 0) return false;
+    try { localStorage.removeItem(_slotProgressKey(n)); } catch (e) {}
+    try { localStorage.removeItem(_slotDesignKey(n));   } catch (e) {}
+    meta.slots.splice(idx, 1);
+    if (meta.activeSlot === n) {
+      meta.activeSlot = meta.slots[0];
+      clanSaveMeta(meta);
+      _applySlotToMemory(meta.activeSlot);
+      saveLocal();
+    } else { clanSaveMeta(meta); }
+    return true;
+  }
+
+  // clanMembers — summary array for UI rendering (name / level / design)
+  function clanMembers() {
+    var meta   = clanGetMeta();
+    var slots  = meta ? meta.slots  : [_clanActiveSlot];
+    var active = meta ? meta.activeSlot : _clanActiveSlot;
+    return slots.map(function (n) {
+      if (n === active) {
+        return { slot: n, active: true,
+                 name: progress.name, nameLocked: progress.nameLocked,
+                 exp: progress.exp, level: progress.level,
+                 lastTrainedAt: progress.lastTrainedAt,
+                 designSelected: design.selected, designUnlocked: design.unlocked.slice() };
+      }
+      var d = _loadSlotProgress(n) || {}, des = _loadSlotDesign(n) || {};
+      return { slot: n, active: false,
+               name: d.name || 'Ninja', nameLocked: !!d.nameLocked,
+               exp: d.exp || 0, level: levelFromExp(d.exp || 0),
+               lastTrainedAt: d.lastTrainedAt || 0,
+               designSelected: des.selected || null, designUnlocked: des.unlocked || [] };
+    });
+  }
+  function clanGetActiveSlot() { return _clanActiveSlot; }
+  function clanSlotCount()     { var m = clanGetMeta(); return m ? m.slots.length : 1; }
+
+  // ── Bloodline Scroll codec ──────────────────────────────────────────────
+  // Format: CLAN1.<base64>  — distinct from NINJA1 so both types can coexist.
+  function generateBloodlineScroll() {
+    _captureCurrentToSlot(_clanActiveSlot);   // flush in-memory state first
+    var meta = clanGetMeta() || { activeSlot: _clanActiveSlot, slots: [_clanActiveSlot] };
+    var members = meta.slots.map(function (n) {
+      var d   = _loadSlotProgress(n) || {};
+      var des = _loadSlotDesign(n)   || {};
+      return {
+        slot: n,
+        name: d.name || 'Ninja',  nameLocked: !!d.nameLocked,
+        exp:  d.exp  || 0,        level: levelFromExp(d.exp || 0),
+        words: d.words || {},     globalIndex: d.globalIndex || 0,
+        totalSessions: d.totalSessions || 0, lastTrainedAt: d.lastTrainedAt || 0,
+        design: { selected: des.selected || null, unlocked: des.unlocked || [] },
+        lf: LEVEL_FACTOR,
+      };
+    });
+    var payload = JSON.stringify({ clanV: 1, activeSlot: meta.activeSlot, members: members });
+    var sum  = ninjaChecksum(payload);
+    var wrap = JSON.stringify({ v: 1, sum: sum, payload: payload });
+    return 'CLAN1.' + _utf8Btoa(wrap);
+  }
+
+  function parseBloodlineScroll(code) {
+    if (typeof code !== 'string') throw new Error('scroll code missing');
+    var t = code.trim();
+    if (t.indexOf('CLAN1.') !== 0) throw new Error('invalid bloodline scroll header');
+    var wrap;
+    try { wrap = JSON.parse(_utf8Atob(t.slice(6))); } catch (e) { throw new Error('cannot decode bloodline scroll'); }
+    if (!wrap || wrap.v !== 1)                    throw new Error('unsupported bloodline scroll version');
+    if (ninjaChecksum(wrap.payload) !== wrap.sum) throw new Error('checksum mismatch');
+    return JSON.parse(wrap.payload);
+  }
+
+  // importBloodlineScroll — restore all members; XP scaled via lf if needed
+  function importBloodlineScroll(data) {
+    if (!data || !Array.isArray(data.members) || !data.members.length) return false;
+    data.members.forEach(function (m) {
+      var n = m.slot;
+      if (typeof n !== 'number' || n < 0 || n >= MAX_CLAN_SIZE) return;
+      var importedExp = m.exp || 0;
+      var scrollLF    = typeof m.lf === 'number' ? m.lf : LEVEL_FACTOR;
+      if (scrollLF !== LEVEL_FACTOR && scrollLF > 0)
+        importedExp = Math.round(importedExp * LEVEL_FACTOR / scrollLF);
+      _saveSlotProgress(n, {
+        name: m.name || 'Ninja', nameLocked: !!m.nameLocked,
+        exp: importedExp, level: levelFromExp(importedExp),
+        words: m.words || {}, globalIndex: m.globalIndex || 0,
+        totalSessions: m.totalSessions || 0, lastTrainedAt: m.lastTrainedAt || 0,
+      });
+      if (m.design) _saveSlotDesign(n, { selected: m.design.selected || null, unlocked: m.design.unlocked || [], v: 2 });
+    });
+    var newSlots = data.members
+      .map(function (m) { return m.slot; })
+      .filter(function (n) { return typeof n === 'number' && n >= 0 && n < MAX_CLAN_SIZE; })
+      .sort(function (a, b) { return a - b; });
+    var activeSlot = typeof data.activeSlot === 'number' ? data.activeSlot : newSlots[0];
+    if (newSlots.indexOf(activeSlot) < 0) activeSlot = newSlots[0];
+    clanSaveMeta({ activeSlot: activeSlot, slots: newSlots });
+    _applySlotToMemory(activeSlot);
+    saveLocal();
+    return true;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
   // 14.  PUBLIC API
   // ───────────────────────────────────────────────────────────────────────
   function configure(opts) {
@@ -629,6 +899,7 @@
   function boot() {
     loadLocal();
     designLoad();
+    clanBoot();       // clan init — migrates legacy data or loads active slot
     consumeHandoff(); // pulls in cross-game state if the previous page armed one
   }
 
@@ -651,13 +922,17 @@
       SHARED_KEY: SHARED_KEY,
       DESIGN_KEY: DESIGN_KEY,
       HANDOFF_KEY: HANDOFF_KEY,
+      CLAN_KEY: CLAN_KEY,
+      MAX_CLAN_SIZE: MAX_CLAN_SIZE,
     },
 
     // XP / level
-    addExp:             addExp,
-    levelFromExp:       levelFromExp,
-    expForLevel:        expForLevel,
-    calculateAnswerExp: calculateAnswerExp,
+    addExp:                addExp,
+    levelFromExp:          levelFromExp,
+    expForLevel:           expForLevel,
+    calculateAnswerExp:    calculateAnswerExp,
+    ninjaLevelPenalty:     ninjaLevelPenalty,
+    ninjaEigoLevelPenalty: ninjaEigoLevelPenalty,
 
     // word memory / Analysis Scroll
     recordAnswer:    recordAnswer,
@@ -711,6 +986,17 @@
     // seamless migration
     armHandoff:     armHandoff,
     consumeHandoff: consumeHandoff,
+
+    // clan system (忍者の里)
+    clanMembers:             clanMembers,
+    clanGetActiveSlot:       clanGetActiveSlot,
+    clanSlotCount:           clanSlotCount,
+    clanSetActiveSlot:       clanSetActiveSlot,
+    clanAddMember:           clanAddMember,
+    clanRemoveMember:        clanRemoveMember,
+    generateBloodlineScroll: generateBloodlineScroll,
+    parseBloodlineScroll:    parseBloodlineScroll,
+    importBloodlineScroll:   importBloodlineScroll,
   };
 
 })(typeof window !== 'undefined' ? window : this);
