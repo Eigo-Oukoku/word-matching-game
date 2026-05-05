@@ -172,7 +172,9 @@
     .ab-menu      { background: #8d99ae; box-shadow: 0 5px 0 #5a6070; }
 
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); touch-action: none; }
-    .modal-box { background: white; border-radius: 22px; padding: 24px 20px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; box-shadow: 0 16px 48px rgba(0,0,0,0.3); animation: popIn 0.25s ease; }
+    .modal-box { position: relative; background: white; border-radius: 22px; padding: 24px 20px; max-width: 400px; width: 100%; max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; box-shadow: 0 16px 48px rgba(0,0,0,0.3); animation: popIn 0.25s ease; }
+    .modal-top-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.07); border-radius: 50%; font-size: 17px; line-height: 32px; text-align: center; cursor: pointer; color: #555; font-weight: 900; padding: 0; z-index: 1; }
+    .modal-top-close:active { background: rgba(0,0,0,0.15); }
     .modal-title { font-family: 'Bangers', cursive; font-size: 26px; letter-spacing: 1px; color: var(--red); margin-bottom: 14px; text-align: center; }
     .how-item { margin-bottom: 12px; }
     .how-item-title { font-size: 15px; font-weight: 900; color: var(--ink); margin-bottom: 3px; }
@@ -283,6 +285,7 @@
 <!-- Other Games Overlay -->
 <div id="links-modal" style="display:none;" class="overlay" onclick="if(event.target===this)toggleLinks(false)">
   <div class="modal-box">
+    <button class="modal-top-close" onclick="toggleLinks(false)" aria-label="Close">✕</button>
     <div class="modal-title" style="color:#3d5a80;">🎮 Other Games</div>
     <a class="action-btn" style="background:#2b2d42 !important; box-shadow:0 5px 0 #0a0a1a !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a>
     <a class="action-btn" style="background:#3d5a80 !important; box-shadow:0 5px 0 #243a55 !important; display:block; text-align:center; text-decoration:none; line-height:1; padding:16px;" href="https://eigo-oukoku.github.io/Eigo-Ninja/game2">🥷 Word Ninja Vol. 2</a>
@@ -294,6 +297,7 @@
 
 <div id="how-modal" style="display:none;" class="overlay">
   <div class="modal-box">
+    <button class="modal-top-close" onclick="toggleModal(false)" aria-label="Close">✕</button>
     <div class="modal-title">🥷 忍びの心得</div>
     <div class="how-item">
       <div class="how-item-title">📖 1. Vocabulary (英→日)</div>
@@ -975,6 +979,9 @@ const gradeLabels = {
   "Pre2": { name: "Grade Pre-2", sub: "Pre-Advanced" },
   "2":    { name: "Grade 2",     sub: "Advanced level" },
 };
+
+// Shared snippet: top-right × close button injected into every dynamic modal-box.
+const TOP_CLOSE = '<button class="modal-top-close" onclick="this.closest(\'.overlay\').remove()" aria-label="Close">✕</button>';
 
 // ─── STATE ───────────────────────────────────────────────
 let state = {
@@ -1705,6 +1712,7 @@ async function weakCopyToClipboard() {
   overlay.style.zIndex = '9999';
   overlay.innerHTML = `
     <div class="modal-box">
+      ${TOP_CLOSE}
       <div class="modal-title" style="font-size:18px;">📋 Copy &amp; Paste</div>
       <textarea class="copy-modal-ta" id="weak-copy-ta">${text.replace(/</g,'&lt;')}</textarea>
       <button class="modal-close" onclick="this.closest('.overlay').remove()">閉じる</button>
@@ -1723,6 +1731,7 @@ function showScrollModal() {
   const safeName = (progress.name || 'Ninja').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   overlay.innerHTML = `
     <div class="modal-box" style="max-height:90vh;overflow-y:auto;">
+      ${TOP_CLOSE}
       <div class="modal-title">📜 Shadow Clone Srcoll</div>
       <div style="font-size:12px;color:#666;margin:0 0 12px;line-height:1.6;text-align:center;">
         修行の記録を影として巻物に封じよう<br>
@@ -1753,16 +1762,36 @@ function showScrollModal() {
 
       <!-- ── Save scroll ── -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Srcollを作る</span>
+        <span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Scrollを作る</span>
         <span style="font-size:11px;color:#7C3AED;font-weight:800;">Lv ${progress.level} · ${progress.exp.toLocaleString()} XP</span>
       </div>
-      <textarea class="copy-modal-ta" id="ninja-scroll-ta" readonly>${code}</textarea>
-      <button class="action-btn ab-primary" style="margin-top:4px;padding:13px;" onclick="ninjaCopyScroll()">📋 Shadow Clone Scrollを写し取る</button>
+      <button class="action-btn ab-primary" style="margin-top:4px;padding:13px;" onclick="ninjaExportScrollFile()">📥 ファイルに保存</button>
+      <details style="margin-top:6px;margin-bottom:2px;">
+        <summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">
+          📋 テキストとして共有 / Share as text
+        </summary>
+        <div style="margin-top:6px;">
+          <textarea class="copy-modal-ta" id="ninja-scroll-ta" readonly>${code}</textarea>
+          <button class="action-btn ab-primary" style="margin-top:4px;padding:13px;" onclick="ninjaCopyScroll()">📋 コピーする</button>
+        </div>
+      </details>
 
       <!-- ── Load scroll ── -->
-      <div style="font-size:13px;font-weight:900;color:#333;margin:14px 0 6px;">⬆ Shadow Clone Scrollを読み込む</div>
-      <textarea class="copy-modal-ta" id="ninja-load-ta" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>
-      <button class="action-btn ab-retry" style="margin-top:4px;padding:13px;" onclick="ninjaApplyLoad()">🥷 修行記録を呼び戻す</button>
+      <div style="height:1px;background:#eee;margin:12px 0 10px;"></div>
+      <div style="font-size:13px;font-weight:900;color:#333;margin-bottom:6px;">⬆ Shadow Clone Scrollを読み込む</div>
+      <label class="action-btn ab-retry" style="display:block;text-align:center;padding:13px;cursor:pointer;">
+        📂 ファイルから読み込む
+        <input type="file" accept=".txt" style="display:none;" onchange="ninjaImportScrollFile(this)">
+      </label>
+      <details style="margin-top:6px;">
+        <summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">
+          📝 テキストを貼り付けて読み込む / Paste scroll text
+        </summary>
+        <div style="margin-top:6px;">
+          <textarea class="copy-modal-ta" id="ninja-load-ta" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>
+          <button class="action-btn ab-retry" style="margin-top:4px;padding:13px;" onclick="ninjaApplyLoad()">🥷 修行記録を呼び戻す</button>
+        </div>
+      </details>
 
       <!-- ── Persistence note ── -->
       <div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:12px;padding:9px 12px;margin-top:14px;font-size:11px;color:#7a5800;font-weight:700;line-height:1.5;">
@@ -1810,6 +1839,7 @@ function showNameModal() {
   const safeName = (progress.name || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   overlay.innerHTML = `
     <div class="modal-box" onclick="event.stopPropagation()">
+      ${TOP_CLOSE}
       <div class="modal-title">🥷 忍者の名前 / Name your Ninja</div>
       <p style="font-size:13px;color:#666;font-weight:700;margin-bottom:14px;line-height:1.55;text-align:center;">
         忍者の名前を登録しよう。<br>
@@ -1901,6 +1931,7 @@ function showProfileHub() {
   const btnBase = 'display:block;width:100%;padding:15px 14px;font-family:\'Nunito\',sans-serif;font-size:15px;font-weight:900;border:none;border-radius:14px;cursor:pointer;transition:0.1s;color:#fff;margin-bottom:14px;letter-spacing:0.3px;';
   overlay.innerHTML = `
     <div class="modal-box" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;padding:18px 16px;">
+      ${TOP_CLOSE}
       ${idCard}
       <button style="${btnBase}background:#A78BFA;box-shadow:0 4px 0 #7C3AED;"
               onclick="document.getElementById('ninja-profile-hub').remove(); shadowNinjaShowPicker({firstRun:false});">
@@ -1952,12 +1983,50 @@ function ninjaCopyScroll() {
   if (!ta) return;
   ta.select();
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(ta.value).then(()=>showToast('📋 Shadow Clone Scrollを写し取りました！')).catch(()=>{
-      try { document.execCommand('copy'); showToast('📋 Shadow Clone Scrollを写し取りました！'); } catch(e) {}
+    navigator.clipboard.writeText(ta.value).then(()=>showToast('📋 コピーしました！')).catch(()=>{
+      try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {}
     });
   } else {
-    try { document.execCommand('copy'); showToast('📋 Shadow Clone Scrollを写し取りました！'); } catch(e) {}
+    try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {}
   }
+}
+function ninjaExportScrollFile() {
+  try {
+    const code     = generateScrollCode(ninjaExportData());
+    const name     = (progress.name || 'ninja').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+    const today    = new Date();
+    const datePart = today.getFullYear() + '-' +
+                     String(today.getMonth()+1).padStart(2,'0') + '-' +
+                     String(today.getDate()).padStart(2,'0');
+    const filename = name + '_' + datePart + '.txt';
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    showToast('📥 ' + filename + ' を保存しました！');
+  } catch(e) { showToast('⚠️ 保存失敗: ' + e.message); }
+}
+function ninjaImportScrollFile(input) {
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const code = (e.target.result || '').trim();
+      const d = loadFromScrollCode(code);
+      if (!ninjaImportData(d)) throw new Error('failed');
+      showToast('📂 ' + (progress.name || 'Ninja') + ' Lv' + progress.level + ' を呼び戻しました！');
+      _removeTransientOverlays();
+      if (state.screen === 'home') renderHome();
+      if (!shadowNinja.selected) setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 250);
+    } catch(err) { showToast('⚠️ 読み込み失敗: ' + err.message); }
+  };
+  reader.onerror = () => showToast('⚠️ ファイルを読み取れませんでした');
+  reader.readAsText(file, 'utf-8');
+  input.value = '';
 }
 function ninjaApplyLoad() {
   const ta = document.getElementById('ninja-load-ta');
@@ -2665,6 +2734,7 @@ function showCopyModal(text) {
   overlay.className = 'overlay';
   overlay.innerHTML = `
     <div class="modal-box">
+      ${TOP_CLOSE}
       <div class="modal-title">📋 テキストをコピー</div>
       <p style="font-size:12px;color:#666;text-align:center;margin-bottom:4px;">テキストを選択して手動でコピーしてください</p>
       <textarea class="copy-modal-ta" id="copy-modal-ta">${text.replace(/</g,'&lt;')}</textarea>
@@ -3580,6 +3650,7 @@ async function blitzCopyToClipboard() {
   overlay.style.zIndex = '9999';
   overlay.innerHTML = `
     <div class="modal-box">
+      ${TOP_CLOSE}
       <div class="modal-title" style="font-size:18px;">📋 Copy &amp; Paste</div>
       <textarea class="copy-modal-ta" id="blitz-copy-ta">${text}</textarea>
       <button class="modal-close" onclick="this.closest('.overlay').remove()">閉じる</button>
@@ -4115,6 +4186,15 @@ function _eigoGetClanMeta() {
 function _eigoSaveClanMeta(meta) {
   try { localStorage.setItem(NINJA_CLAN_KEY, JSON.stringify(meta)); } catch(e) {}
 }
+function _eigoGetClanName() {
+  const meta = _eigoGetClanMeta();
+  return (meta && meta.name) ? meta.name : '';
+}
+function _eigoSetClanName(name) {
+  const meta = _eigoGetClanMeta() || { activeSlot: _eigoClanActiveSlot, slots: [_eigoClanActiveSlot] };
+  meta.name = (name || '').trim().slice(0, 30);
+  _eigoSaveClanMeta(meta);
+}
 function _eigoLoadSlotProgress(n) {
   try { const r = localStorage.getItem(_eigoSlotProgressKey(n)); return r ? JSON.parse(r) : null; } catch(e) { return null; }
 }
@@ -4252,39 +4332,128 @@ function clanMembers() {
   });
 }
 
-// ── Bloodline Scroll — same codec as ninja-core.js ──
-// lf: NINJA_LEVEL_FACTOR (=10) is stamped so cross-game XP scaling works.
+// ── Bloodline Scroll — CLAN2 (compact) + CLAN1 (legacy read) ──────────
+// Mirrors ninja-core.js codec exactly so scrolls are cross-game compatible.
+
+const _EIGO_C2NS = {
+  'word-ninja-v2': 'W2', 'word-ninja-v1': 'W1',
+  'eigo-ninja': 'EN', 'spelling-ninja': 'SP', 'sentence-ninja': 'SN',
+};
+const _EIGO_C2NSR = (function() {
+  const r = {}; for (const k in _EIGO_C2NS) r[_EIGO_C2NS[k]] = k; return r;
+})();
+
+function _eigoC2WordKey(full) {
+  const i = full.indexOf('::'); if (i < 0) return full;
+  return (_EIGO_C2NS[full.slice(0,i)] || full.slice(0,i)) + '::' + full.slice(i+2);
+}
+function _eigoC2WordKeyR(compact) {
+  const i = compact.indexOf('::'); if (i < 0) return compact;
+  return (_EIGO_C2NSR[compact.slice(0,i)] || compact.slice(0,i)) + '::' + compact.slice(i+2);
+}
+function _eigoC2PackWords(words) {
+  const out = {};
+  for (const k in words) {
+    const w = words[k], e = {};
+    if (w.correct)                              e.c  = w.correct;
+    if (w.wrong)                                e.w  = w.wrong;
+    if (w.slow)                                 e.s  = w.slow;
+    if (w.lastWrong)                            e.lw = true;
+    if (w.lastSeenIndex && w.lastSeenIndex > -990) e.li = w.lastSeenIndex;
+    out[_eigoC2WordKey(k)] = e;
+  }
+  return out;
+}
+function _eigoC2UnpackWords(packed) {
+  const out = {};
+  for (const k in packed) {
+    const e = packed[k];
+    out[_eigoC2WordKeyR(k)] = {
+      correct: e.c || 0, wrong: e.w || 0, slow: e.s || 0, seen: true,
+      lastWrong: !!e.lw, lastSeenIndex: e.li != null ? e.li : -999,
+    };
+  }
+  return out;
+}
+function _eigoC2PackMember(d, des, slot) {
+  const m = {
+    sl: slot, n: d.name || 'Ninja', e: d.exp || 0,
+    gi: d.globalIndex || 0, ts: d.totalSessions || 0,
+    lt: d.lastTrainedAt || 0, lf: NINJA_LEVEL_FACTOR,
+    w: _eigoC2PackWords(d.words || {}),
+  };
+  if (d.nameLocked) m.nl = true;
+  if (des && (des.selected || (des.unlocked && des.unlocked.length))) {
+    m.d = {};
+    if (des.selected)                        m.d.s = des.selected;
+    if (des.unlocked && des.unlocked.length) m.d.u = des.unlocked;
+  }
+  return m;
+}
+function _eigoC2UnpackMember(m) {
+  const scrollLF = m.lf || NINJA_LEVEL_FACTOR;
+  let exp = m.e || 0;
+  if (scrollLF !== NINJA_LEVEL_FACTOR && scrollLF > 0)
+    exp = Math.round(exp * NINJA_LEVEL_FACTOR / scrollLF);
+  return {
+    slot: m.sl, name: m.n || 'Ninja', nameLocked: !!m.nl,
+    exp, level: ninjaLevelFromExp(exp),
+    words: _eigoC2UnpackWords(m.w || {}),
+    globalIndex: m.gi || 0, totalSessions: m.ts || 0, lastTrainedAt: m.lt || 0,
+    design: { selected: (m.d && m.d.s) || null, unlocked: (m.d && m.d.u) || [] },
+    lf: NINJA_LEVEL_FACTOR,
+  };
+}
+
 function generateBloodlineScroll() {
   _eigoCaptureToSlot(_eigoClanActiveSlot);
   const meta = _eigoGetClanMeta() || { activeSlot: _eigoClanActiveSlot, slots: [_eigoClanActiveSlot] };
-  const members = meta.slots.map(n => {
-    const d   = _eigoLoadSlotProgress(n) || {};
-    const des = _eigoLoadSlotDesign(n)   || {};
-    return {
-      slot: n,
-      name: d.name || 'Ninja',  nameLocked: !!d.nameLocked,
-      exp:  d.exp  || 0,        level: ninjaLevelFromExp(d.exp || 0),
-      words: d.words || {},     globalIndex: d.globalIndex || 0,
-      totalSessions: d.totalSessions || 0, lastTrainedAt: d.lastTrainedAt || 0,
-      design: { selected: des.selected || null, unlocked: des.unlocked || [] },
-      lf: NINJA_LEVEL_FACTOR,
-    };
-  });
-  const payload = JSON.stringify({ clanV: 1, activeSlot: meta.activeSlot, members });
+  const members = meta.slots.map(n =>
+    _eigoC2PackMember(_eigoLoadSlotProgress(n) || {}, _eigoLoadSlotDesign(n) || {}, n)
+  );
+  const inner = { as: meta.activeSlot, m: members };
+  if (meta.name) inner.cn = meta.name;
+  const payload = JSON.stringify(inner);
   const sum  = ninjaChecksum(payload);
-  const wrap = JSON.stringify({ v: 1, sum, payload });
-  return 'CLAN1.' + _utf8Btoa(wrap);
+  const wrap = JSON.stringify({ v: 2, sum, payload });
+  return 'CLAN2.' + _utf8Btoa(wrap);
 }
 
 function parseBloodlineScroll(code) {
   if (typeof code !== 'string') throw new Error('scroll code missing');
   const t = code.trim();
-  if (!t.startsWith('CLAN1.')) throw new Error('invalid bloodline scroll header');
-  let wrap;
-  try { wrap = JSON.parse(_utf8Atob(t.slice(6))); } catch(e) { throw new Error('cannot decode bloodline scroll'); }
-  if (!wrap || wrap.v !== 1)                    throw new Error('unsupported bloodline scroll version');
-  if (ninjaChecksum(wrap.payload) !== wrap.sum) throw new Error('checksum mismatch');
-  return JSON.parse(wrap.payload);
+
+  if (t.startsWith('CLAN2.')) {
+    let w2;
+    try { w2 = JSON.parse(_utf8Atob(t.slice(6))); } catch(e) { throw new Error('cannot decode bloodline scroll'); }
+    if (!w2 || w2.v !== 2)                    throw new Error('unsupported bloodline scroll version');
+    if (ninjaChecksum(w2.payload) !== w2.sum) throw new Error('checksum mismatch');
+    const c2 = JSON.parse(w2.payload);
+    const result = { clanV: 1, activeSlot: c2.as, members: (c2.m || []).map(_eigoC2UnpackMember) };
+    if (c2.cn) result.clanName = c2.cn;
+    return result;
+  }
+
+  if (t.startsWith('CLAN1.')) {
+    let w1;
+    try { w1 = JSON.parse(_utf8Atob(t.slice(6))); } catch(e) { throw new Error('cannot decode bloodline scroll'); }
+    if (!w1 || w1.v !== 1)                    throw new Error('unsupported bloodline scroll version');
+    if (ninjaChecksum(w1.payload) !== w1.sum) throw new Error('checksum mismatch');
+    const c1 = JSON.parse(w1.payload);
+    if (Array.isArray(c1.members)) {
+      c1.members = c1.members.map(m => {
+        const scrollLF = typeof m.lf === 'number' ? m.lf : NINJA_LEVEL_FACTOR;
+        if (scrollLF !== NINJA_LEVEL_FACTOR && scrollLF > 0)
+          m.exp = Math.round((m.exp || 0) * NINJA_LEVEL_FACTOR / scrollLF);
+        m.lf = NINJA_LEVEL_FACTOR;
+        m.level = ninjaLevelFromExp(m.exp || 0);
+        return m;
+      });
+    }
+    return c1;
+  }
+
+  throw new Error('invalid bloodline scroll header');
 }
 
 function importBloodlineScroll(data) {
@@ -4310,7 +4479,9 @@ function importBloodlineScroll(data) {
     .sort((a,b) => a-b);
   let activeSlot = typeof data.activeSlot === 'number' ? data.activeSlot : newSlots[0];
   if (newSlots.indexOf(activeSlot) < 0) activeSlot = newSlots[0];
-  _eigoSaveClanMeta({ activeSlot, slots: newSlots });
+  const newMeta = { activeSlot, slots: newSlots };
+  if (data.clanName) newMeta.name = data.clanName;
+  _eigoSaveClanMeta(newMeta);
   _eigoApplySlot(activeSlot);
   ninjaSaveLocal();
   return true;
@@ -4320,9 +4491,10 @@ function importBloodlineScroll(data) {
 function showVillageModal() {
   const stale = document.getElementById('eigo-village-modal');
   if (stale) stale.remove();
-  const members = clanMembers();
-  const maxSize = NINJA_MAX_CLAN_SIZE;
-  const overlay = document.createElement('div');
+  const members  = clanMembers();
+  const maxSize  = NINJA_MAX_CLAN_SIZE;
+  const clanName = _eigoGetClanName();
+  const overlay  = document.createElement('div');
   overlay.className = 'overlay';
   overlay.id = 'eigo-village-modal';
   overlay.style.zIndex = '9999';
@@ -4357,7 +4529,6 @@ function showVillageModal() {
         <span style="font-size:22px;">＋</span><span>新忍者</span>
       </div>` : '';
 
-  // Manage buttons for non-active members (only if > 1)
   const manageRows = members.length > 1
     ? members.filter(m => !m.active).map(m =>
         `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;border-bottom:1px solid #f0f0f0;">
@@ -4368,13 +4539,34 @@ function showVillageModal() {
     : '';
 
   const btnBase = `font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;transition:0.1s;color:#fff;padding:12px;width:100%;display:block;margin-top:8px;`;
+  const btnGray = `font-family:'Nunito',sans-serif;font-size:14px;font-weight:900;border:2px solid #ccc;border-radius:12px;cursor:pointer;background:#fff;color:#333;padding:10px 12px;`;
+
   overlay.innerHTML = `
     <div class="modal-box" onclick="event.stopPropagation()" style="max-height:90vh;overflow-y:auto;padding:18px 16px;">
-      <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:10px;color:#059669;">🏯 忍者の里 / Village</div>
-      <div style="font-size:11px;color:#666;text-align:center;margin-bottom:10px;line-height:1.5;">
-        最大${maxSize}人の忍者を管理できます<br>
-        <span style="font-size:10px;color:#888;">Manage up to ${maxSize} ninjas.</span>
+      ${TOP_CLOSE}
+      <div style="font-size:20px;font-weight:900;text-align:center;margin-bottom:6px;color:#059669;">🏯 忍者の里 / Village</div>
+
+      <!-- Clan name row -->
+      <div id="eigo-clan-name-row" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">
+        <div id="eigo-clan-name-display" style="font-size:15px;font-weight:900;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${(clanName || '里に名前をつけよう').replace(/</g,'&lt;')}
+        </div>
+        <button onclick="eigoClanNameEdit()" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px;line-height:1;" title="里の名前を変更">✏️</button>
       </div>
+      <div id="eigo-clan-name-edit" style="display:none;margin-bottom:10px;">
+        <input id="eigo-clan-name-input" type="text" maxlength="30"
+               style="width:100%;padding:8px 10px;font-size:14px;font-weight:800;border:2px solid #059669;border-radius:10px;outline:none;color:#333;box-sizing:border-box;"
+               placeholder="里の名前 (最大30文字)" value="${clanName.replace(/"/g,'&quot;')}">
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button onclick="eigoClanNameSave()" style="${btnBase}padding:10px 12px;background:#059669;box-shadow:0 3px 0 #065f46;">✅ 決定</button>
+          <button onclick="eigoClanNameCancel()" style="${btnGray}margin-top:0;">✕ キャンセル</button>
+        </div>
+      </div>
+
+      <div style="font-size:11px;color:#888;text-align:center;margin-bottom:10px;">
+        最大${maxSize}人の忍者を管理 / Manage up to ${maxSize} ninjas
+      </div>
+
       <!-- Carousel -->
       <div style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 2px 10px;">
         ${carouselCards}${addCard}
@@ -4382,20 +4574,55 @@ function showVillageModal() {
       <!-- Member management -->
       ${manageRows ? `<div style="font-size:11px;font-weight:900;color:#666;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;">メンバー管理</div><div style="border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:8px;">${manageRows}</div>` : ''}
       <div style="height:1px;background:#eee;margin:14px 0;"></div>
+
       <!-- Bloodline Scroll section -->
       <div style="font-size:14px;font-weight:900;color:#059669;margin-bottom:8px;">🩸 Bloodline Scroll</div>
       <div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:10px;">
-        一族全員のデータを一本の巻物にまとめます。<br>
-        <span style="color:#888;">Encode all clan members into one scroll.</span>
+        一族全員のデータを一本のファイルにまとめます。<br>
+        <span style="color:#888;">Save all clan members as a file to transfer anywhere.</span>
       </div>
-      <div style="font-size:12px;font-weight:900;color:#333;margin-bottom:5px;">⬇ Bloodline Scrollを作る</div>
-      <textarea id="eigo-bloodline-out" style="width:100%;min-height:80px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f3f1ec;box-sizing:border-box;" readonly></textarea>
-      <button onclick="eigoBloodlineGenerate()" style="${btnBase}background:#059669;box-shadow:0 3px 0 #065f46;">🩸 Scrollを生成する</button>
-      <button onclick="eigoBloodlineCopy()" id="eigo-bloodline-copy-btn" style="${btnBase}background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;">📋 Bloodline Scrollを写し取る</button>
-      <div style="font-size:12px;font-weight:900;color:#333;margin:12px 0 5px;">⬆ Bloodline Scrollを読み込む</div>
-      <textarea id="eigo-bloodline-in" placeholder="ここにBloodline Scrollを貼り付け / paste CLAN1...." style="width:100%;min-height:80px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f8f8f5;box-sizing:border-box;"></textarea>
-      <button onclick="eigoBloodlineLoad()" style="${btnBase}background:#FFB000;box-shadow:0 3px 0 #b07a00;">🩸 一族を呼び戻す</button>
-      <div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:10px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">
+
+      <!-- Save: file (primary) -->
+      <div style="font-size:12px;font-weight:900;color:#333;margin-bottom:6px;">⬇ 保存する / Save</div>
+      <button onclick="eigoBloodlineExportFile()" style="${btnBase}background:#059669;box-shadow:0 3px 0 #065f46;">📥 ファイルに保存</button>
+
+      <!-- Save: text fallback (collapsed) -->
+      <details style="margin-top:6px;margin-bottom:2px;">
+        <summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">
+          📋 テキストとして共有 / Share as text (for messaging apps)
+        </summary>
+        <div style="margin-top:6px;">
+          <textarea id="eigo-bloodline-out" style="width:100%;min-height:70px;padding:10px;font-family:monospace;font-size:11px;border:2px solid #ddd;border-radius:10px;resize:vertical;color:#333;background:#f3f1ec;box-sizing:border-box;" readonly></textarea>
+          <button onclick="eigoBloodlineGenerate()" style="${btnBase}background:#059669;box-shadow:0 3px 0 #065f46;">🩸 テキストを生成する</button>
+          <button onclick="eigoBloodlineCopy()" id="eigo-bloodline-copy-btn" style="${btnBase}background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;">📋 コピーする</button>
+        </div>
+      </details>
+
+      <!-- Load: file (primary) -->
+      <div style="height:1px;background:#eee;margin:12px 0 10px;"></div>
+      <div style="font-size:12px;font-weight:900;color:#333;margin-bottom:6px;">⬆ 読み込む / Load</div>
+      <label style="${btnBase}background:#FFB000;box-shadow:0 3px 0 #b07a00;text-align:center;display:block;cursor:pointer;">
+        📂 ファイルから読み込む
+        <input type="file" accept=".txt" style="display:none;" onchange="eigoBloodlineImportFile(this)">
+      </label>
+
+      <!-- Load: text fallback (collapsed) -->
+      <details style="margin-top:6px;">
+        <summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">
+          📝 テキストを貼り付けて読み込む / Paste scroll text
+        </summary>
+        <div style="margin-top:6px;">
+          <input id="eigo-bloodline-in" type="text" maxlength="4000"
+                 style="width:100%;padding:10px 12px;font-family:monospace;font-size:13px;font-weight:800;border:2px solid #ddd;border-radius:10px;outline:none;color:#333;box-sizing:border-box;"
+                 placeholder="CLAN2.... を貼り付け"
+                 oninput="eigoBloodlineInputHint(this)"
+                 onpaste="setTimeout(()=>eigoBloodlineInputHint(document.getElementById('eigo-bloodline-in')),10)">
+          <div id="eigo-bloodline-in-hint" style="font-size:10px;font-weight:800;margin-top:3px;min-height:14px;"></div>
+          <button onclick="eigoBloodlineLoad()" style="${btnBase}background:#FFB000;box-shadow:0 3px 0 #b07a00;">🩸 一族を呼び戻す</button>
+        </div>
+      </details>
+
+      <div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:12px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">
         💡 Bloodline ScrollはShadow Clone Scrollとは独立した巻物です。<br>
         個別の忍者にはShadow Clone Scroll、全員まとめてはBloodline Scrollをご利用ください。
       </div>
@@ -4439,6 +4666,81 @@ function eigoRemoveMember(n) {
     if (state.screen === 'home') renderHome();
   }
 }
+// ── Clan name handlers ────────────────────────────────────────────────
+function eigoClanNameEdit() {
+  const row  = document.getElementById('eigo-clan-name-row');
+  const edit = document.getElementById('eigo-clan-name-edit');
+  if (!row || !edit) return;
+  row.style.display  = 'none';
+  edit.style.display = 'block';
+  const inp = document.getElementById('eigo-clan-name-input');
+  if (inp) { inp.focus(); inp.select(); }
+}
+function eigoClanNameSave() {
+  const inp  = document.getElementById('eigo-clan-name-input');
+  const disp = document.getElementById('eigo-clan-name-display');
+  const row  = document.getElementById('eigo-clan-name-row');
+  const edit = document.getElementById('eigo-clan-name-edit');
+  if (!inp) return;
+  const name = inp.value.trim().slice(0, 30);
+  _eigoSetClanName(name);
+  if (disp) disp.textContent = name || '里に名前をつけよう';
+  if (edit) edit.style.display = 'none';
+  if (row)  row.style.display  = 'flex';
+  showToast('🏯 ' + (name || '里の名前を削除しました'));
+}
+function eigoClanNameCancel() {
+  const row  = document.getElementById('eigo-clan-name-row');
+  const edit = document.getElementById('eigo-clan-name-edit');
+  if (edit) edit.style.display = 'none';
+  if (row)  row.style.display  = 'flex';
+}
+
+// ── File export ───────────────────────────────────────────────────────
+function eigoBloodlineExportFile() {
+  try {
+    const code     = generateBloodlineScroll();
+    const clanName = _eigoGetClanName();
+    const today    = new Date();
+    const datePart = today.getFullYear() + '-' +
+                     String(today.getMonth()+1).padStart(2,'0') + '-' +
+                     String(today.getDate()).padStart(2,'0');
+    const safeName = (clanName || 'bloodline').replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,'_');
+    const filename = safeName + '_' + datePart + '.txt';
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    showToast('📥 ' + filename + ' を保存しました！');
+  } catch(e) { showToast('⚠️ 保存失敗: ' + e.message); }
+}
+
+// ── File import ───────────────────────────────────────────────────────
+function eigoBloodlineImportFile(input) {
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const raw  = (e.target.result || '').trim();
+      const data = parseBloodlineScroll(raw);
+      if (!importBloodlineScroll(data)) throw new Error('import failed');
+      showToast('📂 ' + clanMembers().length + '人の一族をファイルから呼び戻しました！');
+      _removeTransientOverlays();
+      setTimeout(showVillageModal, 50);
+      if (state.screen === 'home') renderHome();
+      if (!shadowNinja.selected) setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 300);
+    } catch(err) { showToast('⚠️ 読み込み失敗: ' + err.message); }
+  };
+  reader.onerror = () => showToast('⚠️ ファイルを読み取れませんでした');
+  reader.readAsText(file, 'utf-8');
+  input.value = '';
+}
+
+// ── Text fallback handlers ────────────────────────────────────────────
 function eigoBloodlineGenerate() {
   const ta = document.getElementById('eigo-bloodline-out'); if (!ta) return;
   try {
@@ -4455,21 +4757,38 @@ function eigoBloodlineCopy() {
   ta.select();
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(ta.value)
-      .then(() => showToast('📋 Bloodline Scrollを写し取りました！'))
+      .then(() => showToast('📋 コピーしました！'))
       .catch(() => { try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {} });
   } else { try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch(e) {} }
 }
+function eigoBloodlineInputHint(el) {
+  const hint = document.getElementById('eigo-bloodline-in-hint');
+  if (!hint) return;
+  const v = (el.value || '').trim();
+  if (!v) { hint.textContent = ''; return; }
+  if (v.startsWith('CLAN2.')) {
+    hint.textContent = '📜 Bloodline Scrollを認識 / Scroll detected';
+    hint.style.color = '#059669';
+  } else if (v.startsWith('CLAN1.')) {
+    hint.textContent = '📜 旧形式のScrollを認識 / Legacy scroll detected';
+    hint.style.color = '#3A8EE8';
+  } else {
+    hint.textContent = '⚠️ 形式が正しくありません / Unrecognised format';
+    hint.style.color = '#E63946';
+  }
+}
 function eigoBloodlineLoad() {
-  const ta = document.getElementById('eigo-bloodline-in'); if (!ta) return;
-  const code = (ta.value || '').trim();
+  const inp = document.getElementById('eigo-bloodline-in'); if (!inp) return;
+  const code = (inp.value || '').trim();
   if (!code) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
   try {
     const data = parseBloodlineScroll(code);
     if (!importBloodlineScroll(data)) throw new Error('import failed');
     showToast('🩸 ' + clanMembers().length + '人の一族を呼び戻しました！');
     _removeTransientOverlays();
+    setTimeout(showVillageModal, 50);
     if (state.screen === 'home') renderHome();
-    if (!shadowNinja.selected) setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 250);
+    if (!shadowNinja.selected) setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 300);
   } catch(e) { showToast('⚠️ 読み込み失敗: ' + e.message); }
 }
 

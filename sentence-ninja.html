@@ -163,7 +163,9 @@
   .util-btn.links-btn { background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0; }
 
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px 16px max(16px, env(safe-area-inset-bottom)); touch-action:none; }
-  .overlay-box { background:white; border-radius:20px; padding:20px 18px; max-width:400px; width:100%; max-height:86vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; box-shadow:0 10px 40px rgba(0,0,0,0.25); }
+  .overlay-box { position:relative; background:white; border-radius:20px; padding:20px 18px; max-width:400px; width:100%; max-height:86vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; box-shadow:0 10px 40px rgba(0,0,0,0.25); }
+  .modal-top-close { position:absolute; top:10px; right:12px; width:32px; height:32px; border:none; background:rgba(0,0,0,0.07); border-radius:50%; font-size:17px; line-height:32px; text-align:center; cursor:pointer; color:#555; font-weight:900; padding:0; z-index:1; }
+  .modal-top-close:active { background:rgba(0,0,0,0.15); }
   .ov-title { font-size:21px; font-weight:bold; color:#E63946; margin-bottom:10px; text-align:center; }
   .ov-title-jp { font-size:14px; font-weight:normal; color:#888; }
   .ov-intro { font-size:13px; color:#444; margin-bottom:12px; line-height:1.6; }
@@ -240,6 +242,7 @@
   <!-- How to Play -->
   <div class="overlay" id="how-overlay" style="display:none" onclick="if(event.target===this)closeHow()">
    <div class="overlay-box">
+    <button class="modal-top-close" onclick="closeHow()" aria-label="Close">✕</button>
     <div class="ov-title">🥷 忍びの心得 — Sentence Ninja</div>
     <p class="ov-intro">Read the Japanese sentence and build the English translation!<br><span class="ov-intro-jp">日本語の文を読んで、英語に並び替えよう！</span></p>
     <div class="ov-item"><div class="ov-item-title">🟢 Easy</div><div class="ov-item-desc">First word placed. Tap remaining word chips in order.<br><span class="ov-desc-jp">最初の単語はすでに置いてあります。残りの単語を正しい順番にタップしよう。</span></div></div>
@@ -261,6 +264,7 @@
   <!-- Other Games -->
   <div class="overlay" id="links-overlay" style="display:none" onclick="if(event.target===this)closeLinks()">
    <div class="overlay-box">
+    <button class="modal-top-close" onclick="closeLinks()" aria-label="Close">✕</button>
     <div class="links-title">🎮 Other Games</div>
     <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a>
     <a class="game-link-btn link-wn2" href="https://eigo-oukoku.github.io/Eigo-Ninja/game2">🥷 Word Ninja Vol. 2</a>

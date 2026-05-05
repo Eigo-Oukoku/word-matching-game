@@ -75,11 +75,13 @@
     touch-action: none;
   }
   .how-box {
-    background: white; border-radius: 20px; padding: 20px 18px;
+    position: relative; background: white; border-radius: 20px; padding: 20px 18px;
     max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto;
     -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y;
     box-shadow: 0 10px 40px rgba(0,0,0,0.25);
   }
+  .modal-top-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; background: rgba(0,0,0,0.07); border-radius: 50%; font-size: 17px; line-height: 32px; text-align: center; cursor: pointer; color: #555; font-weight: 900; padding: 0; z-index: 1; }
+  .modal-top-close:active { background: rgba(0,0,0,0.15); }
   .how-title { font-size: 22px; font-weight: bold; color: #E63946; margin-bottom: 12px; text-align: center; }
   .how-intro { font-size: 13px; color: #444; margin-bottom: 14px; line-height: 1.6; }
   .how-item { margin-bottom: 10px; }
@@ -92,7 +94,7 @@
     display: flex; align-items: center; justify-content: center;
     z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom));
   }
-  .links-box { background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  .links-box { position: relative; background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
   .links-title { font-size: 20px; font-weight: bold; color: #064E8A; margin-bottom: 14px; text-align: center; }
   .game-link-btn {
     display: block; width: 100%; padding: 14px 12px; margin-bottom: 10px;
@@ -132,6 +134,17 @@
   .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
   .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
 
+  /* ── Compact layout for 8-choice (dense) and 10-choice (denser) modes ── */
+  .choices-grid.dense  { gap: 8px;  margin: 8px 0; }
+  .choices-grid.denser { gap: 6px;  margin: 5px 0; }
+  .choices-grid.dense  .choice-btn { min-height: 64px; padding: 10px 6px; font-size: clamp(15px, 3.8vw, 20px); box-shadow: 0 4px 0 #dee2e6; }
+  .choices-grid.denser .choice-btn { min-height: 56px; padding: 8px 6px;  font-size: clamp(14px, 3.5vw, 18px); box-shadow: 0 3px 0 #dee2e6; border-radius: 14px; }
+  .top-bar.compact-bar { margin-bottom: 5px; }
+  .target-section.compact-target { margin-bottom: 5px; }
+  .target-section.compact-target .word-card { padding: 6px 10px; }
+  .target-section.compact-target .image-frame { width: 76px; height: 76px; margin-bottom: 5px; }
+  .target-section.compact-target .word-img    { width: 68px; height: 68px; }
+
   .footer-area { width: 100%; padding-top: 15px; margin-top: 5px; display: flex; flex-direction: column; align-items: center; border-top: 2px solid #f8f9fa; }
   .mascot-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
   .footer-mascot-svg { width: 56px; height: 56px; margin-right: 8px; animation: mascotBounce 2s infinite ease-in-out; }
@@ -162,6 +175,7 @@
   </div><!-- How to Play Overlay -->
   <div class="how-overlay" id="how-overlay" style="display:none;" onclick="if(event.target===this)closeHow()">
    <div class="how-box">
+    <button class="modal-top-close" onclick="closeHow()" aria-label="Close">✕</button>
     <div class="how-title">
      🥷 忍びの心得 — Word Ninja
     </div>
@@ -265,6 +279,7 @@
   </div><!-- Other Games Overlay -->
   <div class="links-overlay" id="links-overlay" style="display:none;" onclick="if(event.target===this)closeLinks()">
    <div class="links-box">
+    <button class="modal-top-close" onclick="closeLinks()" aria-label="Close">✕</button>
     <div class="links-title">
      🎮 Other Games
     </div><!-- ↓↓ リンクをここに入れてください ↓↓ --> <a class="game-link-btn link-wn1" href="https://eigo-oukoku.github.io/Eigo-Ninja/">🥷 Word Ninja Vol. 1</a> <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a> <a class="game-link-btn link-sn" href="https://eigo-oukoku.github.io/Eigo-Ninja/sentence-ninja" style="background:#FF8FA3 !important;">💬 Sentence Ninja</a> <a class="game-link-btn link-en" href="https://eigo-oukoku.github.io/Eigo-Ninja/eigo-ninja" style="background:#6A5ACD !important;">📚 Eigo-Ninja (Vocab Quiz)</a> <!-- ↑↑ リンクをここに入れてください ↑↑ --> <button class="links-close" onclick="closeLinks()">Close</button>
@@ -558,22 +573,27 @@ function render() {
   const scoreText = state.isSpeedster ? `⭐ ${state.score} words` : `⭐ ${state.score} | ${state.round + 1}/10`;
   const livesHTML = state.isSpeedster ? `<span style="font-size:18px;">⚡</span>` : `${'❤️'.repeat(Math.max(0, state.lives))}`;
   const footerMsg = state.isSpeedster ? (excited ? 'Hurry!!' : 'Quick! Tap it!') : 'Go for it!';
+  const manyChoices = state.choiceCount >= 10;
+  const someChoices = state.choiceCount >= 8;
+  const gridClass   = manyChoices ? 'choices-grid denser' : someChoices ? 'choices-grid dense' : 'choices-grid';
+  const barClass    = manyChoices ? 'top-bar compact-bar' : 'top-bar';
+  const targetClass = someChoices ? 'target-section compact-target' : 'target-section';
   document.getElementById('game-area').innerHTML = `
-    <div class="top-bar">
+    <div class="${barClass}">
       <button class="menu-btn" onclick="renderWelcome()">🏠 Menu</button>
       <div id="lives-display" style="font-size:16px;">${livesHTML}</div>
       <div class="score-pill">${scoreText}</div>
     </div>
     ${timerHTML}
-    <div class="target-section">
-      <div class="${cardClass}">${cardHTML}</div><br>
-      ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')">🔊 Listen</button>` : ''}
+    <div class="${targetClass}">
+      <div class="${cardClass}">${cardHTML}</div>
+      ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')" style="${someChoices ? 'margin-top:4px;' : ''}">🔊 Listen</button>` : ''}
     </div>
     <!-- Inline XP-bonus feedback row (NinjaUI.flashAnswerXp targets this).
          Sits between the question and the choices so the bonus message
          appears right below the question — eigo-ninja parity. -->
     <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
-    <div class="choices-grid">
+    <div class="${gridClass}">
       ${state.choices.map((w, i) => `<button class="choice-btn" id="btn-${i}" onclick="handleChoice('${w}', ${i})">${w}</button>`).join('')}
     </div>
     ${getFooterHTML(footerMsg, excited)}`;

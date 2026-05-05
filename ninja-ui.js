@@ -43,8 +43,10 @@
       // ── modal box: matches eigo-ninja's .modal-box dimensions, with
       //    a max-height + internal scroll so long content (the design
       //    grid, the scroll modal) NEVER pushes content past viewport. ──
-      '.ninja-ui-modal{background:#fff;border-radius:22px;padding:22px 18px;max-width:420px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 16px 48px rgba(0,0,0,0.3);color:#2b2d42;animation:ninjaUiPopIn 0.25s ease;}',
+      '.ninja-ui-modal{position:relative;background:#fff;border-radius:22px;padding:22px 18px;max-width:420px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 16px 48px rgba(0,0,0,0.3);color:#2b2d42;animation:ninjaUiPopIn 0.25s ease;}',
       '.ninja-ui-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:10px;color:#4C1D95;letter-spacing:0.5px;}',
+      '.ninja-ui-top-close{position:absolute;top:10px;right:12px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.07);border-radius:50%;font-size:17px;line-height:32px;text-align:center;cursor:pointer;color:#555;font-weight:900;padding:0;z-index:1;}',
+      '.ninja-ui-top-close:active{background:rgba(0,0,0,0.15);}',
       '.ninja-ui-close{display:block;width:100%;margin-top:12px;padding:13px;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;}',
       '.ninja-ui-close:active{transform:translateY(1px);}',
       '.ninja-ui-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,0.18);transition:0.1s;}',
@@ -252,7 +254,7 @@
     injectStyles();
     var ov = document.createElement('div');
     ov.className = 'ninja-ui-overlay';
-    ov.innerHTML = '<div class="ninja-ui-modal">' + innerHTML + '</div>';
+    ov.innerHTML = '<div class="ninja-ui-modal"><button class="ninja-ui-top-close" onclick="NinjaUI._closeOverlay(this)" aria-label="Close">✕</button>' + innerHTML + '</div>';
     if (!(opts && opts.lockBackdrop)) {
       // Tap on backdrop closes the modal — but never on a tap that
       // started inside the modal box (prevents accidental dismissal
@@ -349,6 +351,9 @@
         '<div style="margin-top:5px;font-size:12px;font-weight:700;opacity:0.92;">',
           '⏱ 最後に修行した日時 / Last trained: <span style="opacity:0.95;">', htmlEsc(lastTrained), '</span>',
         '</div>',
+        (p.sessionPending && p.lastTrainedAt
+          ? '<div style="margin-top:4px;font-size:11px;font-weight:800;color:#E63946;background:rgba(230,57,70,0.1);border-radius:6px;padding:3px 8px;display:inline-block;">⚠️ 修行未完了 / Training not yet completed</div>'
+          : ''),
       '</div>'
     ].join('');
   }
@@ -446,12 +451,32 @@
         '<span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Scrollを作る</span>',
         '<span style="font-size:11px;color:#7C3AED;font-weight:800;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</span>',
       '</div>',
-      '<textarea class="ninja-ui-ta" id="ninja-scroll-out" readonly>', htmlEsc(code), '</textarea>',
-      '<button class="ninja-ui-btn primary" style="margin-top:6px;" onclick="NinjaUI._copyScroll()">📋 Shadow Clone Scrollを写し取る</button>',
+      '<button class="ninja-ui-btn primary" style="background:#7C3AED;box-shadow:0 3px 0 #5B21B6;" onclick="NinjaUI._exportScrollFile()">📥 ファイルに保存</button>',
+      '<details style="margin-top:6px;margin-bottom:2px;">',
+        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
+          '📋 テキストとして共有 / Share as text',
+        '</summary>',
+        '<div style="margin-top:6px;">',
+          '<textarea class="ninja-ui-ta" id="ninja-scroll-out" readonly>', htmlEsc(code), '</textarea>',
+          '<button class="ninja-ui-btn primary" style="margin-top:6px;" onclick="NinjaUI._copyScroll()">📋 コピーする</button>',
+        '</div>',
+      '</details>',
       // Load scroll
-      '<div style="font-size:13px;font-weight:900;color:#333;margin:14px 0 6px;">⬆ Shadow Clone Scrollを読み込む</div>',
-      '<textarea class="ninja-ui-ta" id="ninja-scroll-in" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>',
-      '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._applyLoad()">🥷 修行記録を呼び戻す</button>',
+      '<div style="height:1px;background:#eee;margin:12px 0 10px;"></div>',
+      '<div style="font-size:13px;font-weight:900;color:#333;margin-bottom:6px;">⬆ Shadow Clone Scrollを読み込む</div>',
+      '<label class="ninja-ui-btn retry" style="display:block;text-align:center;cursor:pointer;">',
+        '📂 ファイルから読み込む',
+        '<input type="file" accept=".txt" style="display:none;" onchange="NinjaUI._importScrollFile(this)">',
+      '</label>',
+      '<details style="margin-top:6px;">',
+        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
+          '📝 テキストを貼り付けて読み込む / Paste scroll text',
+        '</summary>',
+        '<div style="margin-top:6px;">',
+          '<textarea class="ninja-ui-ta" id="ninja-scroll-in" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>',
+          '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._applyLoad()">🥷 修行記録を呼び戻す</button>',
+        '</div>',
+      '</details>',
       // Persistence note
       '<div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:12px;padding:9px 12px;margin-top:14px;font-size:11px;color:#7a5800;font-weight:700;line-height:1.5;">',
         '💡 ブラウザの記録はページを閉じても残りますが、<br>',
@@ -482,6 +507,47 @@
     } else {
       try { document.execCommand('copy'); showToast('📋 Scrollをコピーしました！'); } catch (e) {}
     }
+  }
+  function _exportScrollFile() {
+    try {
+      var code     = N.generateScrollCode(N.exportData());
+      var name     = (N.progress.name || 'ninja').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+      var today    = new Date();
+      var datePart = today.getFullYear() + '-' +
+                     String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                     String(today.getDate()).padStart(2, '0');
+      var filename = name + '_' + datePart + '.txt';
+      var blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      showToast('📥 ' + filename + ' を保存しました！');
+    } catch (e) {
+      showToast('⚠️ 保存失敗: ' + e.message);
+    }
+  }
+  function _importScrollFile(input) {
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var code = (e.target.result || '').trim();
+        var data = N.loadFromScrollCode(code);
+        N.importData(data);
+        showToast('📂 ' + (N.progress.name || 'Ninja') + ' Lv ' + N.progress.level + ' を呼び戻しました！');
+        closeOverlay(input);
+        if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+      } catch (err) {
+        showToast('⚠️ 読み込み失敗: ' + err.message);
+      }
+    };
+    reader.onerror = function () { showToast('⚠️ ファイルを読み取れませんでした'); };
+    reader.readAsText(file, 'utf-8');
+    input.value = '';
   }
   function _applyLoad() {
     var ta = document.getElementById('ninja-scroll-in'); if (!ta) return;
@@ -569,7 +635,7 @@
     var ov = document.createElement('div');
     ov.id = 'ninja-ui-design-pick';
     ov.className = 'ninja-ui-overlay';
-    ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-ui-design-box"></div>';
+    ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-ui-design-box"><button class="ninja-ui-top-close" onclick="NinjaUI._closeDesignPicker()" aria-label="Close">✕</button></div>';
     // Tap on backdrop closes — same UX as openOverlay
     ov.addEventListener('click', function (ev) { if (ev.target === ov) _closeDesignPicker(); });
     document.body.appendChild(ov);
@@ -761,33 +827,93 @@
     injectStyles();
     var members = N.clanMembers();
     var maxSize = N.constants.MAX_CLAN_SIZE;
+    var clanName = N.getClanName();
     var html = [
       '<div class="ninja-ui-title">🏯 忍者の里 / Village</div>',
-      '<div style="font-size:12px;color:#666;text-align:center;margin-bottom:10px;line-height:1.5;">',
-        '最大' + maxSize + '人の忍者を管理できます<br>',
-        '<span style="font-size:11px;color:#888;">Manage up to ' + maxSize + ' ninjas.</span>',
+
+      // ── Clan name row ──
+      '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">',
+        '<div id="ninja-clan-name-display" style="font-size:15px;font-weight:900;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">',
+          htmlEsc(clanName || '里に名前をつけよう'),
+        '</div>',
+        '<button style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px;line-height:1;" ',
+                'title="里の名前を変更" onclick="NinjaUI._clanNameEdit()">✏️</button>',
       '</div>',
+      '<div id="ninja-clan-name-edit" style="display:none;margin-bottom:10px;">',
+        '<input id="ninja-clan-name-input" type="text" maxlength="30" ',
+               'style="width:100%;padding:8px 10px;font-size:14px;font-weight:800;border:2px solid #059669;',
+                      'border-radius:10px;outline:none;color:#333;box-sizing:border-box;" ',
+               'placeholder="里の名前 (最大30文字)" ',
+               'value="' + htmlEsc(clanName) + '">',
+        '<div style="display:flex;gap:6px;margin-top:6px;">',
+          '<button class="ninja-ui-btn primary" style="background:#059669;box-shadow:0 3px 0 #065f46;" ',
+                  'onclick="NinjaUI._clanNameSave()">✅ 決定</button>',
+          '<button class="ninja-ui-btn" onclick="NinjaUI._clanNameCancel()">✕ キャンセル</button>',
+        '</div>',
+      '</div>',
+
+      '<div style="font-size:11px;color:#888;text-align:center;margin-bottom:10px;">',
+        '最大' + maxSize + '人の忍者を管理 / Manage up to ' + maxSize + ' ninjas',
+      '</div>',
+
       // Member carousel
       clanCarouselHTML(),
       // Member remove buttons (non-active members only, if more than 1)
       (members.length > 1 ? _memberManageHTML(members) : ''),
       '<div style="height:1px;background:#eee;margin:14px 0;"></div>',
-      // Bloodline Scroll section
+
+      // ── Bloodline Scroll section ──
       '<div style="font-size:14px;font-weight:900;color:#059669;margin-bottom:8px;">🩸 Bloodline Scroll</div>',
       '<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:10px;">',
-        '一族全員のデータを一本の巻物にまとめます。<br>',
-        '<span style="color:#888;">Encode all clan members into one scroll.</span>',
+        '一族全員のデータを一本のファイルにまとめます。<br>',
+        '<span style="color:#888;">Save all clan members as a file to transfer anywhere.</span>',
       '</div>',
-      // Export
-      '<div style="font-size:12px;font-weight:900;color:#333;margin-bottom:5px;">⬇ Bloodline Scrollを作る</div>',
-      '<textarea class="ninja-ui-ta" id="ninja-bloodline-out" readonly></textarea>',
-      '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#059669;box-shadow:0 3px 0 #065f46;" onclick="NinjaUI._bloodlineGenerate()">🩸 Scrollを生成する</button>',
-      '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#0d9488;box-shadow:0 3px 0 #0f766e;" id="ninja-bloodline-copy-btn" onclick="NinjaUI._bloodlineCopy()" style="display:none;">📋 Bloodline Scrollを写し取る</button>',
-      // Import
-      '<div style="font-size:12px;font-weight:900;color:#333;margin:12px 0 5px;">⬆ Bloodline Scrollを読み込む</div>',
-      '<textarea class="ninja-ui-ta" id="ninja-bloodline-in" placeholder="ここにBloodline Scrollを貼り付け / paste CLAN1...."></textarea>',
-      '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._bloodlineLoad()">🩸 一族を呼び戻す</button>',
-      '<div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:10px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">',
+
+      // ── Save: file (primary) ──
+      '<div style="font-size:12px;font-weight:900;color:#333;margin-bottom:6px;">⬇ 保存する / Save</div>',
+      '<button class="ninja-ui-btn primary" style="background:#059669;box-shadow:0 3px 0 #065f46;" ',
+              'onclick="NinjaUI._bloodlineExportFile()">📥 ファイルに保存</button>',
+
+      // ── Save: text fallback (collapsed) ──
+      '<details style="margin-top:6px;margin-bottom:2px;">',
+        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
+          '📋 テキストとして共有 / Share as text (for messaging apps)',
+        '</summary>',
+        '<div style="margin-top:6px;">',
+          '<textarea class="ninja-ui-ta" id="ninja-bloodline-out" readonly placeholder="← 生成ボタンを押してください"></textarea>',
+          '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#059669;box-shadow:0 3px 0 #065f46;" ',
+                  'onclick="NinjaUI._bloodlineGenerate()">🩸 テキストを生成する</button>',
+          '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;" ',
+                  'id="ninja-bloodline-copy-btn" onclick="NinjaUI._bloodlineCopy()">📋 コピーする</button>',
+        '</div>',
+      '</details>',
+
+      // ── Load: file (primary) ──
+      '<div style="height:1px;background:#eee;margin:12px 0 10px;"></div>',
+      '<div style="font-size:12px;font-weight:900;color:#333;margin-bottom:6px;">⬆ 読み込む / Load</div>',
+      '<label class="ninja-ui-btn retry" style="display:block;text-align:center;cursor:pointer;">',
+        '📂 ファイルから読み込む',
+        '<input type="file" accept=".txt" style="display:none;" onchange="NinjaUI._bloodlineImportFile(this)">',
+      '</label>',
+
+      // ── Load: text fallback (collapsed) ──
+      '<details style="margin-top:6px;">',
+        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
+          '📝 テキストを貼り付けて読み込む / Paste scroll text',
+        '</summary>',
+        '<div style="margin-top:6px;">',
+          '<input id="ninja-bloodline-in" type="text" maxlength="4000" ',
+                 'style="width:100%;padding:10px 12px;font-family:monospace;font-size:13px;font-weight:800;',
+                        'border:2px solid #ddd;border-radius:10px;outline:none;color:#333;box-sizing:border-box;" ',
+                 'placeholder="CLAN2.... を貼り付け" ',
+                 'oninput="NinjaUI._bloodlineInputHint(this)" ',
+                 'onpaste="setTimeout(function(){NinjaUI._bloodlineInputHint(document.getElementById(\'ninja-bloodline-in\'));},10)">',
+          '<div id="ninja-bloodline-in-hint" style="font-size:10px;font-weight:800;margin-top:3px;min-height:14px;"></div>',
+          '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._bloodlineLoad()">🩸 一族を呼び戻す</button>',
+        '</div>',
+      '</details>',
+
+      '<div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:12px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">',
         '💡 Bloodline ScrollはShadow Clone Scrollとは独立した巻物です。<br>',
         '個別の忍者にはShadow Clone Scroll、全員まとめてはBloodline Scrollをご利用ください。',
       '</div>',
@@ -808,6 +934,88 @@
     if (!rows.length) return '';
     return '<div style="font-size:11px;font-weight:900;color:#666;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;">メンバー管理</div>' +
            '<div style="border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:8px;">' + rows.join('') + '</div>';
+  }
+
+  // ── Clan name edit ────────────────────────────────────────────────────
+  function _clanNameEdit() {
+    var disp = document.getElementById('ninja-clan-name-display');
+    var edit = document.getElementById('ninja-clan-name-edit');
+    if (!disp || !edit) return;
+    disp.parentElement.style.display = 'none';
+    edit.style.display = 'block';
+    var inp = document.getElementById('ninja-clan-name-input');
+    if (inp) { inp.focus(); inp.select(); }
+  }
+  function _clanNameSave() {
+    var inp  = document.getElementById('ninja-clan-name-input');
+    var disp = document.getElementById('ninja-clan-name-display');
+    var edit = document.getElementById('ninja-clan-name-edit');
+    if (!inp) return;
+    var name = inp.value.trim().slice(0, 30);
+    N.setClanName(name);
+    if (disp) disp.textContent = name || '里に名前をつけよう';
+    if (edit) edit.style.display = 'none';
+    var row  = disp && disp.parentElement;
+    if (row)  row.style.display = 'flex';
+    showToast('🏯 ' + (name || '里の名前を削除しました'));
+  }
+  function _clanNameCancel() {
+    var disp = document.getElementById('ninja-clan-name-display');
+    var edit = document.getElementById('ninja-clan-name-edit');
+    if (edit) edit.style.display = 'none';
+    var row  = disp && disp.parentElement;
+    if (row)  row.style.display = 'flex';
+  }
+
+  // ── File export ───────────────────────────────────────────────────────
+  function _bloodlineExportFile() {
+    try {
+      var code     = N.generateBloodlineScroll();
+      var clanName = N.getClanName();
+      var today    = new Date();
+      var datePart = today.getFullYear() + '-' +
+                     String(today.getMonth() + 1).padStart(2, '0') + '-' +
+                     String(today.getDate()).padStart(2, '0');
+      var safeName = (clanName || 'bloodline').replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_');
+      var filename = safeName + '_' + datePart + '.txt';
+      var blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      showToast('📥 ' + filename + ' を保存しました！');
+    } catch (e) {
+      showToast('⚠️ 保存失敗: ' + e.message);
+    }
+  }
+
+  // ── File import ───────────────────────────────────────────────────────
+  function _bloodlineImportFile(input) {
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var raw  = (e.target.result || '').trim();
+        var data = N.parseBloodlineScroll(raw);
+        var ok   = N.importBloodlineScroll(data);
+        if (!ok) throw new Error('import failed');
+        var count = N.clanSlotCount();
+        showToast('📂 ' + count + '人の一族をファイルから呼び戻しました！');
+        // Refresh the village modal
+        var ov = document.querySelector('.ninja-ui-overlay');
+        if (ov) { closeOverlay(ov); setTimeout(openVillage, 50); }
+        if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+      } catch (err) {
+        showToast('⚠️ 読み込み失敗: ' + err.message);
+      }
+    };
+    reader.onerror = function () { showToast('⚠️ ファイルを読み取れませんでした'); };
+    reader.readAsText(file, 'utf-8');
+    // Reset so the same file can be selected again if needed
+    input.value = '';
   }
 
   // Village private handlers
@@ -836,16 +1044,36 @@
       try { document.execCommand('copy'); showToast('📋 コピーしました！'); } catch (e) {}
     }
   }
+  // ── Input hint: show CLAN2 / CLAN1 detected in real time ────────────
+  function _bloodlineInputHint(el) {
+    var hint = document.getElementById('ninja-bloodline-in-hint');
+    if (!hint) return;
+    var v = (el.value || '').trim();
+    if (!v) { hint.textContent = ''; hint.style.color = '#888'; return; }
+    if (v.indexOf('CLAN2.') === 0) {
+      hint.textContent = '📜 Bloodline Scrollを認識 / Scroll detected';
+      hint.style.color = '#059669';
+    } else if (v.indexOf('CLAN1.') === 0) {
+      hint.textContent = '📜 旧形式のScrollを認識 / Legacy scroll detected';
+      hint.style.color = '#3A8EE8';
+    } else {
+      hint.textContent = '⚠️ 形式が正しくありません / Unrecognised format';
+      hint.style.color = '#E63946';
+    }
+  }
+
+  // ── Load ─────────────────────────────────────────────────────────────
   function _bloodlineLoad() {
-    var ta = document.getElementById('ninja-bloodline-in'); if (!ta) return;
-    var code = (ta.value || '').trim();
-    if (!code) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
+    var inp = document.getElementById('ninja-bloodline-in'); if (!inp) return;
+    var raw = (inp.value || '').trim();
+    if (!raw) { showToast('⚠️ 巻物のテキストを入れてね'); return; }
     try {
-      var data = N.parseBloodlineScroll(code);
-      if (!N.importBloodlineScroll(data)) throw new Error('import failed');
+      var data = N.parseBloodlineScroll(raw);
+      var ok = N.importBloodlineScroll(data);
+      if (!ok) throw new Error('import failed');
       var count = N.clanSlotCount();
       showToast('🩸 ' + count + '人の一族を呼び戻しました！');
-      closeOverlay(ta);
+      closeOverlay(inp);
       if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
     } catch (e) {
       showToast('⚠️ 読み込み失敗: ' + e.message);
@@ -1116,8 +1344,11 @@
     switchToSlot:     switchToSlot,
 
     // private callbacks (referenced by inline onclick handlers)
-    _copyScroll:    _copyScroll,
-    _applyLoad:     _applyLoad,
+    _closeOverlay:  function(el) { closeOverlay(el); },
+    _copyScroll:       _copyScroll,
+    _exportScrollFile: _exportScrollFile,
+    _importScrollFile: _importScrollFile,
+    _applyLoad:        _applyLoad,
     _applyName:     _applyName,
     _applyNameSolo: _applyNameSolo,
     _resetProgress: _resetProgress,
@@ -1125,9 +1356,15 @@
     _closeDesignPicker: _closeDesignPicker,
     _weakExportCSV: _weakExportCSV,
     _weakCopyText:  _weakCopyText,
-    _bloodlineGenerate: _bloodlineGenerate,
-    _bloodlineCopy:     _bloodlineCopy,
-    _bloodlineLoad:     _bloodlineLoad,
+    _clanNameEdit:       _clanNameEdit,
+    _clanNameSave:       _clanNameSave,
+    _clanNameCancel:     _clanNameCancel,
+    _bloodlineExportFile:  _bloodlineExportFile,
+    _bloodlineImportFile:  _bloodlineImportFile,
+    _bloodlineGenerate:  _bloodlineGenerate,
+    _bloodlineCopy:      _bloodlineCopy,
+    _bloodlineLoad:      _bloodlineLoad,
+    _bloodlineInputHint: _bloodlineInputHint,
     _switchSlot:        _switchSlot,
     _addMember:         _addMember,
     _removeMember:      _removeMember,

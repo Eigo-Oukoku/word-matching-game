@@ -85,6 +85,7 @@
     globalIndex:    0,
     totalSessions:  0,
     lastTrainedAt:  0,
+    sessionPending: false,  // true from first answer until touchTrained() — local only, never in scroll
   };
 
   var design = {
@@ -216,6 +217,12 @@
   // eigo-ninja so callers can award bonuses identically.
   function recordAnswer(entry, isCorrect, timeMs, namespace) {
     if (!entry) return { firstTimeCorrect: false, recovered: false };
+    // Stamp session-start time on the very first answer of a new session so
+    // "Last trained" reflects when the user began, not when they finished.
+    if (!progress.sessionPending) {
+      progress.lastTrainedAt  = Date.now();
+      progress.sessionPending = true;
+    }
     var w = getWord(entry, namespace);
     var wasFirstTime = !w.seen;
     var wasWrong     = w.lastWrong === true;
@@ -270,14 +277,15 @@
     try {
       // Per-app cache (fast restore, includes session counters)
       localStorage.setItem(profile.storageKey, JSON.stringify({
-        name:          progress.name,
-        nameLocked:    progress.nameLocked,
-        exp:           progress.exp,
-        level:         progress.level,
-        words:         progress.words,
-        globalIndex:   progress.globalIndex,
-        totalSessions: progress.totalSessions,
-        lastTrainedAt: progress.lastTrainedAt,
+        name:           progress.name,
+        nameLocked:     progress.nameLocked,
+        exp:            progress.exp,
+        level:          progress.level,
+        words:          progress.words,
+        globalIndex:    progress.globalIndex,
+        totalSessions:  progress.totalSessions,
+        lastTrainedAt:  progress.lastTrainedAt,
+        sessionPending: progress.sessionPending,  // local-only; not in scroll or SHARED_KEY
       }));
       // SHARED cross-game key — every Ninja game (incl. eigo-ninja) reads
       // from this on boot, so the user's progress flows seamlessly when
@@ -317,7 +325,8 @@
         progress.words         = d.words       || {};
         progress.globalIndex   = d.globalIndex || 0;
         progress.totalSessions = d.totalSessions || 0;
-        progress.lastTrainedAt = d.lastTrainedAt || 0;
+        progress.lastTrainedAt  = d.lastTrainedAt  || 0;
+        progress.sessionPending = d.sessionPending || false;
       }
       if (shared) {
         var s = JSON.parse(shared);
@@ -395,6 +404,8 @@
     if (typeof d.lastTrainedAt === 'number' && d.lastTrainedAt > (progress.lastTrainedAt || 0)) {
       progress.lastTrainedAt = d.lastTrainedAt;
     }
+    // Scroll represents a known-complete state — clear any in-progress flag.
+    progress.sessionPending = false;
     if (d.design && typeof d.design === 'object') {
       // Drain the in-memory list IN PLACE so any held references stay valid
       design.unlocked.splice(0, design.unlocked.length);
@@ -428,7 +439,9 @@
     return true;
   }
   function touchTrained() {
-    progress.lastTrainedAt = Date.now();
+    // lastTrainedAt is already set at session-start by recordAnswer().
+    // Here we only clear the pending flag to signal the session completed.
+    progress.sessionPending = false;
     saveLocal();
   }
   function formatTimestamp(ms) {
@@ -445,14 +458,15 @@
   // 9.  RESET (原点回帰)
   // ───────────────────────────────────────────────────────────────────────
   function resetProgress() {
-    progress.name          = 'Ninja';
-    progress.nameLocked    = false;
-    progress.exp           = 0;
-    progress.level         = 0;
-    progress.words         = {};
-    progress.globalIndex   = 0;
-    progress.totalSessions = 0;
-    progress.lastTrainedAt = 0;
+    progress.name           = 'Ninja';
+    progress.nameLocked     = false;
+    progress.exp            = 0;
+    progress.level          = 0;
+    progress.words          = {};
+    progress.globalIndex    = 0;
+    progress.totalSessions  = 0;
+    progress.lastTrainedAt  = 0;
+    progress.sessionPending = false;
     try {
       localStorage.removeItem(profile.storageKey);
       localStorage.removeItem(SHARED_KEY);
@@ -687,6 +701,15 @@
   function clanSaveMeta(meta) {
     try { localStorage.setItem(CLAN_KEY, JSON.stringify(meta)); } catch (e) {}
   }
+  function getClanName() {
+    var meta = clanGetMeta();
+    return (meta && meta.name) ? meta.name : '';
+  }
+  function setClanName(name) {
+    var meta = clanGetMeta() || { activeSlot: _clanActiveSlot, slots: [_clanActiveSlot] };
+    meta.name = (name || '').trim().slice(0, 30);
+    clanSaveMeta(meta);
+  }
   function _loadSlotProgress(n) {
     try { var r = localStorage.getItem(_slotProgressKey(n)); return r ? JSON.parse(r) : null; } catch (e) { return null; }
   }
@@ -706,7 +729,7 @@
       name: progress.name, nameLocked: progress.nameLocked,
       exp: progress.exp, level: progress.level, words: progress.words,
       globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
-      lastTrainedAt: progress.lastTrainedAt,
+      lastTrainedAt: progress.lastTrainedAt, sessionPending: progress.sessionPending,
     });
     _saveSlotDesign(n, { selected: design.selected, unlocked: design.unlocked.slice(), v: 2 });
   }
@@ -722,12 +745,14 @@
       progress.words         = d.words         || {};
       progress.globalIndex   = d.globalIndex   || 0;
       progress.totalSessions = d.totalSessions || 0;
-      progress.lastTrainedAt = d.lastTrainedAt || 0;
+      progress.lastTrainedAt  = d.lastTrainedAt  || 0;
+      progress.sessionPending = d.sessionPending || false;
     } else {
       // Brand-new empty slot
       progress.name = 'Ninja'; progress.nameLocked = false;
       progress.exp = 0; progress.level = 0; progress.words = {};
-      progress.globalIndex = 0; progress.totalSessions = 0; progress.lastTrainedAt = 0;
+      progress.globalIndex = 0; progress.totalSessions = 0;
+      progress.lastTrainedAt = 0; progress.sessionPending = false;
     }
     var des = _loadSlotDesign(n);
     design.selected = null;
@@ -825,38 +850,165 @@
   function clanSlotCount()     { var m = clanGetMeta(); return m ? m.slots.length : 1; }
 
   // ── Bloodline Scroll codec ──────────────────────────────────────────────
-  // Format: CLAN1.<base64>  — distinct from NINJA1 so both types can coexist.
+  // CLAN2 (current)  — compact JSON, ~60 % smaller than CLAN1.
+  // CLAN1 (legacy)   — still parsed for backward compatibility.
+  //
+  // Compact format rules (CLAN2):
+  //   Outer:   { as, m[] }                 (activeSlot, members)
+  //   Member:  { sl,n,nl?,e,gi,ts,lt,d?,lf,w }
+  //              slot, name, nameLocked(omit if false), exp,
+  //              globalIndex, totalSessions, lastTrainedAt,
+  //              design(omit if empty), lf, words
+  //   Word key: namespace abbreviated (see _C2NS), e.g. "W2::apple"
+  //   Word val: { c?,w?,s?,lw?,li? }       zeros/false omitted; seen=true implied
+
+  var _C2NS = {                              // full namespace → 2-char code
+    'word-ninja-v2':  'W2', 'word-ninja-v1': 'W1',
+    'eigo-ninja':     'EN', 'spelling-ninja':'SP', 'sentence-ninja':'SN',
+  };
+  var _C2NSR = (function () {               // reverse map
+    var r = {};
+    for (var k in _C2NS) r[_C2NS[k]] = k;
+    return r;
+  }());
+
+  function _c2WordKey(full) {
+    var i = full.indexOf('::');
+    if (i < 0) return full;
+    var ns = full.slice(0, i), word = full.slice(i + 2);
+    return (_C2NS[ns] || ns) + '::' + word;
+  }
+  function _c2WordKeyR(compact) {
+    var i = compact.indexOf('::');
+    if (i < 0) return compact;
+    var ns = compact.slice(0, i), word = compact.slice(i + 2);
+    return (_C2NSR[ns] || ns) + '::' + word;
+  }
+  function _c2PackWords(words) {
+    var out = {};
+    for (var k in words) {
+      var w = words[k]; var e = {};
+      if (w.correct)                              e.c  = w.correct;
+      if (w.wrong)                                e.w  = w.wrong;
+      if (w.slow)                                 e.s  = w.slow;
+      if (w.lastWrong)                            e.lw = true;
+      if (w.lastSeenIndex && w.lastSeenIndex > -990) e.li = w.lastSeenIndex;
+      out[_c2WordKey(k)] = e;
+    }
+    return out;
+  }
+  function _c2UnpackWords(packed) {
+    var out = {};
+    for (var k in packed) {
+      var e = packed[k];
+      out[_c2WordKeyR(k)] = {
+        correct:       e.c  || 0,
+        wrong:         e.w  || 0,
+        slow:          e.s  || 0,
+        seen:          true,
+        lastWrong:     !!e.lw,
+        lastSeenIndex: e.li != null ? e.li : -999,
+      };
+    }
+    return out;
+  }
+  function _c2PackMember(d, des, slot) {
+    var m = {
+      sl: slot,
+      n:  d.name || 'Ninja',
+      e:  d.exp  || 0,
+      gi: d.globalIndex    || 0,
+      ts: d.totalSessions  || 0,
+      lt: d.lastTrainedAt  || 0,
+      lf: LEVEL_FACTOR,
+      w:  _c2PackWords(d.words || {}),
+    };
+    if (d.nameLocked) m.nl = true;
+    if (des && (des.selected || (des.unlocked && des.unlocked.length))) {
+      m.d = {};
+      if (des.selected)                           m.d.s = des.selected;
+      if (des.unlocked && des.unlocked.length)    m.d.u = des.unlocked;
+    }
+    return m;
+  }
+  function _c2UnpackMember(m) {
+    var scrollLF = m.lf || LEVEL_FACTOR;
+    var exp = m.e || 0;
+    if (scrollLF !== LEVEL_FACTOR && scrollLF > 0)
+      exp = Math.round(exp * LEVEL_FACTOR / scrollLF);
+    return {
+      slot:          m.sl,
+      name:          m.n  || 'Ninja',
+      nameLocked:    !!m.nl,
+      exp:           exp,
+      level:         levelFromExp(exp),
+      words:         _c2UnpackWords(m.w || {}),
+      globalIndex:   m.gi || 0,
+      totalSessions: m.ts || 0,
+      lastTrainedAt: m.lt || 0,
+      design: { selected: (m.d && m.d.s) || null, unlocked: (m.d && m.d.u) || [] },
+      lf:            LEVEL_FACTOR,   // already migrated above
+    };
+  }
+
   function generateBloodlineScroll() {
     _captureCurrentToSlot(_clanActiveSlot);   // flush in-memory state first
     var meta = clanGetMeta() || { activeSlot: _clanActiveSlot, slots: [_clanActiveSlot] };
     var members = meta.slots.map(function (n) {
-      var d   = _loadSlotProgress(n) || {};
-      var des = _loadSlotDesign(n)   || {};
-      return {
-        slot: n,
-        name: d.name || 'Ninja',  nameLocked: !!d.nameLocked,
-        exp:  d.exp  || 0,        level: levelFromExp(d.exp || 0),
-        words: d.words || {},     globalIndex: d.globalIndex || 0,
-        totalSessions: d.totalSessions || 0, lastTrainedAt: d.lastTrainedAt || 0,
-        design: { selected: des.selected || null, unlocked: des.unlocked || [] },
-        lf: LEVEL_FACTOR,
-      };
+      return _c2PackMember(_loadSlotProgress(n) || {}, _loadSlotDesign(n) || {}, n);
     });
-    var payload = JSON.stringify({ clanV: 1, activeSlot: meta.activeSlot, members: members });
+    var inner = { as: meta.activeSlot, m: members };
+    if (meta.name) inner.cn = meta.name;
+    var payload = JSON.stringify(inner);
     var sum  = ninjaChecksum(payload);
-    var wrap = JSON.stringify({ v: 1, sum: sum, payload: payload });
-    return 'CLAN1.' + _utf8Btoa(wrap);
+    var wrap = JSON.stringify({ v: 2, sum: sum, payload: payload });
+    return 'CLAN2.' + _utf8Btoa(wrap);
   }
 
   function parseBloodlineScroll(code) {
     if (typeof code !== 'string') throw new Error('scroll code missing');
     var t = code.trim();
-    if (t.indexOf('CLAN1.') !== 0) throw new Error('invalid bloodline scroll header');
-    var wrap;
-    try { wrap = JSON.parse(_utf8Atob(t.slice(6))); } catch (e) { throw new Error('cannot decode bloodline scroll'); }
-    if (!wrap || wrap.v !== 1)                    throw new Error('unsupported bloodline scroll version');
-    if (ninjaChecksum(wrap.payload) !== wrap.sum) throw new Error('checksum mismatch');
-    return JSON.parse(wrap.payload);
+
+    if (t.indexOf('CLAN2.') === 0) {
+      // ── Current compact format ──
+      var w2;
+      try { w2 = JSON.parse(_utf8Atob(t.slice(6))); } catch (e) { throw new Error('cannot decode bloodline scroll'); }
+      if (!w2 || w2.v !== 2)                    throw new Error('unsupported bloodline scroll version');
+      if (ninjaChecksum(w2.payload) !== w2.sum) throw new Error('checksum mismatch');
+      var c2 = JSON.parse(w2.payload);
+      // Expand to the shape importBloodlineScroll expects
+      var result2 = {
+        clanV:      1,
+        activeSlot: c2.as,
+        members:    (c2.m || []).map(_c2UnpackMember),
+      };
+      if (c2.cn) result2.clanName = c2.cn;
+      return result2;
+    }
+
+    if (t.indexOf('CLAN1.') === 0) {
+      // ── Legacy format — kept for backward compatibility ──
+      var w1;
+      try { w1 = JSON.parse(_utf8Atob(t.slice(6))); } catch (e) { throw new Error('cannot decode bloodline scroll'); }
+      if (!w1 || w1.v !== 1)                    throw new Error('unsupported bloodline scroll version');
+      if (ninjaChecksum(w1.payload) !== w1.sum) throw new Error('checksum mismatch');
+      var c1 = JSON.parse(w1.payload);
+      // CLAN1 stored lf per-member; migrate XP here so importBloodlineScroll
+      // can treat every member uniformly (lf already = LEVEL_FACTOR).
+      if (Array.isArray(c1.members)) {
+        c1.members = c1.members.map(function (m) {
+          var scrollLF = typeof m.lf === 'number' ? m.lf : LEVEL_FACTOR;
+          if (scrollLF !== LEVEL_FACTOR && scrollLF > 0)
+            m.exp = Math.round((m.exp || 0) * LEVEL_FACTOR / scrollLF);
+          m.lf = LEVEL_FACTOR;
+          m.level = levelFromExp(m.exp || 0);
+          return m;
+        });
+      }
+      return c1;
+    }
+
+    throw new Error('invalid bloodline scroll header');
   }
 
   // importBloodlineScroll — restore all members; XP scaled via lf if needed
@@ -883,7 +1035,9 @@
       .sort(function (a, b) { return a - b; });
     var activeSlot = typeof data.activeSlot === 'number' ? data.activeSlot : newSlots[0];
     if (newSlots.indexOf(activeSlot) < 0) activeSlot = newSlots[0];
-    clanSaveMeta({ activeSlot: activeSlot, slots: newSlots });
+    var newMeta = { activeSlot: activeSlot, slots: newSlots };
+    if (data.clanName) newMeta.name = data.clanName;
+    clanSaveMeta(newMeta);
     _applySlotToMemory(activeSlot);
     saveLocal();
     return true;
@@ -994,9 +1148,11 @@
     clanSetActiveSlot:       clanSetActiveSlot,
     clanAddMember:           clanAddMember,
     clanRemoveMember:        clanRemoveMember,
-    generateBloodlineScroll: generateBloodlineScroll,
-    parseBloodlineScroll:    parseBloodlineScroll,
-    importBloodlineScroll:   importBloodlineScroll,
+    getClanName:             getClanName,
+    setClanName:             setClanName,
+    generateBloodlineScroll:   generateBloodlineScroll,
+    parseBloodlineScroll:      parseBloodlineScroll,
+    importBloodlineScroll:     importBloodlineScroll,
   };
 
 })(typeof window !== 'undefined' ? window : this);
