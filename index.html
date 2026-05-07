@@ -296,19 +296,25 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (blob URL cache + new Audio) ─────────────────────────────────────
-const _sfxBlobUrls = {};
-function _fetchSfx(name) {
-  fetch('audio/' + name + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _sfxBlobUrls[name] = URL.createObjectURL(blob); })
-    .catch(function() {});
-}
+// ── SFX (single element per sound) ───────────────────────────────────────
+const _sfxAudio = {};
+['clickysound','correctsound','wrongsound'].forEach(function(name) {
+  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
+});
 function _playSfx(name) {
-  if (_muted || !_sfxBlobUrls[name]) return;
-  try { new Audio(_sfxBlobUrls[name]).play().catch(function(){}); } catch(e) {}
+  if (_muted || !_sfxAudio[name]) return;
+  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
 }
-['clickysound','correctsound','wrongsound'].forEach(_fetchSfx);
+// ── iOS Audio Unlock ──────────────────────────────────────────────────────
+(function() {
+  function _unlock() {
+    var a = new Audio('audio/clickysound.mp3');
+    a.muted = true;
+    a.play().then(function() { a.pause(); }).catch(function(){});
+  }
+  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
+  document.addEventListener('click',      _unlock, { once: true, capture: true });
+})();
 
 // ── Word audio (blob URL cache + new Audio) ──────────────────────────────
 const _wordBlobUrls = {};
