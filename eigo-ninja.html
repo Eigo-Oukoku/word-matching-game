@@ -3167,15 +3167,34 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (pre-loaded Audio + currentTime reset) ────────────────────────────
-const _sfxAudio = {};
-['clickysound', 'correctsound', 'wrongsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
+// ── SFX (2-element pool per sound, preload + iOS-unlock) ──────────────────
+const _sfxPool = {};
+(function() {
+  ['clickysound','correctsound','wrongsound'].forEach(function(name) {
+    var p = [new Audio('audio/'+name+'.mp3'), new Audio('audio/'+name+'.mp3')];
+    p.forEach(function(a) { a.preload = 'auto'; a.load(); });
+    _sfxPool[name] = { p: p, i: 0 };
+  });
+})();
 function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+  if (_muted || !_sfxPool[name]) return;
+  var e = _sfxPool[name], a = e.p[e.i++ & 1];
+  try { a.currentTime = 0; a.play().catch(function(){}); } catch(ex) {}
 }
+// ── iOS Audio Unlock + pre-warm (forces decode on first gesture) ──────────
+(function() {
+  function _unlock() {
+    var els = [];
+    Object.values(_sfxPool).forEach(function(e) { els = els.concat(e.p); });
+    els.forEach(function(a) {
+      a.volume = 0;
+      a.play().then(function() { a.pause(); a.currentTime = 0; a.volume = 1; })
+               .catch(function() { a.volume = 1; });
+    });
+  }
+  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
+  document.addEventListener('click',      _unlock, { once: true, capture: true });
+})();
 
 function playClick()   { _playSfx('clickysound');  }
 function playCorrect() { _playSfx('correctsound'); }

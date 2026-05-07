@@ -505,14 +505,19 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (pre-loaded Audio + currentTime reset) ────────────────────────────
-const _sfxAudio = {};
-['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
+// ── SFX (2-element pool per sound, preload + iOS-unlock) ──────────────────
+const _sfxPool = {};
+(function() {
+  ['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(function(name) {
+    var p = [new Audio('audio/'+name+'.mp3'), new Audio('audio/'+name+'.mp3')];
+    p.forEach(function(a) { a.preload = 'auto'; a.load(); });
+    _sfxPool[name] = { p: p, i: 0 };
+  });
+})();
 function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+  if (_muted || !_sfxPool[name]) return;
+  var e = _sfxPool[name], a = e.p[e.i++ & 1];
+  try { a.currentTime = 0; a.play().catch(function(){}); } catch(ex) {}
 }
 
 // ── Word audio (blob URL cache + new Audio) ──────────────────────────────
@@ -746,16 +751,34 @@ function ninjaLogWrong(word, ms){
 }
 
 function playSfx(f) { _playSfx(f); }
-var _wordAudio = null;
+var _wordAudio = new Audio('audio/clickysound.mp3'); // reusable element (iOS unlock seed)
+_wordAudio.preload = 'auto';
 function speak(w) {
   if (_muted || !w) return;
   const key = w.replace(/\s+/g, '_');
   if (!(key in _wordBlobUrls)) _preloadAudio(key);
   var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  if (_wordAudio) { try { _wordAudio.pause(); _wordAudio.src = ''; } catch(e) {} }
-  _wordAudio = new Audio(url);
-  try { _wordAudio.play().catch(function(){}); } catch(e) {}
+  try {
+    _wordAudio.pause();
+    _wordAudio.src = url;
+    _wordAudio.load();
+    _wordAudio.play().catch(function(){});
+  } catch(e) {}
 }
+// ── iOS Audio Unlock + pre-warm ───────────────────────────────────────────
+(function() {
+  function _unlock() {
+    var els = [_wordAudio];
+    Object.values(_sfxPool).forEach(function(e) { els = els.concat(e.p); });
+    els.forEach(function(a) {
+      a.volume = 0;
+      a.play().then(function() { a.pause(); a.currentTime = 0; a.volume = 1; })
+               .catch(function() { a.volume = 1; });
+    });
+  }
+  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
+  document.addEventListener('click',      _unlock, { once: true, capture: true });
+})();
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }
 function recordMistake(word){

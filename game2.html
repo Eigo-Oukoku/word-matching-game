@@ -334,14 +334,19 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (pre-loaded Audio + currentTime reset) ────────────────────────────
-const _sfxAudio = {};
-['clickysound','correctsound','wrongsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
+// ── SFX (2-element pool per sound, preload + iOS-unlock) ──────────────────
+const _sfxPool = {};
+(function() {
+  ['clickysound','correctsound','wrongsound'].forEach(function(name) {
+    var p = [new Audio('audio/'+name+'.mp3'), new Audio('audio/'+name+'.mp3')];
+    p.forEach(function(a) { a.preload = 'auto'; a.load(); });
+    _sfxPool[name] = { p: p, i: 0 };
+  });
+})();
 function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+  if (_muted || !_sfxPool[name]) return;
+  var e = _sfxPool[name], a = e.p[e.i++ & 1];
+  try { a.currentTime = 0; a.play().catch(function(){}); } catch(ex) {}
 }
 
 // ── Word audio (blob URL cache + new Audio) ──────────────────────────────
@@ -391,16 +396,34 @@ window.getNinjaCatalogs = function () {
 };
 
 function playSfx(f) { _playSfx(f); }
-var _wordAudio = null;
+var _wordAudio = new Audio('audio/clickysound.mp3'); // reusable element (iOS unlock seed)
+_wordAudio.preload = 'auto';
 function speak(w) {
   if (_muted || !w) return;
   const key = getFileKey(w);
   if (!(key in _wordBlobUrls)) _preloadAudio(key);
   var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  if (_wordAudio) { try { _wordAudio.pause(); _wordAudio.src = ''; } catch(e) {} }
-  _wordAudio = new Audio(url);
-  try { _wordAudio.play().catch(function(){}); } catch(e) {}
+  try {
+    _wordAudio.pause();
+    _wordAudio.src = url;
+    _wordAudio.load();
+    _wordAudio.play().catch(function(){});
+  } catch(e) {}
 }
+// ── iOS Audio Unlock + pre-warm ───────────────────────────────────────────
+(function() {
+  function _unlock() {
+    var els = [_wordAudio];
+    Object.values(_sfxPool).forEach(function(e) { els = els.concat(e.p); });
+    els.forEach(function(a) {
+      a.volume = 0;
+      a.play().then(function() { a.pause(); a.currentTime = 0; a.volume = 1; })
+               .catch(function() { a.volume = 1; });
+    });
+  }
+  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
+  document.addEventListener('click',      _unlock, { once: true, capture: true });
+})();
 
 const ANIMALS = {
   fox: `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,
