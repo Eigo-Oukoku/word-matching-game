@@ -721,40 +721,21 @@ function _playSfx(name) {
 ['clickysound','correctsound','wrongsound','correctsound_short','correct_short'].forEach(_fetchSfx);
 
 function playSfx(f) { _playSfx(f); }
-// ── Sentence audio cache (AudioContext BufferSource — same engine as SFX) ──
-const _sentenceCache = {};
-const _sentenceCbs = {};
+// ── Sentence audio (blob URL cache + new Audio) ──────────────────────────
+const _sentenceBlobUrls = {};
 function _preloadSentence(key) {
-  if (!key || !_audioCtx || (key in _sentenceCache)) return;
-  _sentenceCache[key] = 'loading';
+  if (!key || (key in _sentenceBlobUrls)) return;
+  _sentenceBlobUrls[key] = null;  // loading
   fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.arrayBuffer(); })
-    .then(function(ab) {
-      _audioCtx.decodeAudioData(ab,
-        function(buf) {
-          _sentenceCache[key] = buf;
-          if (_sentenceCbs[key]) { _sentenceCbs[key].forEach(function(cb){ cb(buf); }); delete _sentenceCbs[key]; }
-        },
-        function() { _sentenceCache[key] = null; delete _sentenceCbs[key]; });
-    })
-    .catch(function() { _sentenceCache[key] = null; delete _sentenceCbs[key]; });
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) { _sentenceBlobUrls[key] = URL.createObjectURL(blob); })
+    .catch(function() { _sentenceBlobUrls[key] = ''; });
 }
 function speakSentence(audio) {
-  if (_muted || !audio || !_audioCtx) return;
-  if (!(audio in _sentenceCache)) _preloadSentence(audio);
-  function _playBuf(buf) {
-    if (!buf) return;
-    try {
-      var _go = function() {
-        var src = _audioCtx.createBufferSource();
-        src.buffer = buf; src.connect(_audioCtx.destination); src.start(0);
-      };
-      if (_audioCtx.state === 'suspended') { _audioCtx.resume().then(_go).catch(function(){}); } else { _go(); }
-    } catch(e) {}
-  }
-  const cached = _sentenceCache[audio];
-  if (cached && cached !== 'loading') { _playBuf(cached); }
-  else if (cached === 'loading') { if (!_sentenceCbs[audio]) _sentenceCbs[audio] = []; _sentenceCbs[audio].push(_playBuf); }
+  if (_muted || !audio) return;
+  if (!(audio in _sentenceBlobUrls)) _preloadSentence(audio);
+  var url = _sentenceBlobUrls[audio] || ('audio/' + audio + '.mp3');
+  try { new Audio(url).play().catch(function(){}); } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════
