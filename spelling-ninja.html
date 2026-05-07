@@ -505,16 +505,36 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── Audio cache (Plan A: pre-load next word + reuse Audio objects) ────
+// ── SFX pool (fetch→Blob, pool of 2 per sound) ───────────────────────
+const _sfxPool = {};
+const _sfxIdx  = {};
+function _fetchSfx(name) {
+  fetch('audio/' + name + '.mp3')
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      _sfxPool[name] = [new Audio(url), new Audio(url)];
+      _sfxIdx[name]  = 0;
+    }).catch(function() {});
+}
+function _playSfx(name) {
+  if (_muted || !_sfxPool[name]) return;
+  var a = _sfxPool[name][_sfxIdx[name]];
+  _sfxIdx[name] = (_sfxIdx[name] + 1) % 2;
+  a.currentTime = 0; a.play().catch(function() {});
+}
+['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(_fetchSfx);
+
+// ── Word audio cache (fetch→Blob for zero-latency playback) ──────────
 const _audioCache = {};
 function _preloadAudio(key) {
   if (!key || _audioCache[key]) return;
-  const a = new Audio(`audio/${key}.mp3`);
-  a.preload = 'auto';
-  _audioCache[key] = a;
+  _audioCache[key] = 'loading';
+  fetch('audio/' + key + '.mp3')
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) { _audioCache[key] = new Audio(URL.createObjectURL(blob)); })
+    .catch(function() { _audioCache[key] = null; });
 }
-// Pre-load SFX at startup
-['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(function(f){ _preloadAudio(f); });
 const _imageCache = {};
 function _preloadImage(key) {
   if (!key || _imageCache[key]) return;
@@ -523,13 +543,7 @@ function _preloadImage(key) {
   _imageCache[key] = img;
 }
 
-function playClick() {
-  if (_muted) return;
-  try {
-    const a = _audioCache['clickysound'] || new Audio('audio/clickysound.mp3');
-    a.currentTime = 0; a.play().catch(function(){});
-  } catch(e) {}
-}
+function playClick() { _playSfx('clickysound'); }
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close, .kb-btn';
   if (ev.target.closest(sel)) playClick();
@@ -741,18 +755,14 @@ function ninjaLogWrong(word, ms){
   state.streak = 0;
 }
 
-function playSfx(f) {
-  if (_muted) return;
-  if (!_audioCache[f]) _preloadAudio(f);
-  const a = _audioCache[f];
-  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
-}
+function playSfx(f) { _playSfx(f); }
 function speak(w) {
   if (_muted || !w) return;
   const key = w.replace(/\s+/g, '_');
   if (!_audioCache[key]) _preloadAudio(key);
   const a = _audioCache[key];
-  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
+  if (a && a !== 'loading') { a.currentTime = 0; a.play().catch(function(){}); }
+  else if (!a) { new Audio('audio/' + key + '.mp3').play().catch(function(){}); }
 }
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }

@@ -678,7 +678,27 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-function playSfx(f) { if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
+// ── SFX pool (fetch→Blob, pool of 2 per sound) ───────────────────────
+const _sfxPool = {};
+const _sfxIdx  = {};
+function _fetchSfx(name) {
+  fetch('audio/' + name + '.mp3')
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      _sfxPool[name] = [new Audio(url), new Audio(url)];
+      _sfxIdx[name]  = 0;
+    }).catch(function() {});
+}
+function _playSfx(name) {
+  if (_muted || !_sfxPool[name]) return;
+  var a = _sfxPool[name][_sfxIdx[name]];
+  _sfxIdx[name] = (_sfxIdx[name] + 1) % 2;
+  a.currentTime = 0; a.play().catch(function() {});
+}
+['clickysound','correctsound','wrongsound','correctsound_short','correct_short'].forEach(_fetchSfx);
+
+function playSfx(f) { _playSfx(f); }
 function speakSentence(audio) { if(_muted) return; if(!audio) return; new Audio(`audio/${audio}.mp3`).play().catch(()=>{}); }
 
 // ═══════════════════════════════════════════════
@@ -698,7 +718,7 @@ function getFooter(msg, excited=false) {
 }
 
 // ── Click sound for menu/level/mode/link interactions ─────────────────
-function playClick() { if(_muted) return; try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(e){} }
+function playClick() { _playSfx('clickysound'); }
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close, .stage-btn, .mode-btn, .back-btn, .action-btn';
   if (ev.target.closest(sel)) playClick();

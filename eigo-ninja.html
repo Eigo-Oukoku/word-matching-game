@@ -3167,13 +3167,29 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── Preloaded audio objects ────────────────────────────────────────────
-const _sfxClick   = new Audio('audio/clickysound.mp3');
-const _sfxCorrect = new Audio('audio/correctsound.mp3');
-const _sfxWrong   = new Audio('audio/wrongsound.mp3');
-function playClick()   { if(_muted) return; try { _sfxClick.currentTime   = 0; _sfxClick.play().catch(()=>{}); }   catch(e){} }
-function playCorrect() { if(_muted) return; try { _sfxCorrect.currentTime = 0; _sfxCorrect.play().catch(()=>{}); } catch(e){} }
-function playWrong()   { if(_muted) return; try { _sfxWrong.currentTime   = 0; _sfxWrong.play().catch(()=>{}); }   catch(e){} }
+// ── SFX: fetch → Blob URL → pool of 2 (zero-latency local playback) ──
+const _sfxPool = {};
+const _sfxIdx  = {};
+function _fetchSfx(name) {
+  fetch('audio/' + name + '.mp3')
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) {
+      var url = URL.createObjectURL(blob);
+      _sfxPool[name] = [new Audio(url), new Audio(url)];
+      _sfxIdx[name]  = 0;
+    }).catch(function() {});
+}
+function _playSfx(name) {
+  if (_muted || !_sfxPool[name]) return;
+  var a = _sfxPool[name][_sfxIdx[name]];
+  _sfxIdx[name] = (_sfxIdx[name] + 1) % 2;
+  a.currentTime = 0; a.play().catch(function() {});
+}
+['clickysound', 'correctsound', 'wrongsound'].forEach(_fetchSfx);
+
+function playClick()   { _playSfx('clickysound');  }
+function playCorrect() { _playSfx('correctsound'); }
+function playWrong()   { _playSfx('wrongsound');   }
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .mode-btn, .mode-toggle, .util-btn, .menu-btn, .back-btn, .action-btn, .modal-close, .export-btn';
   if (ev.target.closest(sel)) playClick();
