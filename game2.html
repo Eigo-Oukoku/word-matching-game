@@ -410,16 +410,12 @@ function speak(w) {
     _wordAudio.play().catch(function(){});
   } catch(e) {}
 }
-// ── iOS Audio Unlock + pre-warm ───────────────────────────────────────────
+// ── iOS Audio Unlock ──────────────────────────────────────────────────────
 (function() {
   function _unlock() {
-    var els = [_wordAudio];
-    Object.values(_sfxPool).forEach(function(e) { els = els.concat(e.p); });
-    els.forEach(function(a) {
-      a.volume = 0;
-      a.play().then(function() { a.pause(); a.currentTime = 0; a.volume = 1; })
-               .catch(function() { a.volume = 1; });
-    });
+    var a = new Audio('audio/clickysound.mp3');
+    a.muted = true;
+    a.play().then(function() { a.pause(); }).catch(function(){});
   }
   document.addEventListener('touchstart', _unlock, { once: true, capture: true });
   document.addEventListener('click',      _unlock, { once: true, capture: true });
