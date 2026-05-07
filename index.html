@@ -301,11 +301,10 @@ const _audioCtx = (function() {
   try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
 })();
 const _sfxBufs = {};
-// Pre-warm AudioContext on the very first user interaction (capture phase)
-// so it is in 'running' state before any game sound is needed.
-document.addEventListener('click', function _acUnlock() {
-  document.removeEventListener('click', _acUnlock, true);
-  if (!_audioCtx) return;
+// Re-warm AudioContext on every user interaction (capture phase)
+// so it is in 'running' state even after iOS suspends it mid-session.
+document.addEventListener('click', function() {
+  if (!_audioCtx || _audioCtx.state !== 'suspended') return;
   _audioCtx.resume().catch(function() {});
   try {
     var _b = _audioCtx.createBuffer(1, 1, _audioCtx.sampleRate);
@@ -339,15 +338,23 @@ function _playSfx(name) {
 }
 ['clickysound','correctsound','wrongsound'].forEach(_fetchSfx);
 
-// ── Word audio cache (fetch→Blob for zero-latency playback) ──────────
+// ── Word audio cache (AudioContext BufferSource — same engine as SFX) ──────────
 const _audioCache = {};
+const _audioCbs = {};
 function _preloadAudio(key) {
-  if (!key || _audioCache[key]) return;
+  if (!key || !_audioCtx || (key in _audioCache)) return;
   _audioCache[key] = 'loading';
   fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _audioCache[key] = new Audio(URL.createObjectURL(blob)); })
-    .catch(function() { _audioCache[key] = null; });
+    .then(function(r) { return r.arrayBuffer(); })
+    .then(function(ab) {
+      _audioCtx.decodeAudioData(ab,
+        function(buf) {
+          _audioCache[key] = buf;
+          if (_audioCbs[key]) { _audioCbs[key].forEach(function(cb){ cb(buf); }); delete _audioCbs[key]; }
+        },
+        function() { _audioCache[key] = null; delete _audioCbs[key]; });
+    })
+    .catch(function() { _audioCache[key] = null; delete _audioCbs[key]; });
 }
 const _imageCache = {};
 function _preloadImage(key) {
@@ -412,12 +419,22 @@ window.getNinjaCatalogs = function () {
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
 function playSfx(f) { _playSfx(f); }
 function speak(w) {
-  if (_muted || !w) return;
+  if (_muted || !w || !_audioCtx) return;
   const key = getFileKey(w);
-  if (!_audioCache[key]) _preloadAudio(key);
-  const a = _audioCache[key];
-  if (a && a !== 'loading') { a.currentTime = 0; a.play().catch(function(){}); }
-  else if (!a) { new Audio('audio/' + key + '.mp3').play().catch(function(){}); }
+  if (!(key in _audioCache)) _preloadAudio(key);
+  function _playBuf(buf) {
+    if (!buf) return;
+    try {
+      var _go = function() {
+        var src = _audioCtx.createBufferSource();
+        src.buffer = buf; src.connect(_audioCtx.destination); src.start(0);
+      };
+      if (_audioCtx.state === 'suspended') { _audioCtx.resume().then(_go).catch(function(){}); } else { _go(); }
+    } catch(e) {}
+  }
+  const cached = _audioCache[key];
+  if (cached && cached !== 'loading') { _playBuf(cached); }
+  else if (cached === 'loading') { if (!_audioCbs[key]) _audioCbs[key] = []; _audioCbs[key].push(_playBuf); }
 }
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 

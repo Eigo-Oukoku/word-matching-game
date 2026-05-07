@@ -723,36 +723,38 @@ function _playSfx(name) {
 function playSfx(f) { _playSfx(f); }
 // ── Sentence audio cache (AudioContext BufferSource — same engine as SFX) ──
 const _sentenceCache = {};
+const _sentenceCbs = {};
 function _preloadSentence(key) {
-  if (!key || _sentenceCache[key] || !_audioCtx) return;
+  if (!key || !_audioCtx || (key in _sentenceCache)) return;
   _sentenceCache[key] = 'loading';
   fetch('audio/' + key + '.mp3')
     .then(function(r) { return r.arrayBuffer(); })
     .then(function(ab) {
       _audioCtx.decodeAudioData(ab,
-        function(buf) { _sentenceCache[key] = buf; },
-        function()    { _sentenceCache[key] = null; });
+        function(buf) {
+          _sentenceCache[key] = buf;
+          if (_sentenceCbs[key]) { _sentenceCbs[key].forEach(function(cb){ cb(buf); }); delete _sentenceCbs[key]; }
+        },
+        function() { _sentenceCache[key] = null; delete _sentenceCbs[key]; });
     })
-    .catch(function() { _sentenceCache[key] = null; });
+    .catch(function() { _sentenceCache[key] = null; delete _sentenceCbs[key]; });
 }
 function speakSentence(audio) {
   if (_muted || !audio || !_audioCtx) return;
-  if (!_sentenceCache[audio]) _preloadSentence(audio);
-  const buf = _sentenceCache[audio];
-  if (!buf || buf === 'loading') return;
-  try {
-    var _doSpeak = function() {
-      var src = _audioCtx.createBufferSource();
-      src.buffer = buf;
-      src.connect(_audioCtx.destination);
-      src.start(0);
-    };
-    if (_audioCtx.state === 'suspended') {
-      _audioCtx.resume().then(_doSpeak).catch(function(){});
-    } else {
-      _doSpeak();
-    }
-  } catch(e) {}
+  if (!(audio in _sentenceCache)) _preloadSentence(audio);
+  function _playBuf(buf) {
+    if (!buf) return;
+    try {
+      var _go = function() {
+        var src = _audioCtx.createBufferSource();
+        src.buffer = buf; src.connect(_audioCtx.destination); src.start(0);
+      };
+      if (_audioCtx.state === 'suspended') { _audioCtx.resume().then(_go).catch(function(){}); } else { _go(); }
+    } catch(e) {}
+  }
+  const cached = _sentenceCache[audio];
+  if (cached && cached !== 'loading') { _playBuf(cached); }
+  else if (cached === 'loading') { if (!_sentenceCbs[audio]) _sentenceCbs[audio] = []; _sentenceCbs[audio].push(_playBuf); }
 }
 
 // ═══════════════════════════════════════════════

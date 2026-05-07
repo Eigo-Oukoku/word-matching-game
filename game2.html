@@ -378,17 +378,21 @@ function _playSfx(name) {
 
 // ── Word audio cache (AudioContext BufferSource — same engine as SFX) ──────────
 const _audioCache = {};
+const _audioCbs = {};   // callbacks waiting for a buffer to finish decoding
 function _preloadAudio(key) {
-  if (!key || _audioCache[key] || !_audioCtx) return;
+  if (!key || !_audioCtx || (key in _audioCache)) return;
   _audioCache[key] = 'loading';
   fetch('audio/' + key + '.mp3')
     .then(function(r) { return r.arrayBuffer(); })
     .then(function(ab) {
       _audioCtx.decodeAudioData(ab,
-        function(buf) { _audioCache[key] = buf; },
-        function()    { _audioCache[key] = null; });
+        function(buf) {
+          _audioCache[key] = buf;
+          if (_audioCbs[key]) { _audioCbs[key].forEach(function(cb){ cb(buf); }); delete _audioCbs[key]; }
+        },
+        function() { _audioCache[key] = null; delete _audioCbs[key]; });
     })
-    .catch(function() { _audioCache[key] = null; });
+    .catch(function() { _audioCache[key] = null; delete _audioCbs[key]; });
 }
 const _imageCache = {};
 function _preloadImage(key) {
@@ -430,22 +434,20 @@ function playSfx(f) { _playSfx(f); }
 function speak(w) {
   if (_muted || !w || !_audioCtx) return;
   const key = getFileKey(w);
-  if (!_audioCache[key]) _preloadAudio(key);
-  const buf = _audioCache[key];
-  if (!buf || buf === 'loading') return;
-  try {
-    var _doSpeak = function() {
-      var src = _audioCtx.createBufferSource();
-      src.buffer = buf;
-      src.connect(_audioCtx.destination);
-      src.start(0);
-    };
-    if (_audioCtx.state === 'suspended') {
-      _audioCtx.resume().then(_doSpeak).catch(function(){});
-    } else {
-      _doSpeak();
-    }
-  } catch(e) {}
+  if (!(key in _audioCache)) _preloadAudio(key);
+  function _playBuf(buf) {
+    if (!buf) return;
+    try {
+      var _go = function() {
+        var src = _audioCtx.createBufferSource();
+        src.buffer = buf; src.connect(_audioCtx.destination); src.start(0);
+      };
+      if (_audioCtx.state === 'suspended') { _audioCtx.resume().then(_go).catch(function(){}); } else { _go(); }
+    } catch(e) {}
+  }
+  const cached = _audioCache[key];
+  if (cached && cached !== 'loading') { _playBuf(cached); }
+  else if (cached === 'loading') { if (!_audioCbs[key]) _audioCbs[key] = []; _audioCbs[key].push(_playBuf); }
 }
 
 const ANIMALS = {
