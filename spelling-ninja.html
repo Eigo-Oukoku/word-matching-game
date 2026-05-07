@@ -547,14 +547,18 @@ function _playSfx(name) {
 }
 ['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(_fetchSfx);
 
-// ── Word audio cache (fetch→Blob URL; fresh Audio per play for iOS) ──────────
+// ── Word audio cache (AudioContext BufferSource — same engine as SFX) ──────────
 const _audioCache = {};
 function _preloadAudio(key) {
-  if (!key || _audioCache[key]) return;
+  if (!key || _audioCache[key] || !_audioCtx) return;
   _audioCache[key] = 'loading';
   fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _audioCache[key] = URL.createObjectURL(blob); })
+    .then(function(r) { return r.arrayBuffer(); })
+    .then(function(ab) {
+      _audioCtx.decodeAudioData(ab,
+        function(buf) { _audioCache[key] = buf; },
+        function()    { _audioCache[key] = null; });
+    })
     .catch(function() { _audioCache[key] = null; });
 }
 const _imageCache = {};
@@ -779,12 +783,24 @@ function ninjaLogWrong(word, ms){
 
 function playSfx(f) { _playSfx(f); }
 function speak(w) {
-  if (_muted || !w) return;
+  if (_muted || !w || !_audioCtx) return;
   const key = w.replace(/\s+/g, '_');
   if (!_audioCache[key]) _preloadAudio(key);
-  const url = _audioCache[key];
-  if (url && url !== 'loading') { new Audio(url).play().catch(function(){}); }
-  else if (!url) { new Audio('audio/' + key + '.mp3').play().catch(function(){}); }
+  const buf = _audioCache[key];
+  if (!buf || buf === 'loading') return;
+  try {
+    var _doSpeak = function() {
+      var src = _audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(_audioCtx.destination);
+      src.start(0);
+    };
+    if (_audioCtx.state === 'suspended') {
+      _audioCtx.resume().then(_doSpeak).catch(function(){});
+    } else {
+      _doSpeak();
+    }
+  } catch(e) {}
 }
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }

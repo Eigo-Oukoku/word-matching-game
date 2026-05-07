@@ -721,22 +721,38 @@ function _playSfx(name) {
 ['clickysound','correctsound','wrongsound','correctsound_short','correct_short'].forEach(_fetchSfx);
 
 function playSfx(f) { _playSfx(f); }
-// ── Sentence audio cache (fetch→Blob URL; fresh Audio per play for iOS) ──
+// ── Sentence audio cache (AudioContext BufferSource — same engine as SFX) ──
 const _sentenceCache = {};
 function _preloadSentence(key) {
-  if (!key || _sentenceCache[key]) return;
+  if (!key || _sentenceCache[key] || !_audioCtx) return;
   _sentenceCache[key] = 'loading';
   fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _sentenceCache[key] = URL.createObjectURL(blob); })
+    .then(function(r) { return r.arrayBuffer(); })
+    .then(function(ab) {
+      _audioCtx.decodeAudioData(ab,
+        function(buf) { _sentenceCache[key] = buf; },
+        function()    { _sentenceCache[key] = null; });
+    })
     .catch(function() { _sentenceCache[key] = null; });
 }
 function speakSentence(audio) {
-  if (_muted || !audio) return;
+  if (_muted || !audio || !_audioCtx) return;
   if (!_sentenceCache[audio]) _preloadSentence(audio);
-  const url = _sentenceCache[audio];
-  if (url && url !== 'loading') { new Audio(url).play().catch(function(){}); }
-  else if (!url) { new Audio('audio/' + audio + '.mp3').play().catch(function(){}); }
+  const buf = _sentenceCache[audio];
+  if (!buf || buf === 'loading') return;
+  try {
+    var _doSpeak = function() {
+      var src = _audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(_audioCtx.destination);
+      src.start(0);
+    };
+    if (_audioCtx.state === 'suspended') {
+      _audioCtx.resume().then(_doSpeak).catch(function(){});
+    } else {
+      _doSpeak();
+    }
+  } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════
