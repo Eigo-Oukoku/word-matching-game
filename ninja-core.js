@@ -85,7 +85,52 @@
     globalIndex:    0,
     totalSessions:  0,
     lastTrainedAt:  0,
-    sessionPending: false,  // true from first answer until touchTrained() — local only, never in scroll
+    sessionPending:    false,  // true from first answer until touchTrained() — local only, never in scroll
+    lastTrainingMode:  '',     // human-readable mode name, e.g. 'Vocabulary'
+    lastTrainingGame:  '',     // abbreviated game name, e.g. 'Eigo-N', 'Sent-N', 'Spell-N', 'Word-N'
+    unlockedAliases:   [],     // aliases (titles) earned and available to equip
+    selectedAlias:     '',     // alias currently shown on the status card ('' = none)
+    statusTheme:       'dark', // status card color theme id
+    textColors: {              // per-element text color overrides ('' = default)
+      name:        '',         // name on the status card; default: #fff
+      alias:       '',         // alias/通り名; default: theme accent
+      xpBar:       '',         // XP bar fill color; default: theme accent
+      complete:    '',         // training-complete badge; default: #6EE7B7
+      interrupted: '',         // training-interrupted badge; default: #FBBF24
+    },
+  };
+
+  // ── Status card theme palette (9 themes) ─────────────────────────────────
+  var STATUS_THEMES = {
+    dark:    { dot:'#0f3460', bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F' },
+    blue:    { dot:'#1565C0', bg:'linear-gradient(135deg,#0D47A1,#1565C0,#1E88E5)', accent:'#90CAF9' },
+    purple:  { dot:'#6A1B9A', bg:'linear-gradient(135deg,#4A148C,#6A1B9A,#8E24AA)', accent:'#CE93D8' },
+    pink:    { dot:'#E91E63', bg:'linear-gradient(135deg,#AD1457,#E91E63,#F06292)', accent:'#FCE4EC' },
+    sakura:  { dot:'#c2185b', bg:'linear-gradient(135deg,#6d1b7b,#c2185b,#e91e63)', accent:'#f48fb1' },
+    ocean:   { dot:'#006064', bg:'linear-gradient(135deg,#01579b,#006064,#004d40)', accent:'#80deea' },
+    forest:  { dot:'#2e7d32', bg:'linear-gradient(135deg,#1b5e20,#2e7d32,#388e3c)', accent:'#a5d6a7' },
+    gold:    { dot:'#F9A825', bg:'linear-gradient(135deg,#E65100,#F9A825,#FFD600)', accent:'#FFFDE7' },
+    thunder: { dot:'#e64a19', bg:'linear-gradient(135deg,#bf360c,#e64a19,#f57f17)', accent:'#ffe082' },
+  };
+
+  // ── Alias (title) unlock table — rank determines unlock eligibility ────────
+  var ALIAS_RANKS = {
+    // Tier 10 — elite (typing-heavy or 100Q challenge)
+    'Perfect Ninja! 🎊':  10,  // eigo-ninja 100Q Challenge perfect only
+    'Sentence Ninja!!':   10,  // Sentence Speedmaster ≥130 chars
+    'Blitz Ninja!!':      10,  // Sentence Type Blitz ≥160 chars
+    // Tier 9 — high achievement
+    'Blitz Master!':       9,  // Spelling Blitz ≥60 / Sentence Blitz ≥110
+    'Speed Master!':       9,  // Sentence Speedmaster ≥90
+    'Sentence Master!':    9,  // Sentence Ninja ≥90%
+    'Ninja Speedster!!':   9,  // Word Ninja Speedmaster ≥15 (was rank 10, raised threshold)
+    // Tier 8 — solid achievement
+    'Spelling Star!':      8,  // Spelling Blitz ≥45 / Speedmaster ≥35 / Spelling regular perfect
+    'Swift Ninja!':        8,  // Word Ninja Speedmaster ≥10 / Spelling Speedmaster ≥25
+    'Ninja Speedster!':    8,  // Spelling Speedmaster ≥35
+    // Tier 7 — entry-level alias
+    'Spelling Ninja!':     7,  // Spelling regular: perfect round
+    'Sharp Ninja!':        7,  // Word Ninja regular: perfect round
   };
 
   var design = {
@@ -285,30 +330,47 @@
         globalIndex:    progress.globalIndex,
         totalSessions:  progress.totalSessions,
         lastTrainedAt:  progress.lastTrainedAt,
-        sessionPending: progress.sessionPending,  // local-only; not in scroll or SHARED_KEY
+        sessionPending:   progress.sessionPending,
+        lastTrainingMode: progress.lastTrainingMode,
+        lastTrainingGame: progress.lastTrainingGame,
+        unlockedAliases:  progress.unlockedAliases.slice(),
+        selectedAlias:    progress.selectedAlias,
+        statusTheme:      progress.statusTheme,
+        textColors:       progress.textColors,
       }));
       // SHARED cross-game key — every Ninja game (incl. eigo-ninja) reads
       // from this on boot, so the user's progress flows seamlessly when
       // they jump between games via the Other Games menu.
       localStorage.setItem(SHARED_KEY, JSON.stringify({
-        name:          progress.name,
-        nameLocked:    progress.nameLocked,
-        exp:           progress.exp,
-        level:         progress.level,
-        words:         progress.words,
-        lastTrainedAt: progress.lastTrainedAt,
-        updatedAt:     Date.now(),
+        name:             progress.name,
+        nameLocked:       progress.nameLocked,
+        exp:              progress.exp,
+        level:            progress.level,
+        words:            progress.words,
+        lastTrainedAt:    progress.lastTrainedAt,
+        sessionPending:   progress.sessionPending,
+        lastTrainingMode: progress.lastTrainingMode,
+        lastTrainingGame: progress.lastTrainingGame,
+        unlockedAliases:  progress.unlockedAliases.slice(),
+        selectedAlias:    progress.selectedAlias,
+        statusTheme:      progress.statusTheme,
+        textColors:       progress.textColors,
+        updatedAt:        Date.now(),
       }));
       // Per-slot clan save — keeps the active slot in sync on every write
       _saveSlotProgress(_clanActiveSlot, {
-        name:          progress.name,
-        nameLocked:    progress.nameLocked,
-        exp:           progress.exp,
-        level:         progress.level,
-        words:         progress.words,
-        globalIndex:   progress.globalIndex,
-        totalSessions: progress.totalSessions,
-        lastTrainedAt: progress.lastTrainedAt,
+        name:            progress.name,
+        nameLocked:      progress.nameLocked,
+        exp:             progress.exp,
+        level:           progress.level,
+        words:           progress.words,
+        globalIndex:     progress.globalIndex,
+        totalSessions:   progress.totalSessions,
+        lastTrainedAt:   progress.lastTrainedAt,
+        unlockedAliases: progress.unlockedAliases.slice(),
+        selectedAlias:   progress.selectedAlias,
+        statusTheme:     progress.statusTheme,
+        textColors:      progress.textColors,
       });
     } catch (e) { /* localStorage may be disabled — fail quietly */ }
   }
@@ -326,7 +388,17 @@
         progress.globalIndex   = d.globalIndex || 0;
         progress.totalSessions = d.totalSessions || 0;
         progress.lastTrainedAt  = d.lastTrainedAt  || 0;
-        progress.sessionPending = d.sessionPending || false;
+        progress.sessionPending    = d.sessionPending    || false;
+        progress.lastTrainingMode  = d.lastTrainingMode  || '';
+        progress.lastTrainingGame  = d.lastTrainingGame  || '';
+        progress.unlockedAliases   = Array.isArray(d.unlockedAliases)
+          ? d.unlockedAliases.filter(function(a) { return !!ALIAS_RANKS[a]; })
+          : [];
+        progress.selectedAlias     = d.selectedAlias || '';
+        if (d.statusTheme && STATUS_THEMES[d.statusTheme]) progress.statusTheme = d.statusTheme;
+        if (d.textColors && typeof d.textColors === 'object') {
+          progress.textColors = Object.assign({name:'',alias:'',xpBar:'',complete:'',interrupted:''}, d.textColors);
+        }
       }
       if (shared) {
         var s = JSON.parse(shared);
@@ -341,7 +413,34 @@
           progress.name       = s.name || progress.name;
           progress.nameLocked = true;
         }
-        if ((s.lastTrainedAt || 0) > progress.lastTrainedAt) progress.lastTrainedAt = s.lastTrainedAt;
+        // If shared key has a more recent training event, adopt its mode/status too
+        if ((s.lastTrainedAt || 0) > progress.lastTrainedAt) {
+          progress.lastTrainedAt    = s.lastTrainedAt;
+          progress.sessionPending   = s.sessionPending   || false;
+          progress.lastTrainingMode = s.lastTrainingMode || progress.lastTrainingMode;
+          progress.lastTrainingGame = s.lastTrainingGame || progress.lastTrainingGame;
+        }
+        // Union-merge unlocked aliases from shared key
+        if (Array.isArray(s.unlockedAliases)) {
+          s.unlockedAliases.forEach(function(a) {
+            if (ALIAS_RANKS[a] && progress.unlockedAliases.indexOf(a) < 0) {
+              progress.unlockedAliases.push(a);
+            }
+          });
+        }
+        // Adopt selectedAlias from shared if none set locally yet
+        if (s.selectedAlias && !progress.selectedAlias &&
+            progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
+          progress.selectedAlias = s.selectedAlias;
+        }
+        // Always adopt theme preference from shared key
+        if (s.statusTheme && STATUS_THEMES[s.statusTheme]) {
+          progress.statusTheme = s.statusTheme;
+        }
+        // Adopt text color preferences from shared key
+        if (s.textColors && typeof s.textColors === 'object') {
+          progress.textColors = Object.assign({name:'',alias:'',xpBar:'',complete:'',interrupted:''}, s.textColors);
+        }
       }
     } catch (e) { /* corrupt blob — start fresh */ }
   }
@@ -422,6 +521,16 @@
       }
       designSave();
     }
+    // Aliases: REPLACE local list with the scroll's list (same semantics as
+    // design — the scroll is authoritative; merging would let stale aliases
+    // from a previous ninja persist after a reset-then-restore).
+    // If the scroll has no alias block (legacy scroll), leave locals alone.
+    if (Array.isArray(d.unlockedAliases)) {
+      progress.unlockedAliases = d.unlockedAliases.filter(function(a) { return !!ALIAS_RANKS[a]; });
+      // Validate selectedAlias against the restored list
+      progress.selectedAlias = (d.selectedAlias && progress.unlockedAliases.indexOf(d.selectedAlias) >= 0)
+        ? d.selectedAlias : '';
+    }
     saveLocal();
     return true;
   }
@@ -439,10 +548,72 @@
     return true;
   }
   function touchTrained() {
-    // lastTrainedAt is already set at session-start by recordAnswer().
-    // Here we only clear the pending flag to signal the session completed.
+    // Stamp the completion time so "Completed" badge shows when the session
+    // ended rather than when it started, and sibling games see T_end > T_start.
+    progress.lastTrainedAt  = Date.now();
     progress.sessionPending = false;
     saveLocal();
+  }
+  function setTrainingMode(mode) {
+    // Reset sessionPending so that recordAnswer() re-stamps lastTrainedAt on
+    // the first answer of the new session — even if localStorage had a stale
+    // sessionPending=true from a previously abandoned session.
+    // saveLocal() is still deferred to recordAnswer() so SHARED_KEY is only
+    // written once real training begins.
+    progress.sessionPending    = false;
+    progress.lastTrainingMode  = (mode || '').trim();
+  }
+  function setTrainingGame(game) {
+    // Same rationale — no saveLocal() here.
+    progress.lastTrainingGame = (game || '').trim();
+  }
+  // tryUnlockAlias — call after each qualifying result with the displayed
+  // title string. Adds it to unlockedAliases if it's a valid alias and not
+  // already in the list. Newly unlocked aliases are NOT auto-selected —
+  // the user chooses via the alias picker on the status card.
+  function tryUnlockAlias(title) {
+    if (!title || !ALIAS_RANKS[title]) return false;
+    if (progress.unlockedAliases.indexOf(title) >= 0) return false; // already unlocked
+    progress.unlockedAliases.push(title);
+    saveLocal();
+    return true; // newly unlocked
+  }
+  // setSelectedAlias — equip an alias from the unlocked list (or '' to clear).
+  function setSelectedAlias(alias) {
+    if (alias && progress.unlockedAliases.indexOf(alias) < 0) return; // not unlocked
+    progress.selectedAlias = alias || '';
+    saveLocal();
+  }
+  // setStatusTheme — persist a new color theme and trigger re-render.
+  function setStatusTheme(id) {
+    if (!id || !STATUS_THEMES[id]) return;
+    progress.statusTheme = id;
+    saveLocal();
+  }
+  // setTextColor — persist a per-element text color override.
+  // element: 'name' | 'alias' | 'xpBar' | 'complete' | 'interrupted'
+  // color: CSS color string, or '' to reset to default.
+  var TEXT_COLOR_KEYS = ['name','alias','xpBar','complete','interrupted'];
+  function setTextColor(element, color) {
+    if (TEXT_COLOR_KEYS.indexOf(element) < 0) return;
+    if (!progress.textColors) progress.textColors = {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
+    progress.textColors[element] = typeof color === 'string' ? color : '';
+    saveLocal();
+  }
+  // Compact timestamp for status badge: "14:23" (today) or "05/05 14:23" (other day)
+  function shortTimestamp(ms) {
+    if (!ms) return '';
+    try {
+      var d   = new Date(ms);
+      if (isNaN(d.getTime())) return '';
+      var now = new Date();
+      var hh  = String(d.getHours()).padStart(2, '0');
+      var min = String(d.getMinutes()).padStart(2, '0');
+      if (d.toDateString() === now.toDateString()) return hh + ':' + min;
+      var mm  = String(d.getMonth() + 1).padStart(2, '0');
+      var dd  = String(d.getDate()).padStart(2, '0');
+      return mm + '/' + dd + ' ' + hh + ':' + min;
+    } catch(e) { return ''; }
   }
   function formatTimestamp(ms) {
     if (!ms) return '—';
@@ -467,6 +638,9 @@
     progress.totalSessions  = 0;
     progress.lastTrainedAt  = 0;
     progress.sessionPending = false;
+    progress.unlockedAliases = [];
+    progress.selectedAlias   = '';
+    progress.textColors      = {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
     try {
       localStorage.removeItem(profile.storageKey);
       localStorage.removeItem(SHARED_KEY);
@@ -658,7 +832,15 @@
     try {
       var token = generateScrollCode(exportData());
       localStorage.setItem(HANDOFF_KEY, JSON.stringify({
-        token: token, from: profile.gameId, at: Date.now(),
+        token:            token,
+        from:             profile.gameId,
+        at:               Date.now(),
+        // Pack live session state so the receiving game can restore it.
+        // importData() clears sessionPending, so we carry it separately.
+        sessionPending:   progress.sessionPending,
+        lastTrainedAt:    progress.lastTrainedAt,
+        lastTrainingMode: progress.lastTrainingMode,
+        lastTrainingGame: progress.lastTrainingGame,
       }));
     } catch (e) {}
   }
@@ -673,7 +855,16 @@
       // Don't import handoffs from ourselves (avoid feedback loops)
       if (blob.from === profile.gameId) { localStorage.removeItem(HANDOFF_KEY); return false; }
       var data = loadFromScrollCode(blob.token);
-      importData(data);
+      importData(data); // importData() sets sessionPending=false and calls saveLocal()
+      // Restore the live session state that armHandoff() captured.
+      // This corrects the sessionPending=false that importData() forced.
+      if (typeof blob.sessionPending === 'boolean') progress.sessionPending = blob.sessionPending;
+      if (typeof blob.lastTrainedAt  === 'number' && blob.lastTrainedAt > 0) {
+        progress.lastTrainedAt = Math.max(progress.lastTrainedAt, blob.lastTrainedAt);
+      }
+      if (blob.lastTrainingMode) progress.lastTrainingMode = blob.lastTrainingMode;
+      if (blob.lastTrainingGame) progress.lastTrainingGame = blob.lastTrainingGame;
+      saveLocal(); // persist the corrected session state to SHARED_KEY
       localStorage.removeItem(HANDOFF_KEY);
       return true;
     } catch (e) {
@@ -726,10 +917,19 @@
   // _captureCurrentToSlot — snapshot current in-memory state into a slot
   function _captureCurrentToSlot(n) {
     _saveSlotProgress(n, {
-      name: progress.name, nameLocked: progress.nameLocked,
-      exp: progress.exp, level: progress.level, words: progress.words,
-      globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
-      lastTrainedAt: progress.lastTrainedAt, sessionPending: progress.sessionPending,
+      name:            progress.name,
+      nameLocked:      progress.nameLocked,
+      exp:             progress.exp,
+      level:           progress.level,
+      words:           progress.words,
+      globalIndex:     progress.globalIndex,
+      totalSessions:   progress.totalSessions,
+      lastTrainedAt:   progress.lastTrainedAt,
+      sessionPending:  progress.sessionPending,
+      unlockedAliases: progress.unlockedAliases.slice(),
+      selectedAlias:   progress.selectedAlias,
+      statusTheme:     progress.statusTheme,
+      textColors:      progress.textColors,
     });
     _saveSlotDesign(n, { selected: design.selected, unlocked: design.unlocked.slice(), v: 2 });
   }
@@ -747,12 +947,26 @@
       progress.totalSessions = d.totalSessions || 0;
       progress.lastTrainedAt  = d.lastTrainedAt  || 0;
       progress.sessionPending = d.sessionPending || false;
+      progress.unlockedAliases = Array.isArray(d.unlockedAliases)
+        ? d.unlockedAliases.filter(function(a) { return !!ALIAS_RANKS[a]; })
+        : [];
+      progress.selectedAlias = d.selectedAlias || '';
+      if (d.statusTheme && STATUS_THEMES[d.statusTheme]) progress.statusTheme = d.statusTheme;
+      else progress.statusTheme = 'dark';
+      if (d.textColors && typeof d.textColors === 'object') {
+        progress.textColors = Object.assign({name:'',alias:'',xpBar:'',complete:'',interrupted:''}, d.textColors);
+      } else {
+        progress.textColors = {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
+      }
     } else {
       // Brand-new empty slot
       progress.name = 'Ninja'; progress.nameLocked = false;
       progress.exp = 0; progress.level = 0; progress.words = {};
       progress.globalIndex = 0; progress.totalSessions = 0;
       progress.lastTrainedAt = 0; progress.sessionPending = false;
+      progress.unlockedAliases = []; progress.selectedAlias = '';
+      progress.statusTheme = 'dark';
+      progress.textColors = {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
     }
     var des = _loadSlotDesign(n);
     design.selected = null;
@@ -1050,11 +1264,55 @@
     Object.keys(opts || {}).forEach(function (k) { profile[k] = opts[k]; });
     if (!profile.storageKey) profile.storageKey = DEFAULT_STORAGE_KEY;
   }
+  // _syncSharedSession — final pass after clanBoot (which loads per-slot
+  // data and can overwrite sessionPending) and consumeHandoff. Ensures the
+  // cross-game SHARED_KEY session state wins when it's more recent OR when
+  // timestamps are equal and SHARED_KEY flags the session as still pending.
+  function _syncSharedSession() {
+    try {
+      var raw = localStorage.getItem(SHARED_KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      var sTime = s.lastTrainedAt || 0;
+      var pTime = progress.lastTrainedAt || 0;
+      if (sTime > pTime) {
+        // SHARED_KEY has a more recent training — adopt everything
+        progress.lastTrainedAt    = s.lastTrainedAt;
+        progress.sessionPending   = s.sessionPending   || false;
+        progress.lastTrainingMode = s.lastTrainingMode || progress.lastTrainingMode;
+        progress.lastTrainingGame = s.lastTrainingGame || progress.lastTrainingGame;
+      } else if (sTime === pTime && sTime > 0 && s.sessionPending) {
+        // Same training session — SHARED_KEY says unfinished; trust it
+        progress.sessionPending   = true;
+        progress.lastTrainingMode = s.lastTrainingMode || progress.lastTrainingMode;
+        progress.lastTrainingGame = s.lastTrainingGame || progress.lastTrainingGame;
+      }
+      // Union-merge unlocked aliases from shared key
+      if (Array.isArray(s.unlockedAliases)) {
+        s.unlockedAliases.forEach(function(a) {
+          if (ALIAS_RANKS[a] && progress.unlockedAliases.indexOf(a) < 0) {
+            progress.unlockedAliases.push(a);
+          }
+        });
+      }
+      // Adopt selectedAlias from shared if none set locally
+      if (s.selectedAlias && !progress.selectedAlias &&
+          progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
+        progress.selectedAlias = s.selectedAlias;
+      }
+      // Adopt theme if local still has the default
+      if (s.statusTheme && STATUS_THEMES[s.statusTheme] && progress.statusTheme === 'dark') {
+        progress.statusTheme = s.statusTheme;
+      }
+    } catch (e) {}
+  }
+
   function boot() {
     loadLocal();
     designLoad();
-    clanBoot();       // clan init — migrates legacy data or loads active slot
-    consumeHandoff(); // pulls in cross-game state if the previous page armed one
+    clanBoot();          // clan init — loads active slot, may overwrite sessionPending
+    consumeHandoff();    // restores handoff session state (sibling→sibling navigation)
+    _syncSharedSession(); // final pass: SHARED_KEY wins if another game trained more recently
   }
 
   global.Ninja = {
@@ -1110,9 +1368,19 @@
     importData:         importData,
 
     // identity
+    STATUS_THEMES:  STATUS_THEMES,
+    ALIAS_RANKS:    ALIAS_RANKS,
     setName:        setName,
-    touchTrained:   touchTrained,
-    formatTimestamp:formatTimestamp,
+    touchTrained:      touchTrained,
+    setTrainingMode:   setTrainingMode,
+    setTrainingGame:   setTrainingGame,
+    tryUnlockAlias:    tryUnlockAlias,
+    setSelectedAlias:  setSelectedAlias,
+    setStatusTheme:    setStatusTheme,
+    setTextColor:      setTextColor,
+    TEXT_COLOR_KEYS:   TEXT_COLOR_KEYS,
+    shortTimestamp:    shortTimestamp,
+    formatTimestamp:   formatTimestamp,
 
     // reset
     resetProgress: resetProgress,

@@ -45,8 +45,9 @@
       //    grid, the scroll modal) NEVER pushes content past viewport. ──
       '.ninja-ui-modal{position:relative;background:#fff;border-radius:22px;padding:22px 18px;max-width:420px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 16px 48px rgba(0,0,0,0.3);color:#2b2d42;animation:ninjaUiPopIn 0.25s ease;}',
       '.ninja-ui-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:10px;color:#4C1D95;letter-spacing:0.5px;}',
-      '.ninja-ui-top-close{position:absolute;top:10px;right:12px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.07);border-radius:50%;font-size:17px;line-height:32px;text-align:center;cursor:pointer;color:#555;font-weight:900;padding:0;z-index:1;}',
-      '.ninja-ui-top-close:active{background:rgba(0,0,0,0.15);}',
+      '.ninja-ui-top-close{position:sticky;top:0;float:right;margin:-4px -4px 0 0;width:40px;height:40px;border:2px solid rgba(0,0,0,0.18);background:rgba(255,255,255,0.92);border-radius:50%;font-size:20px;line-height:38px;text-align:center;cursor:pointer;color:#333;font-weight:900;padding:0;z-index:20;transition:background 0.15s,transform 0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.15);}',
+      '.ninja-ui-top-close:hover{background:rgba(0,0,0,0.15);}',
+      '.ninja-ui-top-close:active{background:rgba(0,0,0,0.25);transform:scale(0.93);}',
       '.ninja-ui-close{display:block;width:100%;margin-top:12px;padding:13px;font-size:14px;font-weight:900;border:none;border-radius:12px;background:#eee;color:#333;cursor:pointer;}',
       '.ninja-ui-close:active{transform:translateY(1px);}',
       '.ninja-ui-btn{display:block;width:100%;padding:12px;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,0.18);transition:0.1s;}',
@@ -138,6 +139,11 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c];
     });
+  }
+  // Strip punctuation from alias strings for display only.
+  // The underlying stored key is kept intact so Shadow Clone Scrolls remain valid.
+  function displayAlias(s) {
+    return String(s == null ? '' : s).replace(/[!?.,]/g, '').trim();
   }
   function showToast(msg) {
     var t = document.createElement('div');
@@ -317,42 +323,60 @@
     var nameMarker  = p.nameLocked
       ? '<span style="font-size:13px;opacity:0.85;font-weight:800;">🔒</span>'
       : '<span style="font-size:13px;opacity:0.85;font-weight:800;">✏️</span>';
+    // Theme
+    var _themes = N.STATUS_THEMES || {};
+    var _themeId = p.statusTheme || 'dark';
+    var _theme = _themes[_themeId] || _themes['dark'] || { bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F', dot:'#0f3460' };
+    var _tc = (p.textColors && typeof p.textColors === 'object') ? p.textColors : {};
+    var _nameColor    = _tc.name        || '#ffffff';
+    var _aliasColor   = _tc.alias       || _theme.accent;
+    var _xpColor      = _tc.xpBar       || _theme.accent;
+    var _completeColor= _tc.complete     || '#6EE7B7';
+    var _intruptColor = _tc.interrupted  || '#FBBF24';
+    // Alias display — read-only on the card; directly below name
+    var _aliases = Array.isArray(p.unlockedAliases) ? p.unlockedAliases : [];
+    var _aliasRow = _aliases.length > 0 && p.selectedAlias
+      ? '<div style="font-size:13px;font-weight:900;color:' + _aliasColor + ';margin-top:1px;letter-spacing:0.5px;">' + htmlEsc(displayAlias(p.selectedAlias)) + '</div>'
+      : '';
+    var _tapNote = p.nameLocked ? '' : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:3px;">タップして名前を登録 / tap to name</div>';
     return [
-      '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;" onclick="NinjaUI.openProfile()">',
+      '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;background:' + _theme.bg + ';box-shadow:0 6px 0 ' + (_theme.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;" onclick="NinjaUI.openProfile()">',
         '<div class="ninja-ui-card-row">',
           '<div class="ninja-ui-avatar">', avatarHTML, '</div>',
-          '<div style="flex:1;min-width:0;">',
-            // Name row — Bangers display font matches eigo-ninja's hero
-            // typography. NOTE: the host games declare a global
-            //   * { font-family: 'Helvetica Neue', ... }
-            // selector that BEATS inheritance from the parent div, so
-            // the Bangers rule MUST be applied directly to the inner
-            // <span> (specificity 1,0,0,0 from inline style) — putting
-            // it only on the parent leaves the span rendered in
-            // Helvetica Neue.
+          '<div style="flex:1;min-width:0;text-align:left;">',
+            // Name
             '<div style="font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;">',
-              '<span style="font-family:\'Bangers\',cursive;">', htmlEsc(p.name || 'Ninja'), '</span>',
+              '<span style="font-family:\'Bangers\',cursive;color:' + _nameColor + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
               '<span style="font-family:\'Nunito\',sans-serif;">', nameMarker, '</span>',
             '</div>',
-            (p.nameLocked
-              ? ''
-              : '<div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:3px;">タップして名前を登録 / tap to name</div>'),
-            '<div style="font-size:16px;font-weight:900;margin-top:6px;">Lv ', lvl, (lvl >= N.constants.LEVEL_CAP ? ' ★MAX' : ''),
+            // Alias directly below name
+            _aliasRow,
+            // Level row
+            '<div style="font-size:16px;font-weight:900;margin-top:5px;color:#fff;">Lv ', lvl, (lvl >= N.constants.LEVEL_CAP ? ' ★MAX' : ''),
               ' &nbsp;·&nbsp; <span style="font-size:14px;opacity:0.9;">', cur.toLocaleString(), ' XP</span></div>',
+            // "tap to name" note — below level so it doesn't crowd the alias
+            _tapNote,
           '</div>',
         '</div>',
-        // XP progress bar
-        '<div class="ninja-ui-xpbar"><div class="ninja-ui-xpfill" style="width:', pctXp, '%;"></div></div>',
+        // XP progress bar (color-customizable)
+        '<div class="ninja-ui-xpbar"><div class="ninja-ui-xpfill" style="width:', pctXp, '%;background:linear-gradient(90deg,', _xpColor, ',', _xpColor, '99);"></div></div>',
         // Meta: words trained / XP-to-next
         '<div class="ninja-ui-meta">',
-          '<span>', seenCount, ' 単語修行済 / words trained</span>',
-          '<span>', (lvl >= N.constants.LEVEL_CAP ? 'MAX' : (nextE - cur).toLocaleString() + ' XP → Lv ' + (lvl + 1)), '</span>',
+          '<span>修行済の単語: ', seenCount, '語</span>',
+          '<span>', (lvl >= N.constants.LEVEL_CAP ? 'MAX' : 'Lv' + (lvl + 1) + 'までに必要な経験値: ' + (nextE - cur).toLocaleString() + 'XP'), '</span>',
         '</div>',
         '<div style="margin-top:5px;font-size:12px;font-weight:700;opacity:0.92;">',
-          '⏱ 最後に修行した日時 / Last trained: <span style="opacity:0.95;">', htmlEsc(lastTrained), '</span>',
+          '⏱ 最後に修行した日時: <span style="opacity:0.95;">', htmlEsc(lastTrained), '</span>',
         '</div>',
-        (p.sessionPending && p.lastTrainedAt
-          ? '<div style="margin-top:4px;font-size:11px;font-weight:800;color:#E63946;background:rgba(230,57,70,0.1);border-radius:6px;padding:3px 8px;display:inline-block;">⚠️ 修行未完了 / Training not yet completed</div>'
+        (p.lastTrainedAt || p.sessionPending
+          ? (function() {
+              var _game = p.lastTrainingGame ? p.lastTrainingGame + ' · ' : '';
+              var _mode = p.lastTrainingMode ? p.lastTrainingMode.replace(/ · $/, '') : '';
+              var _content = (_game + _mode).replace(/ · $/, '');
+              return p.sessionPending
+                ? '<div style="margin-top:4px;font-size:11px;font-weight:800;color:' + _intruptColor + ';background:rgba(251,191,36,0.15);border-radius:6px;padding:3px 8px;display:inline-block;">最後に修行した内容: ' + _content + ' ⚠️中断</div>'
+                : '<div style="margin-top:4px;font-size:11px;font-weight:800;color:' + _completeColor + ';background:rgba(110,231,183,0.15);border-radius:6px;padding:3px 8px;display:inline-block;">最後に修行した内容: ' + _content + ' ✅完遂</div>';
+            })()
           : ''),
       '</div>'
     ].join('');
@@ -371,19 +395,38 @@
     var avatarHTML = avatarFile
       ? '<img src="' + htmlEsc(avatarFile) + '" alt="忍者" onerror="this.style.display=\'none\'">'
       : '<span style="font-size:11px;font-weight:800;color:#fff;text-align:center;">未選択</span>';
+    // Theme + text colors for the hub preview card
+    var _themes2  = N.STATUS_THEMES || {};
+    var _themeId2 = p.statusTheme || 'dark';
+    var _theme2   = _themes2[_themeId2] || _themes2['dark'] || { bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F', dot:'#0f3460' };
+    var _tc2      = (p.textColors && typeof p.textColors === 'object') ? p.textColors : {};
+    var _nameC2   = _tc2.name  || '#ffffff';
+    var _aliasC2  = _tc2.alias || _theme2.accent;
+    var _xpC2     = _tc2.xpBar || _theme2.accent;
+    var lvl2  = p.level, cur2 = p.exp;
+    var nextE2 = N.expForLevel(Math.min(N.constants.LEVEL_CAP, lvl2 + 1));
+    var baseE2 = N.expForLevel(lvl2);
+    var pct2   = Math.min(100, Math.round(((cur2 - baseE2) / Math.max(1, nextE2 - baseE2)) * 100));
+    var _aliasRow2 = Array.isArray(p.unlockedAliases) && p.unlockedAliases.length > 0 && p.selectedAlias
+      ? '<div style="font-size:12px;font-weight:900;color:' + _aliasC2 + ';margin-top:1px;">' + htmlEsc(displayAlias(p.selectedAlias)) + '</div>'
+      : '';
     return [
-      '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;">',
+      '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;background:' + _theme2.bg + ';box-shadow:0 4px 0 ' + (_theme2.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;">',
         '<div class="ninja-ui-card-row">',
           '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
-          '<div style="flex:1;min-width:0;">',
-            // Same anti-`*`-selector pattern as statusBadgeHTML: Bangers
-            // applied directly to the inner span containing the name.
+          '<div style="flex:1;min-width:0;text-align:left;">',
             '<div style="font-size:26px;letter-spacing:1px;line-height:1.05;">',
-              '<span style="font-family:\'Bangers\',cursive;">', htmlEsc(p.name || 'Ninja'), '</span>',
+              '<span style="font-family:\'Bangers\',cursive;color:' + _nameC2 + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
               (p.nameLocked ? ' <span style="font-family:\'Nunito\',sans-serif;font-size:14px;">🔒</span>' : ''),
             '</div>',
-            '<div style="font-size:14px;font-weight:900;margin-top:4px;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</div>',
+            _aliasRow2,
+            '<div style="font-size:14px;font-weight:900;margin-top:4px;color:#fff;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</div>',
           '</div>',
+        '</div>',
+        // XP bar visible in the hub preview
+        '<div class="ninja-ui-xpbar" style="margin-top:10px;"><div class="ninja-ui-xpfill" style="width:', pct2, '%;background:linear-gradient(90deg,', _xpC2, ',', _xpC2, '99);"></div></div>',
+        '<div style="text-align:right;font-size:11px;font-weight:700;color:rgba(255,255,255,0.75);margin-top:4px;">',
+          (lvl2 >= N.constants.LEVEL_CAP ? 'MAX' : 'Lv' + (lvl2 + 1) + 'まで: ' + (nextE2 - cur2).toLocaleString() + 'XP'),
         '</div>',
       '</div>'
     ].join('');
@@ -397,21 +440,36 @@
   // the embedded identity card already shows who the player is, and the
   // four buttons below speak for themselves.
   function openProfile() {
-    // Larger margin between buttons (14px) for easier thumb taps —
-    // matches phone-screen ergonomics and prevents accidental
-    // mis-taps. Each button is also a hair taller via padding bump.
+    var p = N.progress;
     var btnGap = 'margin-bottom:14px;padding:14px;font-size:15px;';
+    var _themes  = N.STATUS_THEMES || {};
+    var _themeId = p.statusTheme || 'dark';
+    // Alias section — shown only when any alias has been unlocked
+    var _aliases = Array.isArray(p.unlockedAliases) ? p.unlockedAliases : [];
+    var _aliasSection = _aliases.length > 0
+      ? '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#D97706;box-shadow:0 3px 0 #92400e;" onclick="NinjaUI.openAliasPicker()">通り名 / Alias' + (p.selectedAlias ? ' · ' + displayAlias(p.selectedAlias) : '') + '</button>'
+      : '';
     var html = [
       identityHeaderHTML(),
+      // Unified color picker button (card color + text colors)
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#0F766E;box-shadow:0 3px 0 #0D4745;" onclick="NinjaUI.openTextColorPicker()">🎨 色の変更 / Colors</button>',
+      _aliasSection,
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#A78BFA;box-shadow:0 3px 0 #7C3AED;" onclick="NinjaUI.openDesignPicker()">🎨 忍者デザイン / Change Design</button>',
-      '<button class="ninja-ui-btn primary" style="' + btnGap + '" onclick="NinjaUI.openNameModal()">📝 忍者の名前 / Name ' + (N.progress.nameLocked ? '🔒' : '') + '</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + '" onclick="NinjaUI.openNameModal()">📝 忍者の名前 / Name ' + (p.nameLocked ? '🔒' : '') + '</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#FFB000;box-shadow:0 3px 0 #b07a00;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#3A8EE8;box-shadow:0 3px 0 #2060b0;" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>',
-      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#059669;box-shadow:0 3px 0 #065f46;" onclick="NinjaUI.openVillage()">🏯 忍者の里 / Village</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#059669;box-shadow:0 3px 0 #065f46;" onclick="NinjaUI.openVillage()">🏯 一族 / Clan</button>',
       '<button class="ninja-ui-close" style="margin-top:18px;">閉じる / Close</button>',
     ].join('');
     var ov = openOverlay(html);
     ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+    // Tag the mini card inside the hub as the live preview target and apply current theme bg
+    var _hubCard = ov.querySelector('.ninja-ui-card');
+    if (_hubCard) {
+      _hubCard.id = 'ninja-hub-preview-card';
+      var _curTheme = (_themes[_themeId] || _themes['dark'] || {});
+      if (_curTheme.bg) _hubCard.style.background = _curTheme.bg;
+    }
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -451,16 +509,20 @@
         '<span style="font-size:13px;font-weight:900;color:#333;">⬇ Shadow Clone Scrollを作る</span>',
         '<span style="font-size:11px;color:#7C3AED;font-weight:800;">Lv ', p.level, ' · ', p.exp.toLocaleString(), ' XP</span>',
       '</div>',
-      '<button class="ninja-ui-btn primary" style="background:#7C3AED;box-shadow:0 3px 0 #5B21B6;" onclick="NinjaUI._exportScrollFile()">📥 ファイルに保存</button>',
-      '<details style="margin-top:6px;margin-bottom:2px;">',
-        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
-          '📋 テキストとして共有 / Share as text',
-        '</summary>',
-        '<div style="margin-top:6px;">',
-          '<textarea class="ninja-ui-ta" id="ninja-scroll-out" readonly>', htmlEsc(code), '</textarea>',
-          '<button class="ninja-ui-btn primary" style="margin-top:6px;" onclick="NinjaUI._copyScroll()">📋 コピーする</button>',
-        '</div>',
-      '</details>',
+      '<div style="font-size:11px;color:#7C3AED;font-weight:800;line-height:1.5;margin-bottom:6px;">',
+        '💾 文字数がクリップボードの上限を超えることがあります。ファイル保存をおすすめします。Google Driveなどのクラウドストレージに保存推奨。<br>',
+        '<span style="color:#888;font-weight:700;">The scroll can exceed your clipboard\'s character limit. File save is recommended.</span>',
+      '</div>',
+      '<button class="ninja-ui-btn primary" style="background:#7C3AED;box-shadow:0 3px 0 #5B21B6;" onclick="NinjaUI._exportScrollFile()">📥 ファイルに保存(おすすめ)</button>',
+      // Text copy (collapsed by default; toggle button replaces <details>)
+      '<button class="ninja-ui-btn" style="margin-top:6px;background:#EDE9FE;color:#5B21B6;border:2px solid #A78BFA;font-size:12px;" ',
+        'onclick="var s=document.getElementById(\'ninja-copy-section\');var open=s.style.display!==\'none\';s.style.display=open?\'none\':\'block\';this.textContent=open?\'📋 テキストをクリップポードにコピーする▼\':\'▲ 閉じる\';">',
+        '📋 テキストをクリップポードにコピーする▼',
+      '</button>',
+      '<div id="ninja-copy-section" style="display:none;margin-top:6px;">',
+        '<textarea class="ninja-ui-ta" id="ninja-scroll-out" readonly>', htmlEsc(code), '</textarea>',
+        '<button class="ninja-ui-btn primary" style="margin-top:6px;" onclick="NinjaUI._copyScroll()">📋 クリップボードにコピー</button>',
+      '</div>',
       // Load scroll
       '<div style="height:1px;background:#eee;margin:12px 0 10px;"></div>',
       '<div style="font-size:13px;font-weight:900;color:#333;margin-bottom:6px;">⬆ Shadow Clone Scrollを読み込む</div>',
@@ -468,15 +530,14 @@
         '📂 ファイルから読み込む',
         '<input type="file" accept=".txt" style="display:none;" onchange="NinjaUI._importScrollFile(this)">',
       '</label>',
-      '<details style="margin-top:6px;">',
-        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
-          '📝 テキストを貼り付けて読み込む / Paste scroll text',
-        '</summary>',
-        '<div style="margin-top:6px;">',
-          '<textarea class="ninja-ui-ta" id="ninja-scroll-in" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>',
-          '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._applyLoad()">🥷 修行記録を呼び戻す</button>',
-        '</div>',
-      '</details>',
+      '<button class="ninja-ui-btn" style="margin-top:6px;background:#F0FDF4;color:#065f46;border:2px solid #6EE7B7;font-size:12px;" ',
+        'onclick="var s=document.getElementById(\'ninja-paste-section\');var open=s.style.display!==\'none\';s.style.display=open?\'none\':\'block\';this.textContent=open?\'📝 テキストを貼り付けて読み込む▼\':\'▲ 閉じる\';">',
+        '📝 テキストを貼り付けて読み込む▼',
+      '</button>',
+      '<div id="ninja-paste-section" style="display:none;margin-top:6px;">',
+        '<textarea class="ninja-ui-ta" id="ninja-scroll-in" placeholder="ここにShadow Clone Scrollを貼り付け / paste NINJA1...."></textarea>',
+        '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._applyLoad()">🥷 修行記録を呼び戻す</button>',
+      '</div>',
       // Persistence note
       '<div style="background:#FFF8E1;border:2px solid #FFD54F;border-radius:12px;padding:9px 12px;margin-top:14px;font-size:11px;color:#7a5800;font-weight:700;line-height:1.5;">',
         '💡 ブラウザの記録はページを閉じても残りますが、<br>',
@@ -517,6 +578,32 @@
                      String(today.getMonth() + 1).padStart(2, '0') + '-' +
                      String(today.getDate()).padStart(2, '0');
       var filename = name + '_' + datePart + '.txt';
+      // Use the File System Access API (showSaveFilePicker) when available so
+      // the player can choose where to save — including cloud-synced folders.
+      if (typeof window !== 'undefined' && typeof window.showSaveFilePicker === 'function') {
+        window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'Shadow Clone Scroll', accept: { 'text/plain': ['.txt'] } }],
+        }).then(function(handle) {
+          return handle.createWritable().then(function(writable) {
+            return writable.write(code).then(function() { return writable.close(); });
+          }).then(function() {
+            showToast('📥 ' + filename + ' を保存しました！');
+          });
+        }).catch(function(e) {
+          if (e && e.name === 'AbortError') return; // user cancelled
+          // Fallback to legacy download if picker fails
+          _legacyDownload(filename, code);
+        });
+        return;
+      }
+      _legacyDownload(filename, code);
+    } catch (e) {
+      showToast('⚠️ 保存失敗: ' + e.message);
+    }
+  }
+  function _legacyDownload(filename, code) {
+    try {
       var blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
       var url  = URL.createObjectURL(blob);
       var a    = document.createElement('a');
@@ -700,14 +787,15 @@
       banner = '<div class="ninja-ui-banner" style="background:' + (tokens>0 ? '#F3E8FF' : '#f8f8f5')
         + ';border:2px solid ' + (tokens>0 ? '#A78BFA' : '#ddd')
         + ';color:' + (tokens>0 ? '#4C1D95' : '#666')
-        + ';">🎟 Unlock tokens: <span style="font-size:18px;">' + tokens + '</span> &nbsp;·&nbsp; Lv ' + N.progress.level
+        + ';">🎟 解放可能なデザイン：<span style="font-size:18px;">' + tokens + '</span>'
         + '<br><span style="font-size:11px;font-weight:700;opacity:0.85;">'
         + (tokens>0
             ? '好きなデザインを選んで解放しよう！<br>Earned across all Ninja games.'
-            : 'あと ' + xpToNext.toLocaleString() + ' XP で次のトークン獲得')
+            : 'あと ' + xpToNext.toLocaleString() + ' XP で次のデザイン解放')
         + '</span></div>';
     }
     box.innerHTML = [
+      '<button class="ninja-ui-top-close" onclick="NinjaUI._closeDesignPicker()" aria-label="Close">✕</button>',
       '<div class="ninja-ui-title">🥷 Ninja Design', (starterMode ? ' — Welcome!' : ''), '</div>',
       '<p style="text-align:center;font-size:12px;color:#666;font-weight:700;margin-bottom:10px;line-height:1.5;">',
         (starterMode
@@ -829,21 +917,21 @@
     var maxSize = N.constants.MAX_CLAN_SIZE;
     var clanName = N.getClanName();
     var html = [
-      '<div class="ninja-ui-title">🏯 忍者の里 / Village</div>',
+      '<div class="ninja-ui-title">🏯 一族 / Clan</div>',
 
       // ── Clan name row ──
       '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">',
         '<div id="ninja-clan-name-display" style="font-size:15px;font-weight:900;color:#333;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">',
-          htmlEsc(clanName || '里に名前をつけよう'),
+          htmlEsc(clanName || '一族に名前をつけよう'),
         '</div>',
         '<button style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px 4px;line-height:1;" ',
-                'title="里の名前を変更" onclick="NinjaUI._clanNameEdit()">✏️</button>',
+                'title="一族の名前を変更" onclick="NinjaUI._clanNameEdit()">✏️</button>',
       '</div>',
       '<div id="ninja-clan-name-edit" style="display:none;margin-bottom:10px;">',
         '<input id="ninja-clan-name-input" type="text" maxlength="30" ',
                'style="width:100%;padding:8px 10px;font-size:14px;font-weight:800;border:2px solid #059669;',
                       'border-radius:10px;outline:none;color:#333;box-sizing:border-box;" ',
-               'placeholder="里の名前 (最大30文字)" ',
+               'placeholder="一族の名前 (最大30文字)" ',
                'value="' + htmlEsc(clanName) + '">',
         '<div style="display:flex;gap:6px;margin-top:6px;">',
           '<button class="ninja-ui-btn primary" style="background:#059669;box-shadow:0 3px 0 #065f46;" ',
@@ -852,6 +940,10 @@
         '</div>',
       '</div>',
 
+      '<div style="font-size:11px;color:#059669;font-weight:700;text-align:center;margin-bottom:4px;">',
+        '✏️ 一族の名前はいつでも自由に変更できます。<br>',
+        '<span style="color:#888;">Clan name can be changed freely at any time.</span>',
+      '</div>',
       '<div style="font-size:11px;color:#888;text-align:center;margin-bottom:10px;">',
         '最大' + maxSize + '人の忍者を管理 / Manage up to ' + maxSize + ' ninjas',
       '</div>',
@@ -866,7 +958,9 @@
       '<div style="font-size:14px;font-weight:900;color:#059669;margin-bottom:8px;">🩸 Bloodline Scroll</div>',
       '<div style="font-size:11px;color:#666;line-height:1.5;margin-bottom:10px;">',
         '一族全員のデータを一本のファイルにまとめます。<br>',
-        '<span style="color:#888;">Save all clan members as a file to transfer anywhere.</span>',
+        '<span style="color:#888;">Save all clan members as a file to transfer anywhere.</span><br>',
+        '<span style="color:#059669;font-weight:800;">💾 一族のデータはクリップボードの文字数上限を超えることがあります。ファイル保存を強くおすすめします。</span><br>',
+        '<span style="color:#888;">Clan data can exceed your clipboard\'s character limit. File save is strongly recommended.</span>',
       '</div>',
 
       // ── Save: file (primary) ──
@@ -874,19 +968,18 @@
       '<button class="ninja-ui-btn primary" style="background:#059669;box-shadow:0 3px 0 #065f46;" ',
               'onclick="NinjaUI._bloodlineExportFile()">📥 ファイルに保存</button>',
 
-      // ── Save: text fallback (collapsed) ──
-      '<details style="margin-top:6px;margin-bottom:2px;">',
-        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
-          '📋 テキストとして共有 / Share as text (for messaging apps)',
-        '</summary>',
-        '<div style="margin-top:6px;">',
-          '<textarea class="ninja-ui-ta" id="ninja-bloodline-out" readonly placeholder="← 生成ボタンを押してください"></textarea>',
-          '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#059669;box-shadow:0 3px 0 #065f46;" ',
-                  'onclick="NinjaUI._bloodlineGenerate()">🩸 テキストを生成する</button>',
-          '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;" ',
-                  'id="ninja-bloodline-copy-btn" onclick="NinjaUI._bloodlineCopy()">📋 コピーする</button>',
-        '</div>',
-      '</details>',
+      // ── Save: text fallback (toggle button) ──
+      '<button class="ninja-ui-btn" style="margin-top:6px;background:#ECFDF5;color:#065f46;border:2px solid #6EE7B7;font-size:12px;" ',
+        'onclick="var s=document.getElementById(\'ninja-bl-copy-section\');var open=s.style.display!==\'none\';s.style.display=open?\'none\':\'block\';this.textContent=open?\'📋 テキストをコピーする（代替手段）▼\':\'▲ 閉じる\';">',
+        '📋 テキストをコピーする（代替手段）▼',
+      '</button>',
+      '<div id="ninja-bl-copy-section" style="display:none;margin-top:6px;">',
+        '<textarea class="ninja-ui-ta" id="ninja-bloodline-out" readonly placeholder="↓ 生成ボタンを押してください"></textarea>',
+        '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#059669;box-shadow:0 3px 0 #065f46;" ',
+                'onclick="NinjaUI._bloodlineGenerate()">🩸 テキストを生成する</button>',
+        '<button class="ninja-ui-btn primary" style="margin-top:6px;background:#0d9488;box-shadow:0 3px 0 #0f766e;display:none;" ',
+                'id="ninja-bloodline-copy-btn" onclick="NinjaUI._bloodlineCopy()">📋 クリップボードにコピー</button>',
+      '</div>',
 
       // ── Load: file (primary) ──
       '<div style="height:1px;background:#eee;margin:12px 0 10px;"></div>',
@@ -896,22 +989,21 @@
         '<input type="file" accept=".txt" style="display:none;" onchange="NinjaUI._bloodlineImportFile(this)">',
       '</label>',
 
-      // ── Load: text fallback (collapsed) ──
-      '<details style="margin-top:6px;">',
-        '<summary style="font-size:11px;font-weight:800;color:#666;cursor:pointer;padding:4px 2px;user-select:none;">',
-          '📝 テキストを貼り付けて読み込む / Paste scroll text',
-        '</summary>',
-        '<div style="margin-top:6px;">',
-          '<input id="ninja-bloodline-in" type="text" maxlength="4000" ',
-                 'style="width:100%;padding:10px 12px;font-family:monospace;font-size:13px;font-weight:800;',
-                        'border:2px solid #ddd;border-radius:10px;outline:none;color:#333;box-sizing:border-box;" ',
-                 'placeholder="CLAN2.... を貼り付け" ',
-                 'oninput="NinjaUI._bloodlineInputHint(this)" ',
-                 'onpaste="setTimeout(function(){NinjaUI._bloodlineInputHint(document.getElementById(\'ninja-bloodline-in\'));},10)">',
-          '<div id="ninja-bloodline-in-hint" style="font-size:10px;font-weight:800;margin-top:3px;min-height:14px;"></div>',
-          '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._bloodlineLoad()">🩸 一族を呼び戻す</button>',
-        '</div>',
-      '</details>',
+      // ── Load: text fallback (toggle button) ──
+      '<button class="ninja-ui-btn" style="margin-top:6px;background:#F0FDF4;color:#065f46;border:2px solid #6EE7B7;font-size:12px;" ',
+        'onclick="var s=document.getElementById(\'ninja-bl-paste-section\');var open=s.style.display!==\'none\';s.style.display=open?\'none\':\'block\';this.textContent=open?\'📝 テキストを貼り付けて読み込む▼\':\'▲ 閉じる\';">',
+        '📝 テキストを貼り付けて読み込む▼',
+      '</button>',
+      '<div id="ninja-bl-paste-section" style="display:none;margin-top:6px;">',
+        '<input id="ninja-bloodline-in" type="text" maxlength="4000" ',
+               'style="width:100%;padding:10px 12px;font-family:monospace;font-size:13px;font-weight:800;',
+                      'border:2px solid #ddd;border-radius:10px;outline:none;color:#333;box-sizing:border-box;" ',
+               'placeholder="CLAN2.... を貼り付け" ',
+               'oninput="NinjaUI._bloodlineInputHint(this)" ',
+               'onpaste="setTimeout(function(){NinjaUI._bloodlineInputHint(document.getElementById(\'ninja-bloodline-in\'));},10)">',
+        '<div id="ninja-bloodline-in-hint" style="font-size:10px;font-weight:800;margin-top:3px;min-height:14px;"></div>',
+        '<button class="ninja-ui-btn retry" style="margin-top:6px;" onclick="NinjaUI._bloodlineLoad()">🩸 一族を呼び戻す</button>',
+      '</div>',
 
       '<div style="background:#F0FDF4;border:2px solid #6EE7B7;border-radius:12px;padding:9px 12px;margin-top:12px;font-size:11px;color:#065f46;font-weight:700;line-height:1.5;">',
         '💡 Bloodline ScrollはShadow Clone Scrollとは独立した巻物です。<br>',
@@ -953,11 +1045,11 @@
     if (!inp) return;
     var name = inp.value.trim().slice(0, 30);
     N.setClanName(name);
-    if (disp) disp.textContent = name || '里に名前をつけよう';
+    if (disp) disp.textContent = name || '一族に名前をつけよう';
     if (edit) edit.style.display = 'none';
     var row  = disp && disp.parentElement;
     if (row)  row.style.display = 'flex';
-    showToast('🏯 ' + (name || '里の名前を削除しました'));
+    showToast('🏯 ' + (name || '一族の名前を削除しました'));
   }
   function _clanNameCancel() {
     var disp = document.getElementById('ninja-clan-name-display');
@@ -1091,9 +1183,9 @@
   }
   function _addMember() {
     var n = N.clanAddMember();
-    if (n < 0) { showToast('⚠️ 里は満員です（最大' + N.constants.MAX_CLAN_SIZE + '人）'); return; }
+    if (n < 0) { showToast('⚠️ 一族は満員です（最大' + N.constants.MAX_CLAN_SIZE + '人）'); return; }
     if (N.clanSetActiveSlot(n)) {
-      showToast('🥷 新しい忍者を里に招きました！');
+      showToast('🥷 新しい忍者を一族に招きました！');
       if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
       // Close the village modal now; _closeDesignPicker() will reopen it
       // after the new ninja's starter design has been chosen, so the
@@ -1108,9 +1200,9 @@
     var members = N.clanMembers();
     var m = members.filter(function(x){return x.slot===n;})[0];
     if (!m) return;
-    if (!confirm('🗑 「' + (m.name || 'Ninja') + '」(Lv' + m.level + ') を里から外しますか？\n（この操作は取り消せません）\n\nRemove this ninja from the village?')) return;
+    if (!confirm('🗑 「' + (m.name || 'Ninja') + '」(Lv' + m.level + ') を一族から外しますか？\n（この操作は取り消せません）\n\nRemove this ninja from the clan?')) return;
     if (N.clanRemoveMember(n)) {
-      showToast('🥷 ' + (m.name || 'Ninja') + ' を里から外しました');
+      showToast('🥷 ' + (m.name || 'Ninja') + ' を一族から外しました');
       if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
       var ov = document.querySelector('.ninja-ui-overlay');
       if (ov) { closeOverlay(ov); setTimeout(openVillage, 50); }
@@ -1309,6 +1401,259 @@
   }
 
   // ───────────────────────────────────────────────────────────────────────
+  // Alias picker — shows unlocked aliases so the user can choose one to
+  // display on the status card (or clear their current selection).
+  // ───────────────────────────────────────────────────────────────────────
+  function openAliasPicker() {
+    injectStyles();
+    var p = N.progress;
+    var aliases = Array.isArray(p.unlockedAliases) ? p.unlockedAliases : [];
+    var current = p.selectedAlias || '';
+    var themeId = p.statusTheme || 'dark';
+    var theme   = (N.STATUS_THEMES || {})[themeId] || { bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F' };
+
+    var ov = document.createElement('div');
+    ov.className = 'ninja-ui-overlay';
+    ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-alias-box"><button class="ninja-ui-top-close" onclick="NinjaUI._closeOverlay(this)" aria-label="Close">✕</button></div>';
+    document.body.appendChild(ov);
+
+    var box = document.getElementById('ninja-alias-box');
+    var rows = aliases.map(function(a) {
+      var active = a === current;
+      return '<button onclick="NinjaUI._selectAlias(\'' + a.replace(/'/g,'\\\'') + '\')" '
+        + 'style="width:100%;text-align:left;padding:10px 14px;border-radius:12px;border:2px solid '
+        + (active ? theme.accent : 'rgba(255,255,255,0.15)') + ';'
+        + 'background:' + (active ? 'rgba(255,255,255,0.15)' : 'transparent') + ';'
+        + 'color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:6px;'
+        + 'display:flex;justify-content:space-between;align-items:center;">'
+        + '<span>' + htmlEsc(displayAlias(a)) + '</span>'
+        + (active ? '<span style="font-size:11px;opacity:0.8;">✓ equipped</span>' : '')
+        + '</button>';
+    }).join('');
+
+    box.innerHTML += [
+      '<div style="background:' + theme.bg + ';border-radius:18px;padding:18px 16px 14px;margin-bottom:8px;text-align:center;">',
+        '<div style="font-family:\'Bangers\',cursive;font-size:26px;color:#fff;letter-spacing:1px;">Alias</div>',
+        '<div style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:700;margin-top:2px;">称号を選んでカードに表示 / Choose your title to display</div>',
+      '</div>',
+      '<div id="ninja-alias-rows" style="background:' + theme.bg + ';border-radius:14px;padding:10px 8px 6px;margin-bottom:4px;">',
+        rows,
+        '<button onclick="NinjaUI._selectAlias(\'\')" '
+          + 'style="width:100%;padding:9px 14px;border-radius:12px;border:2px solid rgba(255,255,255,0.25);'
+          + 'background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;cursor:pointer;'
+          + 'margin-bottom:4px;">— 表示しない / None —</button>',
+      '</div>',
+      '<button class="ninja-ui-close" onclick="NinjaUI._closeOverlay(this)" style="margin-top:10px;">✕ 閉じる / Close</button>',
+    ].join('');
+  }
+
+  function _buildAliasRows(aliases, current, theme) {
+    return aliases.map(function(a) {
+      var active = a === current;
+      return '<button onclick="NinjaUI._selectAlias(\'' + a.replace(/'/g,'\\\'') + '\')" '
+        + 'style="width:100%;text-align:left;padding:10px 14px;border-radius:12px;border:2px solid '
+        + (active ? theme.accent : 'rgba(255,255,255,0.15)') + ';'
+        + 'background:' + (active ? 'rgba(255,255,255,0.18)' : 'transparent') + ';'
+        + 'color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:6px;'
+        + 'display:flex;justify-content:space-between;align-items:center;">'
+        + '<span>' + htmlEsc(displayAlias(a)) + '</span>'
+        + (active ? '<span style="font-size:13px;font-weight:900;color:' + theme.accent + ';">✓</span>' : '')
+        + '</button>';
+    }).join('')
+    + '<button onclick="NinjaUI._selectAlias(\'\')" '
+      + 'style="width:100%;padding:9px 14px;border-radius:12px;border:2px solid rgba(255,255,255,0.25);'
+      + 'background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;cursor:pointer;'
+      + 'margin-bottom:4px;">— 表示しない / None —</button>';
+  }
+
+  function _selectAlias(alias) {
+    if (typeof N.setSelectedAlias === 'function') N.setSelectedAlias(alias);
+    // Re-render status card immediately
+    var card = document.getElementById('ninja-status-card');
+    if (card) {
+      var parent = card.parentElement;
+      if (parent) parent.innerHTML = statusBadgeHTML();
+    }
+    // Update alias rows in place so the checkmark is visible immediately
+    var rowsDiv = document.getElementById('ninja-alias-rows');
+    if (rowsDiv) {
+      var p = N.progress;
+      var aliases = Array.isArray(p.unlockedAliases) ? p.unlockedAliases : [];
+      var themeId = p.statusTheme || 'dark';
+      var theme = (N.STATUS_THEMES || {})[themeId] || { bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F' };
+      rowsDiv.innerHTML = _buildAliasRows(aliases, p.selectedAlias || '', theme);
+    }
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Text Color Picker — per-element color customization for the status card
+  // ───────────────────────────────────────────────────────────────────────
+  var _TEXT_PALETTE = ['#FFFFFF','#FFD54F','#FFA726','#FF8A65','#F48FB1','#CE93D8','#90CAF9','#80DEEA','#A5D6A7','#FFCC80'];
+  var _TEXT_ELEMENTS = [
+    { key:'name',        label:'🥷 名前 / Name',            def:'#ffffff' },
+    { key:'alias',       label:'通り名 / Alias',            def:null },   // null = theme accent
+    { key:'xpBar',       label:'⚡ 経験値バー / XP Bar',     def:null },   // null = theme accent
+    { key:'complete',    label:'✅ 完遂 / Complete',         def:'#6EE7B7' },
+    { key:'interrupted', label:'⚠️ 中断 / Interrupted',     def:'#FBBF24' },
+  ];
+
+  function _buildTextColorRows(tc, accent) {
+    return _TEXT_ELEMENTS.map(function(el) {
+      var current = (tc && tc[el.key]) || el.def || accent;
+      var swatches = _TEXT_PALETTE.map(function(c) {
+        var active = current === c || (!tc[el.key] && c === (el.def || accent));
+        return '<button onclick="NinjaUI._setTextColorLive(\'' + el.key + '\',\'' + c + '\')" '
+          + 'title="' + c + '" '
+          + 'style="width:26px;height:26px;border-radius:50%;background:' + c + ';'
+          + 'border:' + (active ? '3px solid #333' : '2px solid rgba(0,0,0,0.15)') + ';'
+          + 'cursor:pointer;padding:0;flex-shrink:0;position:relative;'
+          + 'box-shadow:' + (active ? '0 0 0 2px #fff,0 2px 6px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.2)') + ';'
+          + 'transform:' + (active ? 'scale(1.2)' : 'scale(1)') + ';transition:transform 0.15s;" '
+          + 'data-tc-key="' + el.key + '" data-tc-val="' + c + '">'
+          + (active ? '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333;font-weight:900;text-shadow:0 1px 2px rgba(255,255,255,0.8);">✓</span>' : '')
+          + '</button>';
+      }).join('');
+      var resetBtn = '<button onclick="NinjaUI._setTextColorLive(\'' + el.key + '\',\'\')" '
+        + 'style="font-size:11px;font-weight:800;color:#555;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.12);'
+        + 'border-radius:8px;padding:3px 8px;cursor:pointer;white-space:nowrap;"'
+        + 'data-tc-key="' + el.key + '" data-tc-val="">↺ Reset</button>';
+      return '<div style="margin-bottom:14px;">'
+        + '<div style="font-size:12px;font-weight:800;color:#333;margin-bottom:6px;">' + el.label + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="ninja-tc-row-' + el.key + '">'
+        + swatches + resetBtn
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function openTextColorPicker() {
+    var p = N.progress;
+    var tc = (p.textColors && typeof p.textColors === 'object') ? p.textColors : {};
+    var _themes  = N.STATUS_THEMES || {};
+    var _themeId = p.statusTheme || 'dark';
+    var accent   = (_themes[_themeId] || _themes['dark'] || {}).accent || '#FFD54F';
+    // Build theme dots
+    var _themeIds   = ['dark','blue','purple','pink','sakura','ocean','forest','gold','thunder'];
+    var _themeNames = { dark:'Dark',blue:'Blue',purple:'Purple',pink:'Pink',sakura:'Sakura',ocean:'Ocean',forest:'Forest',gold:'Gold',thunder:'Thunder' };
+    var _dots = _themeIds.map(function(id) {
+      var t = _themes[id] || {};
+      var active = id === _themeId;
+      return '<button data-theme-dot="' + id + '" onclick="NinjaUI.setTheme(\'' + id + '\')" title="' + (_themeNames[id]||id) + '" '
+        + 'style="width:26px;height:26px;border-radius:50%;'
+        + 'border:' + (active ? '3px solid #fff' : '2px solid rgba(255,255,255,0.25)') + ';'
+        + 'background:' + (t.dot || '#333') + ';cursor:pointer;padding:0;flex-shrink:0;'
+        + 'box-shadow:' + (active ? '0 0 0 2px rgba(255,255,255,0.5),0 2px 6px rgba(0,0,0,0.5)' : '0 1px 4px rgba(0,0,0,0.35)') + ';'
+        + 'transform:' + (active ? 'scale(1.2)' : 'scale(1)') + ';transition:transform 0.15s;"></button>';
+    }).join('');
+    // Build non-interactive status card preview (strip id and click handlers)
+    var _previewCard = statusBadgeHTML()
+      .replace(' id="ninja-status-card"', '')
+      .replace(' onclick="NinjaUI.openProfile()"', '')
+      .replace('cursor:pointer;', 'cursor:default;');
+    var html = [
+      '<div class="ninja-ui-title" style="font-size:17px;">🎨 色の変更 / Colors</div>',
+      // Live status card preview
+      '<div id="ninja-color-picker-preview" style="pointer-events:none;margin-bottom:16px;border-radius:14px;overflow:hidden;">',
+        _previewCard,
+      '</div>',
+      // Card color section
+      '<div style="margin-bottom:16px;background:rgba(255,255,255,0.07);border-radius:14px;padding:12px 14px;">',
+        '<div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#bbb;margin-bottom:8px;">🎨 カードの色 / Card Color</div>',
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">' + _dots + '</div>',
+      '</div>',
+      // Text colors section
+      '<div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#555;margin-bottom:10px;">🖌️ 文字の色 / Text Colors</div>',
+      '<div id="ninja-tc-sections">' + _buildTextColorRows(tc, accent) + '</div>',
+      '<button class="ninja-ui-close" style="margin-top:14px;">閉じる / Close</button>',
+    ].join('');
+    var ov = openOverlay(html);
+    ov.querySelector('.ninja-ui-close').onclick = function () { closeOverlay(ov); };
+  }
+
+  function _setTextColorLive(element, color) {
+    if (typeof N.setTextColor === 'function') N.setTextColor(element, color);
+    // Refresh home status card
+    var card = document.getElementById('ninja-status-card');
+    if (card) { var par = card.parentElement; if (par) par.innerHTML = statusBadgeHTML(); }
+    // Refresh hub preview card
+    var hubCard = document.getElementById('ninja-hub-preview-card');
+    if (hubCard) {
+      var hubPar = hubCard.parentElement;
+      if (hubPar) {
+        var tmp2 = document.createElement('div');
+        tmp2.innerHTML = identityHeaderHTML();
+        var newC = tmp2.firstChild;
+        if (newC) { newC.id = 'ninja-hub-preview-card'; hubPar.replaceChild(newC, hubCard); }
+      }
+    }
+    // Rebuild just the swatch rows inside the picker so checkmarks update live
+    var p2    = N.progress;
+    var tc2   = (p2.textColors && typeof p2.textColors === 'object') ? p2.textColors : {};
+    var _th2  = N.STATUS_THEMES || {};
+    var acc2  = (_th2[p2.statusTheme || 'dark'] || _th2['dark'] || {}).accent || '#FFD54F';
+    var sect  = document.getElementById('ninja-tc-sections');
+    if (sect) sect.innerHTML = _buildTextColorRows(tc2, acc2);
+    // Refresh the live preview inside the color picker
+    var previewDiv = document.getElementById('ninja-color-picker-preview');
+    if (previewDiv) {
+      previewDiv.innerHTML = statusBadgeHTML()
+        .replace(' id="ninja-status-card"', '')
+        .replace(' onclick="NinjaUI.openProfile()"', '')
+        .replace('cursor:pointer;', 'cursor:default;');
+    }
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Theme picker (called by inline onclick in statusBadgeHTML dots)
+  // ───────────────────────────────────────────────────────────────────────
+  function setTheme(id) {
+    if (typeof N.setStatusTheme === 'function') N.setStatusTheme(id);
+    var _themes = N.STATUS_THEMES || {};
+    var _theme  = _themes[id] || {};
+    // Re-render the home status card immediately
+    var card = document.getElementById('ninja-status-card');
+    if (card) {
+      var parent = card.parentElement;
+      if (parent) parent.innerHTML = statusBadgeHTML();
+    }
+    // Live-update the hub popup preview card — rebuild it fully so all colors update
+    var hubCard = document.getElementById('ninja-hub-preview-card');
+    if (hubCard) {
+      var hubParent = hubCard.parentElement;
+      if (hubParent) {
+        // identityHeaderHTML builds a fresh card with the updated theme
+        var tmp = document.createElement('div');
+        tmp.innerHTML = identityHeaderHTML();
+        var newCard = tmp.firstChild;
+        if (newCard) {
+          newCard.id = 'ninja-hub-preview-card';
+          hubParent.replaceChild(newCard, hubCard);
+        }
+      }
+    }
+    // Live-update dot active states inside the hub popup and color picker
+    var dots = document.querySelectorAll('[data-theme-dot]');
+    dots.forEach(function(btn) {
+      var dId    = btn.getAttribute('data-theme-dot');
+      var active = dId === id;
+      btn.style.border     = active ? '3px solid #fff' : '2px solid rgba(255,255,255,0.25)';
+      btn.style.boxShadow  = active ? '0 0 0 2px rgba(255,255,255,0.5),0 2px 6px rgba(0,0,0,0.5)' : '0 1px 4px rgba(0,0,0,0.35)';
+      btn.style.transform  = active ? 'scale(1.2)' : 'scale(1)';
+    });
+    // Refresh the live preview inside the color picker
+    var previewDiv = document.getElementById('ninja-color-picker-preview');
+    if (previewDiv) {
+      previewDiv.innerHTML = statusBadgeHTML()
+        .replace(' id="ninja-status-card"', '')
+        .replace(' onclick="NinjaUI.openProfile()"', '')
+        .replace('cursor:pointer;', 'cursor:default;');
+    }
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
   // Public API
   // ───────────────────────────────────────────────────────────────────────
   global.NinjaUI = {
@@ -1368,6 +1713,17 @@
     _switchSlot:        _switchSlot,
     _addMember:         _addMember,
     _removeMember:      _removeMember,
+
+    // theme
+    setTheme:           setTheme,
+
+    // text color picker
+    openTextColorPicker: openTextColorPicker,
+    _setTextColorLive:   _setTextColorLive,
+
+    // alias picker
+    openAliasPicker:    openAliasPicker,
+    _selectAlias:       _selectAlias,
   };
 
 })(typeof window !== 'undefined' ? window : this);

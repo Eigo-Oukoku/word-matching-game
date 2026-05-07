@@ -15,6 +15,37 @@
   #game-root { display: flex; flex-direction: column; align-items: center; max-width: 480px; margin: 0 auto; padding: 10px 14px 20px; }
   #game-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
+  /* ── Responsive scaling for tablets / desktops ── */
+  @media (min-width: 640px) {
+    #game-root { max-width: 660px; padding: 14px 22px 22px; }
+    .game-title { font-size: 72px !important; }
+    .jp-text      { font-size: clamp(20px, 3vw, 26px) !important; }
+    .word-chip    { font-size: clamp(17px, 2.6vw, 22px) !important; padding: 11px 20px !important; }
+    .answer-slot  { font-size: clamp(18px, 2.8vw, 24px) !important; padding: 7px 14px !important; }
+    .letter-chip  { width: clamp(44px, 6vw, 54px) !important; height: clamp(48px, 6.5vw, 58px) !important; font-size: clamp(18px, 2.8vw, 24px) !important; }
+    .blitz-input  { font-size: clamp(17px, 2.6vw, 22px) !important; }
+    .Sense-scramble { font-size: clamp(17px, 2.6vw, 22px) !important; }
+  }
+  @media (min-width: 900px) {
+    #game-root { max-width: 820px; padding: 18px 28px 24px; }
+    .game-title { font-size: 80px !important; }
+    .jp-text      { font-size: clamp(22px, 2.6vw, 30px) !important; }
+    .word-chip    { font-size: clamp(19px, 2.2vw, 26px) !important; padding: 12px 22px !important; }
+    .answer-slot  { font-size: clamp(20px, 2.4vw, 28px) !important; padding: 8px 16px !important; }
+    .letter-chip  { width: clamp(48px, 5.5vw, 62px) !important; height: clamp(52px, 6vw, 66px) !important; font-size: clamp(20px, 2.4vw, 28px) !important; }
+    .blitz-input  { font-size: clamp(19px, 2.2vw, 26px) !important; }
+    .Sense-scramble { font-size: clamp(19px, 2.2vw, 26px) !important; }
+  }
+  @media (min-width: 768px) and (orientation: landscape) {
+    #game-root { max-width: 880px; }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .sentence-card { padding: 10px 14px !important; min-height: 80px !important; }
+    .jp-text  { font-size: 16px !important; }
+    .word-chip { font-size: 15px !important; padding: 8px 14px !important; }
+    .answer-slot { font-size: 16px !important; padding: 5px 10px !important; }
+  }
+
   @keyframes fadeIn    { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   @keyframes popIn     { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
   @keyframes shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
@@ -256,6 +287,7 @@
     <div class="ov-item"><div class="ov-item-title">⭐ XP per Character — モードごとの経験値</div><div class="ov-item-desc">Ninja Sense &amp; Type Blitz: 2.5 XP / character<br>Speedmaster ⚡: 2.0 XP / character (0.8× Ninja Sense)<br>Rank bonuses are added at the end of timed runs.<br><span class="ov-desc-jp">忍者感覚・Type Blitz: 1文字2.5XP ／ Speedmaster: 1文字2.0XP<br>タイムアタック系はランクボーナスXPが加算されます。</span></div></div>
     <div class="ov-item"><div class="ov-item-title">📊 Status Card — ステータスカード</div><div class="ov-item-desc"><b>Lv.</b> — Earn XP to level up, up to Lv. 1000!<br><b>ACC</b> — Accuracy: your correct-answer rate across all attempts.<br><b>Streak 🔥</b> — Consecutive correct answers. Longer streaks = bonus XP!<br><span class="ov-desc-jp">Lv. = 経験値を貯めてレベルアップ（最大Lv.1000）<br>ACC = 正答率（全解答に対する正解の割合）<br>Streak = 連続正解数。長いほどボーナスXP大！</span></div></div>
     <div class="ov-item"><div class="ov-item-title">📜 Shadow Clone Scroll — 分身の書</div><div class="ov-item-desc">Save all ninja data (level, name, design) as an encrypted code. Restore any time — works across all Ninja games.<br><span class="ov-desc-jp">レベル・名前・キャラデザインを暗号化して保存・復元。シリーズ全ゲームで同じ忍者データを引き継げます。</span></div></div>
+        <div class="ov-item"><div class="ov-item-title">🏷️ 通り名 / Alias</div><div class="ov-item-desc">Earn a title by hitting high scores! Choose your favorite from the Status menu to display it on your card.<br><span class="ov-desc-jp">高いゲームスコアが出せると通り名が解放されます。好きな通り名をステータスメニューから選ぼう。</span></div></div>
     <div class="ov-item"><div class="ov-item-title">🎯 Analysis Scroll — 分析の巻物</div><div class="ov-item-desc">Records words you answered wrong or slowly, and shows them more often in future sessions.<br><b>ACC</b> = Accuracy (正答率) &nbsp;·&nbsp; <b>SRS</b> = Review weight / 復習の重み<br><span class="ov-desc-jp">間違えた・時間がかかった単語を記録し、出題頻度を自動調整。Copy / CSVエクスポートにも対応。</span></div></div>
         <button class="ov-close" onclick="closeHow()">Got it! Let's play 🎉<br><span style="font-size:0.8em;">わかった！はじめよう</span></button>
    </div>
@@ -564,6 +596,7 @@ let G = {
   avatar:'fox', revealed:false, isGameOver:false,
   mistakes:[],   // sentences answered incorrectly {jp, en, audio}
   unanswered:[], // sentences shown when timer expired with no attempt
+  analysisLogged:[], // sentence keys actually sent to Analysis Scroll
   blitzReview:[],// per-sentence outcomes for Type Blitz: {entry, _passed, _unanswered}
   currentStartedAt:0,
   streak:0,           // consecutive-correct counter (resets on wrong)
@@ -793,8 +826,14 @@ function startBlitzTimer() {
         const key = G.currentSentence.audio;
         const already = G.blitzReview.some(r => r.entry && r.entry.audio === key);
         if(!typedRaw) {
-          if(!already) G.blitzReview.push({entry: G.currentSentence, _unanswered:true});
-          ninjaSentenceLogWrong(G.currentSentence, BLITZ_SECS * 1000);
+          const elapsedBl = G.currentStartedAt ? (Date.now() - G.currentStartedAt) : 0;
+          const logToAnalysis = G.attemptedWrongThisRound || elapsedBl > 2000;
+          if(!already) G.blitzReview.push({entry: G.currentSentence, _unanswered:true, _analysisLogged:logToAnalysis});
+          // Only log to Analysis Scroll if the player interacted (wrong attempt) or
+          // spent meaningful time (>2 s) — skip sentences just shown when timer hit 0.
+          if(logToAnalysis){
+            ninjaSentenceLogWrong(G.currentSentence, elapsedBl);
+          }
         }
       }
       renderBlitzEnd();
@@ -918,8 +957,10 @@ function startGame(level) {
   stopAllTimers();
   G.level=level; G.score=0; G.round=0; G.lives=3; G.isGameOver=false;
   G.speedsterPartialLetters=0; G.blitzPartialLetters=0; G.mistakes=[];
-  G.unanswered=[]; G.blitzReview=[]; G.currentStartedAt=0;
+  G.unanswered=[]; G.analysisLogged=[]; G.blitzReview=[]; G.currentStartedAt=0;
   G.streak=0; G.sessionBonusXp=0;
+  const _modeLabel = level==='speedster' ? 'Speedmaster' : level==='blitz' ? 'Type Blitz' : 'Sentence Ninja (' + level + ')';
+  try { Ninja.setTrainingGame('Sent-N'); Ninja.setTrainingMode(_modeLabel); } catch(e) {}
   const pool=G.stageId==='M' ? ALL_SENTENCES : SENTENCES[G.stageId];
   G.sentences=shuffle([...pool]).slice(0,ROUNDS_PER_GAME);
 
@@ -960,7 +1001,13 @@ function startSpeedsterTimer() {
       if(G.currentSentence && partial === 0 && !G.revealed) {
         const key = G.currentSentence.audio;
         if(!G.unanswered.some(s=>s.audio===key)) G.unanswered.push(G.currentSentence);
-        ninjaSentenceLogWrong(G.currentSentence, SPEEDSTER_SECS * 1000);
+        // Only log to Analysis Scroll if the player actually interacted (wrong tap) or
+        // spent meaningful time (>2 s) — skip sentences that just appeared as the timer hit 0.
+        const elapsedSp = G.currentStartedAt ? (Date.now() - G.currentStartedAt) : 0;
+        if(G.attemptedWrongThisRound || elapsedSp > 2000){
+          if(!G.analysisLogged.some(s=>s.audio===key)) G.analysisLogged.push(G.currentSentence);
+          ninjaSentenceLogWrong(G.currentSentence, elapsedSp);
+        }
       }
       renderSpeedsterEnd();
     }
@@ -1162,7 +1209,11 @@ function tapWord(word,idx) {
       G.revealed=true; G.score++; showFeedback(true);
       ninjaSentenceCorrect();
       document.getElementById('answer-area').classList.add('correct'); playSfx('correctsound');
-      setTimeout(()=>{ G.round++; nextRound(); },1100);
+      setTimeout(()=>{
+        if(G.isGameOver) return;
+        if(G.level==='speedster' && G.speedsterTimeLeft<=0){ G.isGameOver=true; if(G.speedsterInterval){clearInterval(G.speedsterInterval);G.speedsterInterval=null;} renderSpeedsterEnd(); return; }
+        G.round++; nextRound();
+      },1100);
     } else { renderGame(); }
   } else {
     const chip=document.getElementById('wc-'+idx);
@@ -1211,7 +1262,10 @@ function tapLetter(letter,idx) {
             renderGame();
             document.getElementById('answer-area').classList.add('correct');
             showFeedback(true);
-            setTimeout(()=>{ G.round++; nextRound(); },1200);
+            setTimeout(()=>{
+              if(G.isGameOver) return;
+              G.round++; nextRound();
+            },1200);
           } else {
             playSfx('wrongsound');
             renderGame();
@@ -1231,7 +1285,11 @@ function tapLetter(letter,idx) {
           renderGame();
           document.getElementById('answer-area').classList.add('correct');
           showFeedback(true, isSpeedster);
-          setTimeout(()=>{ G.round++; nextRound(); },1200);
+          setTimeout(()=>{
+            if(G.isGameOver) return;
+            if(isSpeedster && G.speedsterTimeLeft<=0){ G.isGameOver=true; if(G.speedsterInterval){clearInterval(G.speedsterInterval);G.speedsterInterval=null;} renderSpeedsterEnd(); return; }
+            G.round++; nextRound();
+          },1200);
         }
       } else {
         G.letters=makeLetterChoices(words[G.currentWordIdx]); renderGame();
@@ -1329,17 +1387,34 @@ function renderEnd() {
   stopAllTimers();
   const pct=Math.round((G.score/ROUNDS_PER_GAME)*100);
   let medal='🥉',msg='Keep practicing!';
-  if(pct>=90){medal='🏆';msg='Sentence Master!';}
-  else if(pct>=70){medal='🥇';msg='Excellent work!';}
-  else if(pct>=50){medal='🥈';msg='Good job!';}
+  // Mode-specific aliases (Gemini-based naming)
+  const _isSense = G.mode === 'sense';
+  if(_isSense) {
+    if(pct>=90){medal='🏆';msg='Eureka Finder';}
+    else if(pct>=70){medal='🥇';msg='Insight Seeker';}
+    else if(pct>=50){medal='🥈';msg='Good job!';}
+  } else {
+    // Stages / standard sentence-building
+    if(pct>=90){medal='🏆';msg='Elite Strategist';}
+    else if(pct>=70){medal='🥇';msg='Shadow Tactician';}
+    else if(pct>=50){medal='🥈';msg='Good job!';}
+  }
   // Per-question XP awarded inside ninjaSentenceLogCorrect.  Add the
   // perfect-run completion bonus only.
   let gainedLv = 0;
+  let newAliasEnd = '';
   try {
     const isPerfect = G.score === ROUNDS_PER_GAME && G.lives === 3;
     if (isPerfect) gainedLv = Ninja.addExp(15);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(msg)) newAliasEnd = msg;
   } catch (e) {}
+  const newAliasEndHTML = newAliasEnd ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasEnd}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
       <div class="end-medal">${medal}</div>
@@ -1351,6 +1426,7 @@ function renderEnd() {
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, G.sessionBonusXp)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP included</div>
       </div>
+      ${newAliasEndHTML}
       <div class="end-btns">
         <button class="end-btn eb-again" onclick="startGame('${G.level}')">Try Again</button>
         <button class="end-btn" style="background:#FFB000;" onclick="renderLevelSelect()">Change Level</button>
@@ -1369,31 +1445,54 @@ function renderSpeedsterEnd() {
   G.isGameOver=true;
   stopAllTimers();
   const n=G.score;
-  const rank=n>=130?['🥷','Sentence Ninja!!','Unbelievable speed!']
-            :n>=90?['🏆','Speed Master!',"You're lightning fast!"]
+  // Speedster aliases (Gemini-based): Lv.2 'Elite Strategist', Lv.1 'Shadow Tactician'
+  const rank=n>=130?['🥷','Elite Strategist','Unbelievable speed!']
+            :n>=90?['🏆','Shadow Tactician',"You're lightning fast!"]
             :n>=50?['🎉','Ninja in Training!','Keep it up!']
             :n>=25 ?['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
   // Per-sentence XP (2.5 XP/char) was awarded inside ninjaSentenceLogCorrect.
-  // Rank completion bonus: Sentence Ninja!! ≥130 chars → +45 XP; Speed Master! ≥90 → +25 XP.
+  // Rank completion bonus: Elite Strategist ≥130 chars → +45 XP; Shadow Tactician ≥90 → +25 XP.
   let gainedLv = 0;
   let speedsterBonus = 0;
+  let newAliasSpeedster = '';
   try {
     if      (n >= 130) speedsterBonus = 45;
     else if (n >=  90) speedsterBonus = 25;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rank[1])) newAliasSpeedster = rank[1];
   } catch (e) {}
-  // Unanswered review (Type Blitz parity)
-  const ua = G.unanswered || [];
+  const newAliasSpeedsterHTML = newAliasSpeedster ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasSpeedster}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
+  // Unanswered review (Type Blitz parity) — split by Analysis Scroll registration
+  const ua      = G.unanswered || [];
+  const logged  = G.analysisLogged || [];
+  const uaLogged    = ua.filter(s =>  logged.some(l=>l.audio===s.audio));
+  const uaNotLogged = ua.filter(s => !logged.some(l=>l.audio===s.audio));
+  const sentCard = s => `<div style="background:#F3E8FF;border:1.5px solid #A78BFA;border-radius:10px;padding:8px 12px;margin-bottom:5px;">
+    <div style="font-size:12px;color:#555;margin-bottom:2px;">🇯🇵 ${s.jp}</div>
+    <div style="font-weight:900;color:#2b2d42;">🇬🇧 ${s.en}</div>
+  </div>`;
+  const sentCardGray = s => `<div style="background:#f8f8f8;border:1.5px solid #ddd;border-radius:10px;padding:8px 12px;margin-bottom:5px;">
+    <div style="font-size:12px;color:#555;margin-bottom:2px;">🇯🇵 ${s.jp}</div>
+    <div style="font-weight:900;color:#2b2d42;">🇬🇧 ${s.en}</div>
+  </div>`;
   const reviewHTML = ua.length ? `
     <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
-      <div style="font-size:12px;font-weight:900;color:#7C3AED;margin-bottom:8px;letter-spacing:1px;">⏳ UNANSWERED (${ua.length}) — 時間切れで未挑戦</div>
-      ${ua.map(s=>`<div style="background:#F3E8FF;border:1.5px solid #A78BFA;border-radius:10px;padding:8px 12px;margin-bottom:5px;">
-        <div style="font-size:12px;color:#555;margin-bottom:2px;">🇯🇵 ${s.jp}</div>
-        <div style="font-weight:900;color:#2b2d42;">🇬🇧 ${s.en}</div>
-      </div>`).join('')}
-      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらは Analysis Scroll に登録されました 🎯</div>
+      ${uaLogged.length ? `
+        <div style="font-size:11px;font-weight:800;color:#7C3AED;background:#F3E8FF;border-radius:8px;padding:5px 10px;margin-bottom:8px;">🎯 次の単語はAnalysis Scrollに登録されました</div>
+        <div style="font-size:11px;font-weight:800;color:#7C3AED;margin-bottom:6px;">⏳ 時間切れ — Scroll登録済み (${uaLogged.length})</div>
+        ${uaLogged.map(sentCard).join('')}
+      ` : ''}
+      ${uaNotLogged.length ? `
+        <div style="font-size:11px;font-weight:800;color:#999;margin:${uaLogged.length?'8px':'0'} 0 6px;">⏳ 時間切れ — 表示のみ / Scroll未登録 (${uaNotLogged.length})</div>
+        ${uaNotLogged.map(sentCardGray).join('')}
+      ` : ''}
     </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
@@ -1407,6 +1506,7 @@ function renderSpeedsterEnd() {
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, G.sessionBonusXp + speedsterBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
+      ${newAliasSpeedsterHTML}
       <div class="end-btns">
         <button class="end-btn eb-again" onclick="startGame('speedster')">Play Again</button>
         <button class="end-btn eb-menu" onclick="renderWelcome()">Menu</button>
@@ -1426,8 +1526,9 @@ function renderBlitzEnd() {
   stopAllTimers();
   hideBlitzPanel();
   const n=G.score;
-  const rank=n>=160?['🥷','Blitz Ninja!!','Unbelievable speed!']
-            :n>=110?['🏆','Blitz Master!',"You're lightning fast!"]
+  // Type Blitz aliases (Gemini-based): Lv.2 'Elite Strategist', Lv.1 'Shadow Tactician'
+  const rank=n>=160?['🥷','Elite Strategist','Unbelievable speed!']
+            :n>=110?['🏆','Shadow Tactician',"You're lightning fast!"]
             :n>=70?['🎉','Ninja in Training!','Keep it up!']
             :n>=30 ?['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
@@ -1435,16 +1536,26 @@ function renderBlitzEnd() {
   // Rank completion bonus: Blitz Ninja!! ≥160 chars → +45 XP; Blitz Master! ≥110 → +25 XP.
   let gainedLv = 0;
   let blitzBonus = 0;
+  let newAliasBlitz = '';
   try {
     if      (n >= 160) blitzBonus = 45;
     else if (n >= 110) blitzBonus = 25;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rank[1])) newAliasBlitz = rank[1];
   } catch (e) {}
+  const newAliasBlitzHTML = newAliasBlitz ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasBlitz}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   // Three buckets per Type Blitz spec: unanswered / wrong / passed (correct)
-  const unanswered = G.blitzReview.filter(r=> r._unanswered);
-  const wrong      = G.blitzReview.filter(r=>!r._passed && !r._unanswered);
-  const passed     = G.blitzReview.filter(r=> r._passed);
+  const unansweredLogged2    = G.blitzReview.filter(r=> r._unanswered &&  r._analysisLogged);
+  const unansweredNotLogged2 = G.blitzReview.filter(r=> r._unanswered && !r._analysisLogged);
+  const wrong                = G.blitzReview.filter(r=>!r._passed && !r._unanswered);
+  const passed               = G.blitzReview.filter(r=> r._passed);
+  const hasRegistered2       = wrong.length > 0 || unansweredLogged2.length > 0;
   const card = (r, icon, color, bg) => `
     <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;">
       <div style="font-size:11px;font-weight:800;color:${color};letter-spacing:0.5px;">${icon}</div>
@@ -1454,13 +1565,17 @@ function renderBlitzEnd() {
   const reviewHTML = G.blitzReview.length ? `
     <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
       <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review (${G.blitzReview.length})</div>
-      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
-      ${unanswered.map(r => card(r, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
-      ${wrong.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ WRONG (${wrong.length})</div>` : ''}
+      ${hasRegistered2 ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;background:#F3E8FF;border-radius:8px;padding:5px 10px;margin-bottom:8px;">🎯 次の単語はAnalysis Scrollに登録されました</div>` : ''}
+      ${unansweredLogged2.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:4px 0 4px;">⏳ 時間切れ — Scroll登録済み (${unansweredLogged2.length})</div>` : ''}
+      ${unansweredLogged2.map(r => card(r, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${wrong.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:${unansweredLogged2.length?'8px':'4px'} 0 4px;">❌ WRONG (${wrong.length})</div>` : ''}
       ${wrong.map(r => card(r, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
+      ${unansweredNotLogged2.length ? `
+        <div style="font-size:11px;font-weight:800;color:#999;margin:8px 0 4px;">⏳ 時間切れ — 表示のみ / Scroll未登録 (${unansweredNotLogged2.length})</div>
+        ${unansweredNotLogged2.map(r => card(r, '⏳ 時間切れ', '#999', '#f8f8f8')).join('')}
+      ` : ''}
       ${passed.length ? `<div style="font-size:11px;font-weight:800;color:#0a5c2d;margin:8px 0 4px;">✅ CORRECT (${passed.length})</div>` : ''}
       ${passed.map(r => card(r, '✅ Correct', '#0a5c2d', '#f1fff5')).join('')}
-      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらは Analysis Scroll に登録されました 🎯</div>
     </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="end-screen">
@@ -1474,6 +1589,7 @@ function renderBlitzEnd() {
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, G.sessionBonusXp + blitzBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
+      ${newAliasBlitzHTML}
       <div class="end-btns">
         <button class="end-btn" style="background:linear-gradient(135deg,#4C1D95,#7C3AED);" onclick="startGame('blitz')">Blitz Again 🥷</button>
         <button class="end-btn eb-menu" onclick="renderWelcome()">Menu</button>

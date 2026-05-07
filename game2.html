@@ -18,6 +18,24 @@
   #game-root { display: flex; flex-direction: column; align-items: center; max-width: 450px; margin: 0 auto; padding: 10px 15px; }
   #game-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
+  /* ── Responsive scaling for tablets / desktops ── */
+  @media (min-width: 640px) {
+    #game-root { max-width: 640px; padding: 14px 22px; }
+    .choice-btn { font-size: clamp(20px, 2.6vw, 26px) !important; min-height: 92px !important; padding: 16px 12px !important; }
+    .game-title { font-size: 72px !important; }
+  }
+  @media (min-width: 900px) {
+    #game-root { max-width: 820px; padding: 18px 28px; }
+    .choices-grid { gap: 16px !important; }
+    .choice-btn { font-size: clamp(22px, 2.2vw, 30px) !important; min-height: 100px !important; padding: 18px 14px !important; }
+    .level-box { gap: 14px !important; }
+    .level-btn { font-size: 19px !important; padding: 18px 8px !important; }
+    .game-title { font-size: 80px !important; }
+  }
+  @media (min-width: 768px) and (orientation: landscape) {
+    #game-root { max-width: 880px; }
+  }
+
   @keyframes mascotBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   @keyframes bubblePop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
   @keyframes timerPulse { from { opacity: 1; } to { opacity: 0.45; } }
@@ -266,6 +284,10 @@
     </div>
   </div>
   <div class="how-item">
+    <div class="how-item-title">🏷️ 通り名 / Alias</div>
+    <div class="how-item-desc">Earn a title by hitting high scores! Choose your favorite from the Status menu to display it on your card.<br>高いゲームスコアが出せると通り名が解放されます。好きな通り名をステータスメニューから選ぼう。</div>
+  </div>
+  <div class="how-item">
     <div class="how-item-title">🎯 Analysis Scroll — 分析の巻物</div>
     <div class="how-item-desc">
       Records words you answered wrong or slowly, and shows them more often in future sessions.<br>
@@ -363,7 +385,7 @@ let state = {
   // currentStartedAt: per-question start ms for SRS slow-tracking.
   // streak / sessionBonusXp: feed Ninja.calculateAnswerExp for in-a-row /
   //   firstTime / recovered bonuses, mirrored after eigo-ninja.
-  mistakes: [], unanswered: [], currentStartedAt: 0,
+  mistakes: [], unanswered: [], analysisLogged: [], currentStartedAt: 0,
   streak: 0, sessionBonusXp: 0,
   // ── Per-round wrong-attempt flag ──
   // Word Ninja keeps the same word on screen until the player picks the
@@ -426,8 +448,10 @@ function renderWelcome() {
 function initGame(count, ninja, phantom, speedster) {
   state.choiceCount  = count; state.isNinja = ninja; state.isPhantom = phantom;
   state.isSpeedster  = speedster; state.isGameOver = false;
-  state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
+  state.mistakes = []; state.unanswered = []; state.analysisLogged = []; state.currentStartedAt = 0;
   state.streak = 0; state.sessionBonusXp = 0;
+  const _modeLabel = speedster ? 'Speedmaster' : ninja ? 'Ninja Mode' : phantom ? 'Phantom Mode' : 'Word Ninja · ' + count + ' Choices';
+  try { Ninja.setTrainingGame('Word-N'); Ninja.setTrainingMode(_modeLabel); } catch(e) {}
   state.words = shuffle(ALL_WORDS).slice(0, 10);
   state.round = 0; state.score = 0; state.lives = 3;
   if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
@@ -450,6 +474,7 @@ function startSpeedsterTimer() {
         if (!state.unanswered.includes(state.current)) state.unanswered.push(state.current);
         const elapsed = Date.now() - state.currentStartedAt;
         if (state.attemptedWrongThisRound || elapsed > 2000) {
+          state.analysisLogged.push(state.current);
           try { Ninja.recordAnswer({ word: state.current }, false, elapsed); } catch (e) {}
         }
       }
@@ -532,7 +557,16 @@ function handleChoice(word, idx) {
       });
     } catch (e) {}
     if (state.isPhantom || state.isSpeedster) { const tt = document.getElementById('target-text'); if (tt) tt.innerText = state.current; }
-    setTimeout(() => { state.round++; nextRound(); }, state.isSpeedster ? 600 : 1200);
+    setTimeout(() => {
+      if (state.isGameOver) return;
+      // Guard against the race where the timer reached 0 during the delay
+      if (state.isSpeedster && state.speedsterTimeLeft <= 0) {
+        state.isGameOver = true;
+        if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
+        renderSpeedsterEnd(); return;
+      }
+      state.round++; nextRound();
+    }, state.isSpeedster ? 600 : 1200);
   } else {
     if (btn.classList.contains('wrong')) return;
     btn.classList.add('wrong'); playSfx('wrongsound');
@@ -603,18 +637,27 @@ function renderSpeedsterEnd() {
   state.isGameOver = true;
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   const n = state.score;
-  const rank = n >= 10 ? ['🥷','Ninja Speedster!!','Unbelievable speed!'] : n >= 7 ? ['🎉','Swift Ninja!',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
+  // Speedster aliases (Gemini-based): Lv.2 'Blitz Chaser', Lv.1 'Rising Speedster'
+  const rank = n >= 10 ? ['🥷','Blitz Chaser','Unbelievable speed!'] : n >= 7 ? ['🎉','Rising Speedster',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
   // Per-question XP was awarded inside handleChoice.
   // Add rank completion bonus:
   //   Top rank (≥10 words) → +20 XP;  2nd rank (≥7) → +10 XP;  3rd rank (≥5) → +5 XP.
   let gainedLv = 0;
   let speedsterBonus = 0;
+  let newAliasUnlocked = '';
   try {
     const rankBonus = n >= 10 ? 20 : n >= 7 ? 10 : n >= 5 ? 5 : 0;
     speedsterBonus  = rankBonus;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rank[1])) newAliasUnlocked = rank[1];
   } catch (e) {}
+  const newAliasHTML = newAliasUnlocked ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasUnlocked}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   // Type-Blitz-style review block: unanswered + mistakes
   const mistakes   = (state.mistakes   || []).filter(w => w);
   const unanswered = (state.unanswered || []).filter(w => w);
@@ -624,14 +667,21 @@ function renderSpeedsterEnd() {
       <div style="flex:1;font-weight:900;color:#2b2d42;">${w}</div>
       <span style="font-size:10px;font-weight:800;color:${color};letter-spacing:0.5px;">${tag}</span>
     </div>`;
+  const unansweredLogged    = unanswered.filter(w => state.analysisLogged.includes(w));
+  const unansweredNotLogged = unanswered.filter(w => !state.analysisLogged.includes(w));
+  const hasRegistered = mistakes.length > 0 || unansweredLogged.length > 0;
   const reviewHTML = (mistakes.length || unanswered.length) ? `
     <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
       <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review</div>
-      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
-      ${unanswered.map(w => makeCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
-      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
+      ${hasRegistered ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;background:#F3E8FF;border-radius:8px;padding:5px 10px;margin-bottom:8px;">🎯 次の単語はAnalysis Scrollに登録されました</div>` : ''}
+      ${unansweredLogged.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:4px 0 4px;">⏳ 時間切れ — Scroll登録済み (${unansweredLogged.length})</div>` : ''}
+      ${unansweredLogged.map(w => makeCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:${unansweredLogged.length ? '8px' : '4px'} 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
       ${mistakes.map(w => makeCard(w, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
-      <div style="margin-top:10px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+      ${unansweredNotLogged.length ? `
+        <div style="font-size:11px;font-weight:800;color:#999;margin:8px 0 4px;">⏳ 時間切れ — 表示のみ / Scroll未登録 (${unansweredNotLogged.length})</div>
+        ${unansweredNotLogged.map(w => makeCard(w, '⏳ 時間切れ', '#999', '#f8f8f8')).join('')}
+      ` : ''}
     </div>` : '';
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
@@ -646,6 +696,7 @@ function renderSpeedsterEnd() {
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + speedsterBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / rank bonus included</div>
       </div>
+      ${newAliasHTML}
       ${reviewHTML}
       <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -673,25 +724,43 @@ function getWordMistakesHTML() {
 
 function renderEnd() {
   state.isGameOver = true;
-  const emoji = state.lives > 0 ? '🎉' : '🥀';
+  const isPerfect = state.lives === 3 && state.score === 10;
+  const emoji = isPerfect ? '🥷' : state.lives > 0 ? '🎉' : '🥀';
+  // Mode-specific aliases (Gemini-based naming)
+  let rankTitle = '';
+  if (isPerfect) {
+    if (state.isPhantom) rankTitle = 'Phantom Velocity';
+    else                 rankTitle = 'Blitz Chaser';
+  } else if (state.score >= 7 && state.lives > 0) {
+    if (state.isPhantom) rankTitle = 'Phantom Spark';
+    else                 rankTitle = 'Rising Speedster';
+  }
   // Per-question XP was awarded inside handleChoice.  Here we only add
   // the perfect-run completion bonus on top.
   let gainedLv = 0;
+  let newAliasUnlockedEnd = '';
   try {
-    const isPerfect = state.lives === 3 && state.score === 10;
     if (isPerfect) gainedLv = Ninja.addExp(10);
     Ninja.touchTrained();
+    if (rankTitle && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rankTitle)) newAliasUnlockedEnd = rankTitle;
   } catch (e) {}
+  const newAliasHTMLEnd = newAliasUnlockedEnd ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasUnlockedEnd}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML = `
     <div class="start-screen">
       <div style="font-size:80px;">${emoji}</div>
-      <div class="welcome-title">Word Ninja</div>
+      <div class="welcome-title">${isPerfect ? rankTitle : 'Word Ninja'}</div>
       <p style="font-size:24px;margin:14px 0 6px;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
         <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
       </div>
+      ${newAliasHTMLEnd}
       <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:0 auto;" onclick="renderWelcome()">Play Again</button>
       ${getWordMistakesHTML()}
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">

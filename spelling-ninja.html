@@ -12,6 +12,38 @@
   <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; }
   #game-root { padding: 0.5rem 0.75rem 1rem; min-height: 100vh; display: flex; flex-direction: column; align-items: center; max-width: 500px; margin: 0 auto; background-color: #ffffff; }
+
+  /* ── Responsive scaling for tablets / desktops ── */
+  @media (min-width: 640px) {
+    #game-root { max-width: 660px; padding: 1rem 1.4rem 1.4rem; }
+    .game-title { font-size: 72px !important; }
+    .target-word-display { font-size: clamp(28px, 4vw, 38px) !important; }
+    .letter-slot { width: clamp(34px, 5vw, 44px) !important; height: clamp(44px, 6vw, 54px) !important; font-size: clamp(26px, 3.8vw, 34px) !important; }
+    .letter-btn  { width: clamp(50px, 7vw, 62px) !important; height: clamp(50px, 7vw, 62px) !important; font-size: clamp(24px, 3.4vw, 30px) !important; }
+    .kb-input    { font-size: clamp(20px, 2.8vw, 26px) !important; }
+    .sense-scramble { font-size: clamp(28px, 4vw, 36px) !important; }
+  }
+  @media (min-width: 900px) {
+    #game-root { max-width: 820px; padding: 1.2rem 1.8rem 1.6rem; }
+    .level-box { gap: 14px !important; }
+    .level-btn { font-size: 18px !important; padding: 18px 10px !important; }
+    .game-title { font-size: 80px !important; }
+    .target-word-display { font-size: clamp(32px, 3.6vw, 44px) !important; }
+    .letter-slot { width: clamp(38px, 4.5vw, 50px) !important; height: clamp(50px, 5.5vw, 62px) !important; font-size: clamp(30px, 3.4vw, 40px) !important; }
+    .letter-btn  { width: clamp(56px, 6.5vw, 70px) !important; height: clamp(56px, 6.5vw, 70px) !important; font-size: clamp(28px, 3vw, 36px) !important; }
+    .kb-input    { font-size: clamp(22px, 2.4vw, 30px) !important; }
+    .sense-scramble { font-size: clamp(30px, 3.6vw, 42px) !important; }
+  }
+  @media (min-width: 768px) and (orientation: landscape) {
+    #game-root { max-width: 880px; }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .word-card { min-height: 120px !important; padding: 10px !important; }
+    .image-frame { width: 72px !important; height: 72px !important; margin-bottom: 6px !important; }
+    .spelling-area { margin: 6px 0 !important; min-height: 38px !important; }
+    .letter-btn { width: 40px !important; height: 40px !important; font-size: 18px !important; }
+    .letter-slot { width: 26px !important; height: 34px !important; font-size: 20px !important; }
+  }
   .start-screen { text-align: center; padding: 1rem; width: 100%; }
   .welcome-title { font-size: 44px; font-weight: bold; color: #2b2d42; margin-bottom: 5px; letter-spacing: -1px; }
   .vol-tag { font-size: 22px; color: #E63946; font-weight: bold; margin-bottom: 15px; display: block; }
@@ -383,6 +415,10 @@
     </div>
   </div>
   <div class="how-item">
+    <div class="how-item-title">🏷️ 通り名 / Alias</div>
+    <div class="how-item-desc">Earn a title by hitting high scores! Choose your favorite from the Status menu to display it on your card.<br>高いゲームスコアが出せると通り名が解放されます。好きな通り名をステータスメニューから選ぼう。</div>
+  </div>
+  <div class="how-item">
     <div class="how-item-title">🎯 Analysis Scroll — 分析の巻物</div>
     <div class="how-item-desc">
       Records words you answered wrong or slowly, and shows them more often in future sessions.<br>
@@ -534,7 +570,7 @@ const WORD_HINTS = {
   "ramen noodles":  "A popular Japanese noodle soup. It comes in a bowl with broth.",
   "miso soup":      "A warm Japanese soup made from fermented soybean paste.",
   "milk":           "A white drink that comes from cows. Good for your bones!",
-  "orange juice":   "A drink made by squeezing oranges. It's orange-coloured.",
+  "orange juice":   "A drink made by squeezing oranges. It's orange-colored.",
   "green tea":      "A popular Japanese hot drink made from tea leaves.",
   "coffee":         "A dark, bitter drink made from roasted beans. Many adults love it.",
   "cake":           "A sweet baked dessert, often eaten at birthday parties.",
@@ -550,13 +586,13 @@ const WORD_HINTS = {
   "tennis":         "A sport where two players hit a ball back and forth over a net.",
   "karate":         "A Japanese martial art using punches and kicks.",
   "swimming":       "A sport where you move through water using your arms and legs.",
-  "red":            "The colour of fire trucks, strawberries, and stop signs.",
-  "blue":           "The colour of the sky and the ocean.",
-  "green":          "The colour of grass and leaves.",
-  "yellow":         "The colour of the sun and bananas.",
-  "purple":         "A colour made by mixing red and blue.",
-  "lily":           "A tall flower that often smells very nice. White or colourful.",
-  "tulip":          "A cup-shaped spring flower that comes in many colours.",
+  "red":            "The color of fire trucks, strawberries, and stop signs.",
+  "blue":           "The color of the sky and the ocean.",
+  "green":          "The color of grass and leaves.",
+  "yellow":         "The color of the sun and bananas.",
+  "purple":         "A color made by mixing red and blue.",
+  "lily":           "A tall flower that often smells very nice. White or colorful.",
+  "tulip":          "A cup-shaped spring flower that comes in many colors.",
   "dandelion":      "A yellow wildflower whose seeds blow away in the wind like a puffball.",
   "rose":           "A beautiful flower with thorns. Often given as a gift of love.",
   "slide":          "A playground toy you climb up and then glide down.",
@@ -623,6 +659,7 @@ let state = {
   mistakes:[],       // words answered incorrectly
   blitzReview:[],    // {word, passed, _unanswered} for blitz results — _unanswered added per Type Blitz spec
   unanswered:[],     // Speedster only — current word at time-up with no full attempt
+  analysisLogged:[], // words actually sent to Analysis Scroll (subset of unanswered + mistakes)
   currentStartedAt:0,// SRS slow-tracking timestamp
   streak:0,          // consecutive correct answers (resets on wrong)
   sessionBonusXp:0,  // total per-question XP earned this session
@@ -839,8 +876,15 @@ function startBlitzTimer(){
       if(state.currentWord && !state.kbLocked){
         const already = state.blitzReview.find(r=>r.word===state.currentWord);
         if(!typedRaw){
-          if(!already) state.blitzReview.push({word:state.currentWord, _unanswered:true});
-          ninjaLogWrong(state.currentWord, BLITZ_SECONDS * 1000);
+          const elapsedBl = state.currentStartedAt ? (Date.now() - state.currentStartedAt) : 0;
+          const logToAnalysis = state.attemptedWrongThisRound || elapsedBl > 2000;
+          if(!already) state.blitzReview.push({word:state.currentWord, _unanswered:true, _analysisLogged:logToAnalysis});
+          // Only log to Analysis Scroll if the player interacted (wrong attempt) or
+          // spent meaningful time (>2 s) — skip words just shown when timer hit 0.
+          if(logToAnalysis){
+            state.analysisLogged.push(state.currentWord);
+            ninjaLogWrong(state.currentWord, elapsedBl);
+          }
         }
       }
       renderBlitzEnd();
@@ -1065,11 +1109,13 @@ function renderWelcome(){
 // ─────────────────────────────────────────────────────
 function initGame(mode){
   state.mode=mode;
+  const _modeLabel = mode==='speedster' ? 'Speedmaster' : mode==='keyboard' ? 'Type Blitz' : mode==='sense' ? 'Ninja Sense' : 'Spelling Ninja (' + mode + ')';
+  try { Ninja.setTrainingGame('Spell-N'); Ninja.setTrainingMode(_modeLabel); } catch(e) {}
   state.score=0; state.round=0; state.lives=MAX_LIVES;
   state.letterScore=0; state.kbLocked=false;
   state.senseAltAccepted=false; state.senseAltWord='';
   state.placedHistory=[]; state.mistakes=[]; state.blitzReview=[];
-  state.unanswered=[]; state.currentStartedAt=0; state.speedsterTotal=0;
+  state.unanswered=[]; state.analysisLogged=[]; state.currentStartedAt=0; state.speedsterTotal=0;
   state.streak=0; state.sessionBonusXp=0;
   state.words=shuffle(ALL_WORDS).slice(0,10);
 
@@ -1119,7 +1165,13 @@ function startSpeedsterTimer(){
       // counts as ⏳ Unanswered AND feeds into Analysis Scroll as a miss.
       if(state.currentWord && placed === 0){
         if(!state.unanswered.includes(state.currentWord)) state.unanswered.push(state.currentWord);
-        ninjaLogWrong(state.currentWord, SPEEDSTER_SECONDS * 1000);
+        // Only log to Analysis Scroll if the player actually interacted (wrong tap) or
+        // spent meaningful time (>2 s) — skip words that just appeared as the timer hit 0.
+        const elapsedSp = state.currentStartedAt ? (Date.now() - state.currentStartedAt) : 0;
+        if(state.attemptedWrongThisRound || elapsedSp > 2000){
+          state.analysisLogged.push(state.currentWord);
+          ninjaLogWrong(state.currentWord, elapsedSp);
+        }
       }
       renderSpeedsterEnd();
     }
@@ -1210,7 +1262,13 @@ function tapLetter(letter,index){
       render();
       if(state.mode==='speedster') updateSpeedsterBar();
       ninjaLogCorrect(state.currentWord, Date.now() - state.currentStartedAt);
-      setTimeout(()=>{ state.round++; nextRound(); },state.mode==='speedster'?600:1200);
+      setTimeout(()=>{
+        if(state.mode==='speedster'){
+          // Guard against the race where the timer reached 0 during the delay
+          if(state.speedsterTimeLeft<=0){ renderSpeedsterEnd(); return; }
+        }
+        state.round++; nextRound();
+      },state.mode==='speedster'?600:1200);
     } else {
       render();
       if(state.mode==='speedster') updateSpeedsterBar();
@@ -1404,23 +1462,34 @@ function renderBlitzEnd(){
   const n=state.letterScore;
   const w=state.score;
   const emoji=n>=60?'🏆':n>=45?'🥇':n>=30?'🥈':'🥷';
-  const msg=n>=60?'Blitz Master!':n>=45?'Spelling Star!':n>=30?'Nice typing!':'Keep going!';
+  // New aliases (Gemini-based): top tier 'Blitz Chaser' (≥60), upper tier 'Rising Speedster' (≥45)
+  const msg=n>=60?'Blitz Chaser':n>=45?'Rising Speedster':n>=30?'Nice typing!':'Keep going!';
 
   // Per-word XP (8 XP/char for Blitz) was awarded inside ninjaLogCorrect.
-  // Rank completion bonus: Blitz Master ≥60 chars → +25 XP; Spelling Star ≥45 → +12 XP.
+  // Rank completion bonus: Blitz Chaser ≥60 chars → +25 XP; Rising Speedster ≥45 → +12 XP.
   let gainedLv = 0;
   let blitzBonus = 0;
+  let newAliasBlitz = '';
   try {
     if      (n >= 60) blitzBonus = 25;
     else if (n >= 45) blitzBonus = 12;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(msg)) newAliasBlitz = msg;
   } catch (e) {}
+  const newAliasBlitzHTML = newAliasBlitz ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasBlitz}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
 
   // ── Three buckets per eigo-ninja Type Blitz spec ──
-  const unanswered = state.blitzReview.filter(r=> r._unanswered);
-  const wrong      = state.blitzReview.filter(r=>!r.passed && !r._unanswered);
-  const passed     = state.blitzReview.filter(r=> r.passed);
+  const unansweredLogged    = state.blitzReview.filter(r=> r._unanswered &&  r._analysisLogged);
+  const unansweredNotLogged = state.blitzReview.filter(r=> r._unanswered && !r._analysisLogged);
+  const wrong               = state.blitzReview.filter(r=>!r.passed && !r._unanswered);
+  const passed              = state.blitzReview.filter(r=> r.passed);
+  const hasRegistered       = wrong.length > 0 || unansweredLogged.length > 0;
 
   const makeCard=(r,icon,bg,border)=>{
     const hint=WORD_HINTS[r.word.toLowerCase()]||WORD_HINTS[r.word]||'';
@@ -1443,13 +1512,17 @@ function renderBlitzEnd(){
             <button onclick="snBlitzCopy()" style="background:#6A5ACD;color:white;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:bold;cursor:pointer;box-shadow:0 2px 0 #4a3aad;">📋 Copy</button>
           </div>
         </div>
-        ${unanswered.length?`<div class="sn-mistake-header" style="color:#7C3AED;margin-bottom:6px;">⏳ Unanswered (${unanswered.length}) — 時間切れで未挑戦</div>`:''}
-        ${unanswered.map(r=>makeCard(r,'⏳','#F3E8FF','#A78BFA')).join('')}
-        ${wrong.length?`<div class="sn-mistake-header" style="color:#E63946;margin-bottom:6px;">❌ Wrong (${wrong.length})</div>`:''}
+        ${hasRegistered?`<div style="font-size:11px;font-weight:800;color:#7C3AED;background:#F3E8FF;border-radius:8px;padding:5px 10px;margin-bottom:8px;">🎯 次の単語はAnalysis Scrollに登録されました</div>`:''}
+        ${unansweredLogged.length?`<div class="sn-mistake-header" style="color:#7C3AED;margin-bottom:6px;">⏳ 時間切れ — Scroll登録済み (${unansweredLogged.length})</div>`:''}
+        ${unansweredLogged.map(r=>makeCard(r,'⏳','#F3E8FF','#A78BFA')).join('')}
+        ${wrong.length?`<div class="sn-mistake-header" style="color:#E63946;margin-bottom:6px;margin-top:${unansweredLogged.length?'8px':'0'};">❌ Wrong (${wrong.length})</div>`:''}
         ${wrong.map(r=>makeCard(r,'❌','#FFF5F5','#F4A9A8')).join('')}
+        ${unansweredNotLogged.length?`
+          <div class="sn-mistake-header" style="color:#999;margin:8px 0 6px;">⏳ 時間切れ — 表示のみ / Scroll未登録 (${unansweredNotLogged.length})</div>
+          ${unansweredNotLogged.map(r=>makeCard(r,'⏳','#f8f8f8','#dee2e6')).join('')}
+        `:''}
         ${passed.length?`<div class="sn-mistake-header" style="color:#888;margin:8px 0 6px;">⏭ Passed (${passed.length})</div>`:''}
         ${passed.map(r=>makeCard(r,'⏭','#f8f8f8','#dee2e6')).join('')}
-        <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
       </div>`;
   }
 
@@ -1466,8 +1539,9 @@ function renderBlitzEnd(){
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + blitzBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
-      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:14px">${msg}</p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:8px">${msg}</p>
+      ${newAliasBlitzHTML}
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px">
         <button class="level-btn btn-blitz" style="width:auto;padding:12px 28px" onclick="initGame('keyboard')">Blitz Again 🥷</button>
         <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
       </div>
@@ -1484,20 +1558,33 @@ function renderSpeedsterEnd(){
   if(state.timer) clearTimeout(state.timer);
   const n=state.speedsterTotal;
   const emoji=n>=35?'🏆':n>=25?'🥇':n>=20?'🥈':'⚡';
-  const msg=n>=35?'Ninja Speedster!':n>=25?'Swift Ninja!':n>=20?'Keep it up!':'Keep training!';
+  // New aliases (Gemini-based): top tier 'Blitz Chaser' (≥35), upper tier 'Rising Speedster' (≥25)
+  const msg=n>=35?'Blitz Chaser':n>=25?'Rising Speedster':n>=20?'Keep it up!':'Keep training!';
   // Per-word XP (11 XP/char for Speedmaster) was awarded inside ninjaLogCorrect.
-  // Rank completion bonus: Ninja Speedster ≥35 chars → +25 XP; Swift Ninja ≥25 → +12 XP.
+  // Rank completion bonus: Blitz Chaser ≥35 chars → +25 XP; Rising Speedster ≥25 → +12 XP.
   let gainedLv = 0;
   let speedsterBonus = 0;
+  let newAliasSpeedster = '';
   try {
     if      (n >= 35) speedsterBonus = 25;
     else if (n >= 25) speedsterBonus = 12;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
+    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(msg)) newAliasSpeedster = msg;
   } catch (e) {}
+  const newAliasSpeedsterHTML = newAliasSpeedster ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasSpeedster}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   // Speedster review block (unanswered + mistakes) per Type Blitz spec
-  const unanswered = (state.unanswered || []).filter(w => w);
-  const mistakes   = (state.mistakes   || []).filter(w => w);
+  const unanswered          = (state.unanswered || []).filter(w => w);
+  const mistakes            = (state.mistakes   || []).filter(w => w);
+  const logged              = state.analysisLogged || [];
+  const unansweredLogged2   = unanswered.filter(w =>  logged.includes(w));
+  const unansweredNotLogged2= unanswered.filter(w => !logged.includes(w));
+  const hasRegistered2      = mistakes.length > 0 || unansweredLogged2.length > 0;
   const wordCard = (w, tag, color, bg) => `
     <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;">
       <div style="flex:1;font-weight:900;color:#2b2d42;">${w}</div>
@@ -1506,11 +1593,15 @@ function renderSpeedsterEnd(){
   const reviewHTML = (unanswered.length || mistakes.length) ? `
     <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
       <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review</div>
-      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
-      ${unanswered.map(w => wordCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
-      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
+      ${hasRegistered2 ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;background:#F3E8FF;border-radius:8px;padding:5px 10px;margin-bottom:8px;">🎯 次の単語はAnalysis Scrollに登録されました</div>` : ''}
+      ${unansweredLogged2.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:4px 0 4px;">⏳ 時間切れ — Scroll登録済み (${unansweredLogged2.length})</div>` : ''}
+      ${unansweredLogged2.map(w => wordCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:${unansweredLogged2.length?'8px':'4px'} 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
       ${mistakes.map(w => wordCard(w, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
-      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+      ${unansweredNotLogged2.length ? `
+        <div style="font-size:11px;font-weight:800;color:#999;margin:8px 0 4px;">⏳ 時間切れ — 表示のみ / Scroll未登録 (${unansweredNotLogged2.length})</div>
+        ${unansweredNotLogged2.map(w => wordCard(w, '⏳ 時間切れ', '#999', '#f8f8f8')).join('')}
+      ` : ''}
     </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="start-screen">
@@ -1523,7 +1614,8 @@ function renderSpeedsterEnd(){
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp + speedsterBonus)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP / rank bonus included</div>
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      ${newAliasSpeedsterHTML}
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px">
         <button class="level-btn btn-speedster" style="width:auto;padding:12px 28px" onclick="initGame('speedster')">Play Again</button>
         <button class="level-btn btn-normal" style="width:auto;padding:12px 28px" onclick="renderWelcome()">Menu</button>
       </div>
@@ -1537,24 +1629,51 @@ function renderSpeedsterEnd(){
 }
 
 function renderEnd(){
-  const medal=state.score===10?'🏆':state.score>=7?'🥇':state.score>=5?'🥈':'🥉';
+  const isPerfect = state.score === 10 && state.lives === MAX_LIVES;
+  const medal = isPerfect ? '🥷' : state.score===10 ? '🏆' : state.score>=7 ? '🥇' : state.score>=5 ? '🥈' : '🥉';
+  // Per-mode alias map (Gemini-based naming)
+  const _SPELLING_PERFECT_ALIAS = {
+    easy:    'Rising Speedster',
+    normal:  'Rising Speedster',
+    hard:    'Blitz Chaser',
+    vhard:   'Blitz Chaser',
+    ninja:   'Blitz Chaser',
+    phantom: 'Phantom Velocity',
+    sense:   'Eureka Finder',
+  };
+  // Lower-tier alias for non-perfect ≥7/10 runs (still "Lv.1" of the mode)
+  const _SPELLING_NEAR_ALIAS = {
+    phantom: 'Phantom Spark',
+    sense:   'Insight Seeker',
+  };
+  const rankTitle = isPerfect
+    ? (_SPELLING_PERFECT_ALIAS[state.mode] || 'Blitz Chaser')
+    : (state.score >= 7 ? (_SPELLING_NEAR_ALIAS[state.mode] || 'Rising Speedster') : '');
   // Per-question XP awarded inside ninjaLogCorrect.  Add perfect bonus.
   let gainedLv = 0;
+  let newAliasEnd = '';
   try {
-    const isPerfect = state.score === 10 && state.lives === MAX_LIVES;
     if (isPerfect) gainedLv = Ninja.addExp(12);
     Ninja.touchTrained();
+    if (rankTitle && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rankTitle)) newAliasEnd = rankTitle;
   } catch (e) {}
+  const newAliasEndHTML = newAliasEnd ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasEnd}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
   document.getElementById('game-area').innerHTML=`
     <div class="start-screen">
       <div style="font-size:70px">${medal}</div>
-      <div class="welcome-title">Well Done!</div>
+      <div class="welcome-title">${isPerfect ? rankTitle : 'Well Done!'}</div>
       <p style="font-size:24px;margin:14px 0 6px;font-weight:bold">Score: ${state.score} / 10</p>
       <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:6px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
         <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel}</div>
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, state.sessionBonusXp)} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">per-char XP included</div>
       </div>
+      ${newAliasEndHTML}
       <button class="level-btn btn-normal" style="width:auto;padding:12px 40px;margin:0 auto" onclick="renderWelcome()">Play Again</button>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
