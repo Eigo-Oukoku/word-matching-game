@@ -312,7 +312,7 @@ function _playSfx(name) {
   if (_muted || !_sfxPool[name]) return;
   var a = _sfxPool[name][_sfxIdx[name]];
   _sfxIdx[name] = (_sfxIdx[name] + 1) % 2;
-  a.currentTime = 0; a.play().catch(function() {});
+  a.pause(); a.currentTime = 0; a.play().catch(function() {});
 }
 ['clickysound','correctsound','wrongsound'].forEach(_fetchSfx);
 
