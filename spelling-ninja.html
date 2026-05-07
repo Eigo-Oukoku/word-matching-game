@@ -506,22 +506,27 @@ function toggleMute() {
 })();
 
 // ── SFX pool (fetch→Blob, pool of 2 per sound) ───────────────────────
-const _sfxPool = {};
-const _sfxIdx  = {};
+const _audioCtx = (function() {
+  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+})();
+const _sfxBufs = {};
 function _fetchSfx(name) {
+  if (!_audioCtx) return;
   fetch('audio/' + name + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) {
-      var url = URL.createObjectURL(blob);
-      _sfxPool[name] = [new Audio(url), new Audio(url)];
-      _sfxIdx[name]  = 0;
+    .then(function(r) { return r.arrayBuffer(); })
+    .then(function(ab) {
+      _audioCtx.decodeAudioData(ab, function(buf) { _sfxBufs[name] = buf; }, function() {});
     }).catch(function() {});
 }
 function _playSfx(name) {
-  if (_muted || !_sfxPool[name]) return;
-  var a = _sfxPool[name][_sfxIdx[name]];
-  _sfxIdx[name] = (_sfxIdx[name] + 1) % 2;
-  a.pause(); a.currentTime = 0; a.play().catch(function() {});
+  if (_muted || !_audioCtx || !_sfxBufs[name]) return;
+  try {
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    var src = _audioCtx.createBufferSource();
+    src.buffer = _sfxBufs[name];
+    src.connect(_audioCtx.destination);
+    src.start(0);
+  } catch(e) {}
 }
 ['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(_fetchSfx);
 
