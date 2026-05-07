@@ -683,11 +683,10 @@ const _audioCtx = (function() {
   try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
 })();
 const _sfxBufs = {};
-// Pre-warm AudioContext on the very first user interaction (capture phase)
-// so it is in 'running' state before any game sound is needed.
-document.addEventListener('click', function _acUnlock() {
-  document.removeEventListener('click', _acUnlock, true);
-  if (!_audioCtx) return;
+// Re-warm AudioContext on every user interaction (capture phase)
+// so it is in 'running' state even after iOS suspends it mid-session.
+document.addEventListener('click', function() {
+  if (!_audioCtx || _audioCtx.state !== 'suspended') return;
   _audioCtx.resume().catch(function() {});
   try {
     var _b = _audioCtx.createBuffer(1, 1, _audioCtx.sampleRate);
@@ -722,7 +721,23 @@ function _playSfx(name) {
 ['clickysound','correctsound','wrongsound','correctsound_short','correct_short'].forEach(_fetchSfx);
 
 function playSfx(f) { _playSfx(f); }
-function speakSentence(audio) { if(_muted) return; if(!audio) return; new Audio(`audio/${audio}.mp3`).play().catch(()=>{}); }
+// ── Sentence audio cache (fetch→Blob URL; fresh Audio per play for iOS) ──
+const _sentenceCache = {};
+function _preloadSentence(key) {
+  if (!key || _sentenceCache[key]) return;
+  _sentenceCache[key] = 'loading';
+  fetch('audio/' + key + '.mp3')
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) { _sentenceCache[key] = URL.createObjectURL(blob); })
+    .catch(function() { _sentenceCache[key] = null; });
+}
+function speakSentence(audio) {
+  if (_muted || !audio) return;
+  if (!_sentenceCache[audio]) _preloadSentence(audio);
+  const url = _sentenceCache[audio];
+  if (url && url !== 'loading') { new Audio(url).play().catch(function(){}); }
+  else if (!url) { new Audio('audio/' + audio + '.mp3').play().catch(function(){}); }
+}
 
 // ═══════════════════════════════════════════════
 // UTILS
