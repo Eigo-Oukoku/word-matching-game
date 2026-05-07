@@ -683,6 +683,18 @@ const _audioCtx = (function() {
   try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
 })();
 const _sfxBufs = {};
+// Pre-warm AudioContext on the very first user interaction (capture phase)
+// so it is in 'running' state before any game sound is needed.
+document.addEventListener('click', function _acUnlock() {
+  document.removeEventListener('click', _acUnlock, true);
+  if (!_audioCtx) return;
+  _audioCtx.resume().catch(function() {});
+  try {
+    var _b = _audioCtx.createBuffer(1, 1, _audioCtx.sampleRate);
+    var _s = _audioCtx.createBufferSource();
+    _s.buffer = _b; _s.connect(_audioCtx.destination); _s.start(0);
+  } catch(e) {}
+}, true);
 function _fetchSfx(name) {
   if (!_audioCtx) return;
   fetch('audio/' + name + '.mp3')
@@ -694,11 +706,17 @@ function _fetchSfx(name) {
 function _playSfx(name) {
   if (_muted || !_audioCtx || !_sfxBufs[name]) return;
   try {
-    if (_audioCtx.state === 'suspended') _audioCtx.resume();
-    var src = _audioCtx.createBufferSource();
-    src.buffer = _sfxBufs[name];
-    src.connect(_audioCtx.destination);
-    src.start(0);
+    var _doPlay = function() {
+      var src = _audioCtx.createBufferSource();
+      src.buffer = _sfxBufs[name];
+      src.connect(_audioCtx.destination);
+      src.start(0);
+    };
+    if (_audioCtx.state === 'suspended') {
+      _audioCtx.resume().then(_doPlay).catch(function() {});
+    } else {
+      _doPlay();
+    }
   } catch(e) {}
 }
 ['clickysound','correctsound','wrongsound','correctsound_short','correct_short'].forEach(_fetchSfx);
