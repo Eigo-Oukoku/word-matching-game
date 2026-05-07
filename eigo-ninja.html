@@ -3167,48 +3167,15 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX: fetch → Blob URL → pool of 2 (zero-latency local playback) ──
-const _audioCtx = (function() {
-  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
-})();
-const _sfxBufs = {};
-// Pre-warm AudioContext on the very first user interaction (capture phase)
-// so it is in 'running' state before any game sound is needed.
-document.addEventListener('click', function _acUnlock() {
-  document.removeEventListener('click', _acUnlock, true);
-  if (!_audioCtx) return;
-  _audioCtx.resume().catch(function() {});
-  try {
-    var _b = _audioCtx.createBuffer(1, 1, _audioCtx.sampleRate);
-    var _s = _audioCtx.createBufferSource();
-    _s.buffer = _b; _s.connect(_audioCtx.destination); _s.start(0);
-  } catch(e) {}
-}, true);
-function _fetchSfx(name) {
-  if (!_audioCtx) return;
-  fetch('audio/' + name + '.mp3')
-    .then(function(r) { return r.arrayBuffer(); })
-    .then(function(ab) {
-      _audioCtx.decodeAudioData(ab, function(buf) { _sfxBufs[name] = buf; }, function() {});
-    }).catch(function() {});
-}
+// ── SFX (pre-loaded Audio + currentTime reset) ────────────────────────────
+const _sfxAudio = {};
+['clickysound', 'correctsound', 'wrongsound'].forEach(function(name) {
+  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
+});
 function _playSfx(name) {
-  if (_muted || !_audioCtx || !_sfxBufs[name]) return;
-  try {
-    var _doPlay = function() {
-      var src = _audioCtx.createBufferSource();
-      src.buffer = _sfxBufs[name];
-      src.connect(_audioCtx.destination);
-      src.start(0);
-    };
-    if (_audioCtx.state === 'suspended') {
-      _audioCtx.resume().then(_doPlay).catch(function() {});
-    } else {
-      _doPlay();
-    }
-  } catch(e) {}
+  if (_muted || !_sfxAudio[name]) return;
+  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
 }
-['clickysound', 'correctsound', 'wrongsound'].forEach(_fetchSfx);
 
 function playClick()   { _playSfx('clickysound');  }
 function playCorrect() { _playSfx('correctsound'); }

@@ -296,45 +296,17 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX pool (fetch→Blob, pool of 2 per sound) ───────────────────────
-const _audioCtx = (function() {
-  try { return new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
-})();
-const _sfxBufs = {};
-// Re-warm AudioContext on every user interaction (capture phase)
-// so it is in 'running' state even after iOS suspends it mid-session.
-document.addEventListener('click', function() {
-  if (!_audioCtx || _audioCtx.state !== 'suspended') return;
-  _audioCtx.resume().catch(function() {});
-  try {
-    var _b = _audioCtx.createBuffer(1, 1, _audioCtx.sampleRate);
-    var _s = _audioCtx.createBufferSource();
-    _s.buffer = _b; _s.connect(_audioCtx.destination); _s.start(0);
-  } catch(e) {}
-}, true);
+// ── SFX (blob URL cache + new Audio) ─────────────────────────────────────
+const _sfxBlobUrls = {};
 function _fetchSfx(name) {
-  if (!_audioCtx) return;
   fetch('audio/' + name + '.mp3')
-    .then(function(r) { return r.arrayBuffer(); })
-    .then(function(ab) {
-      _audioCtx.decodeAudioData(ab, function(buf) { _sfxBufs[name] = buf; }, function() {});
-    }).catch(function() {});
+    .then(function(r) { return r.blob(); })
+    .then(function(blob) { _sfxBlobUrls[name] = URL.createObjectURL(blob); })
+    .catch(function() {});
 }
 function _playSfx(name) {
-  if (_muted || !_audioCtx || !_sfxBufs[name]) return;
-  try {
-    var _doPlay = function() {
-      var src = _audioCtx.createBufferSource();
-      src.buffer = _sfxBufs[name];
-      src.connect(_audioCtx.destination);
-      src.start(0);
-    };
-    if (_audioCtx.state === 'suspended') {
-      _audioCtx.resume().then(_doPlay).catch(function() {});
-    } else {
-      _doPlay();
-    }
-  } catch(e) {}
+  if (_muted || !_sfxBlobUrls[name]) return;
+  try { new Audio(_sfxBlobUrls[name]).play().catch(function(){}); } catch(e) {}
 }
 ['clickysound','correctsound','wrongsound'].forEach(_fetchSfx);
 
