@@ -334,8 +334,32 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
+// ── Audio cache (Plan A: pre-load next word + reuse Audio objects) ────
+const _audioCache = {};
+function _preloadAudio(key) {
+  if (!key || _audioCache[key]) return;
+  const a = new Audio(`audio/${key}.mp3`);
+  a.preload = 'auto';
+  _audioCache[key] = a;
+}
+// Pre-load SFX at startup so they are ready on first interaction
+['clickysound','correctsound','wrongsound'].forEach(function(f){ _preloadAudio(f); });
+const _imageCache = {};
+function _preloadImage(key) {
+  if (!key || _imageCache[key]) return;
+  const img = new Image();
+  img.src = `images/${key}.png`;
+  _imageCache[key] = img;
+}
+
 // ── Click sound for menu/level/mode/link interactions ─────────────────
-function playClick() { if(_muted) return; try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(e){} }
+function playClick() {
+  if (_muted) return;
+  try {
+    const a = _audioCache['clickysound'] || new Audio('audio/clickysound.mp3');
+    a.currentTime = 0; a.play().catch(function(){});
+  } catch(e) {}
+}
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close';
   if (ev.target.closest(sel)) playClick();
@@ -362,8 +386,19 @@ window.getNinjaCatalogs = function () {
   }];
 };
 
-function playSfx(f) { if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
-function speak(w)   { if(_muted) return; if(!w) return; new Audio(`audio/${getFileKey(w)}.mp3`).play().catch(()=>{}); }
+function playSfx(f) {
+  if (_muted) return;
+  if (!_audioCache[f]) _preloadAudio(f);
+  const a = _audioCache[f];
+  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
+}
+function speak(w) {
+  if (_muted || !w) return;
+  const key = getFileKey(w);
+  if (!_audioCache[key]) _preloadAudio(key);
+  const a = _audioCache[key];
+  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
+}
 
 const ANIMALS = {
   fox: `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,
@@ -454,6 +489,11 @@ function initGame(count, ninja, phantom, speedster) {
   try { Ninja.setTrainingGame('Word-N'); Ninja.setTrainingMode(_modeLabel); } catch(e) {}
   state.words = shuffle(ALL_WORDS).slice(0, 10);
   state.round = 0; state.score = 0; state.lives = 3;
+  // Pre-load audio + image for first two words immediately
+  [0, 1].forEach(function(i) {
+    var k = state.words[i] ? getFileKey(state.words[i]) : null;
+    if (k) { _preloadAudio(k); _preloadImage(k); }
+  });
   if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
   else { if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; } }
   nextRound();
@@ -504,6 +544,9 @@ function nextRound() {
   state.revealed = false;
   state.attemptedWrongThisRound = false;  // reset per-round wrong-then-right tracker
   state.currentStartedAt = Date.now();   // SRS slow-tracking
+  // Pre-load the NEXT word's audio + image while the player sees this question
+  const _nextWord = state.words[state.round + 1];
+  if (_nextWord) { const _nk = getFileKey(_nextWord); _preloadAudio(_nk); _preloadImage(_nk); }
   const wrongs = shuffle(ALL_WORDS.filter(w => w !== state.current)).slice(0, state.choiceCount - 1);
   state.choices = shuffle([state.current, ...wrongs]);
   render();

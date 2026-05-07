@@ -296,7 +296,31 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-function playClick() { if(_muted) return; try { new Audio('audio/clickysound.mp3').play().catch(()=>{}); } catch(e){} }
+// ── Asset cache (Plan A: pre-load next word audio + image) ────────────
+const _audioCache = {};
+function _preloadAudio(key) {
+  if (!key || _audioCache[key]) return;
+  const a = new Audio(`audio/${key}.mp3`);
+  a.preload = 'auto';
+  _audioCache[key] = a;
+}
+const _imageCache = {};
+function _preloadImage(key) {
+  if (!key || _imageCache[key]) return;
+  const img = new Image();
+  img.src = `images/${key}.png`;
+  _imageCache[key] = img;
+}
+// Pre-load SFX at startup
+['clickysound','correctsound','wrongsound'].forEach(function(f){ _preloadAudio(f); });
+
+function playClick() {
+  if (_muted) return;
+  try {
+    const a = _audioCache['clickysound'] || new Audio('audio/clickysound.mp3');
+    a.currentTime = 0; a.play().catch(function(){});
+  } catch(e) {}
+}
 document.addEventListener('click', function(ev){
   const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close';
   if (ev.target.closest(sel)) playClick();
@@ -349,8 +373,19 @@ window.getNinjaCatalogs = function () {
 };
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
-function playSfx(f) { if(_muted) return; new Audio(`audio/${f}.mp3`).play().catch(()=>{}); }
-function speak(w)   { if(_muted) return; if(!w) return; new Audio(`audio/${getFileKey(w)}.mp3`).play().catch(()=>{}); }
+function playSfx(f) {
+  if (_muted) return;
+  if (!_audioCache[f]) _preloadAudio(f);
+  const a = _audioCache[f];
+  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
+}
+function speak(w) {
+  if (_muted || !w) return;
+  const key = getFileKey(w);
+  if (!_audioCache[key]) _preloadAudio(key);
+  const a = _audioCache[key];
+  if (a) { a.currentTime = 0; a.play().catch(function(){}); }
+}
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 
 function pickRandomMascot() {
@@ -408,6 +443,11 @@ function initGame(count, ninja, phantom, speedster) {
   state.round = 0; state.score = 0; state.lives = 3;
   state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
   state.streak = 0; state.sessionBonusXp = 0;
+  // Pre-load audio + image for first two words immediately
+  [0, 1].forEach(function(i) {
+    var k = state.words[i] ? getFileKey(state.words[i]) : null;
+    if (k) { _preloadAudio(k); _preloadImage(k); }
+  });
   if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
   else { if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; } }
   nextRound();
@@ -456,6 +496,9 @@ function nextRound() {
   state.revealed = false;
   state.attemptedWrongThisRound = false; // reset per-round wrong-then-right tracker
   state.currentStartedAt = Date.now(); // for SRS slow-tracking via Ninja.recordAnswer
+  // Pre-load the NEXT word's audio + image while the player sees this question
+  var _nextKey = state.words[state.round + 1] ? getFileKey(state.words[state.round + 1]) : null;
+  if (_nextKey) { _preloadAudio(_nextKey); _preloadImage(_nextKey); }
   const wrongs = shuffle(ALL_WORDS.filter(w => w !== state.current)).slice(0, state.choiceCount - 1);
   state.choices = shuffle([state.current, ...wrongs]);
   render();
