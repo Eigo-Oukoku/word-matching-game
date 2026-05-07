@@ -391,12 +391,15 @@ window.getNinjaCatalogs = function () {
 };
 
 function playSfx(f) { _playSfx(f); }
+var _wordAudio = null;
 function speak(w) {
   if (_muted || !w) return;
   const key = getFileKey(w);
   if (!(key in _wordBlobUrls)) _preloadAudio(key);
   var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  try { new Audio(url).play().catch(function(){}); } catch(e) {}
+  if (_wordAudio) { try { _wordAudio.pause(); _wordAudio.src = ''; } catch(e) {} }
+  _wordAudio = new Audio(url);
+  try { _wordAudio.play().catch(function(){}); } catch(e) {}
 }
 
 const ANIMALS = {

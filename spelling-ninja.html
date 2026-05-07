@@ -746,12 +746,15 @@ function ninjaLogWrong(word, ms){
 }
 
 function playSfx(f) { _playSfx(f); }
+var _wordAudio = null;
 function speak(w) {
   if (_muted || !w) return;
   const key = w.replace(/\s+/g, '_');
   if (!(key in _wordBlobUrls)) _preloadAudio(key);
   var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  try { new Audio(url).play().catch(function(){}); } catch(e) {}
+  if (_wordAudio) { try { _wordAudio.pause(); _wordAudio.src = ''; } catch(e) {} }
+  _wordAudio = new Audio(url);
+  try { _wordAudio.play().catch(function(){}); } catch(e) {}
 }
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }

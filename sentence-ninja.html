@@ -699,11 +699,14 @@ function _preloadSentence(key) {
     .then(function(blob) { _sentenceBlobUrls[key] = URL.createObjectURL(blob); })
     .catch(function() { _sentenceBlobUrls[key] = ''; });
 }
+var _sentenceAudio = null;
 function speakSentence(audio) {
   if (_muted || !audio) return;
   if (!(audio in _sentenceBlobUrls)) _preloadSentence(audio);
   var url = _sentenceBlobUrls[audio] || ('audio/' + audio + '.mp3');
-  try { new Audio(url).play().catch(function(){}); } catch(e) {}
+  if (_sentenceAudio) { try { _sentenceAudio.pause(); _sentenceAudio.src = ''; } catch(e) {} }
+  _sentenceAudio = new Audio(url);
+  try { _sentenceAudio.play().catch(function(){}); } catch(e) {}
 }
 
 // ═══════════════════════════════════════════════
