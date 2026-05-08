@@ -44,7 +44,7 @@
       //    a max-height + internal scroll so long content (the design
       //    grid, the scroll modal) NEVER pushes content past viewport. ──
       '.ninja-ui-modal{position:relative;background:#fff;border-radius:22px;padding:22px 18px;max-width:420px;width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 16px 48px rgba(0,0,0,0.3);color:#2b2d42;animation:ninjaUiPopIn 0.25s ease;}',
-      '.ninja-ui-title{font-size:22px;font-weight:900;text-align:center;margin-bottom:10px;color:#4C1D95;letter-spacing:0.5px;}',
+      '.ninja-ui-title{font-size:clamp(18px,5vw,22px);font-weight:900;text-align:center;margin-bottom:10px;color:#4C1D95;letter-spacing:0.5px;}',
       '.ninja-ui-top-close{position:sticky;top:0;float:right;margin:-4px -4px 0 0;width:40px;height:40px;border:2px solid rgba(0,0,0,0.18);background:rgba(255,255,255,0.92);border-radius:50%;font-size:20px;line-height:38px;text-align:center;cursor:pointer;color:#333;font-weight:900;padding:0;z-index:20;transition:background 0.15s,transform 0.1s;box-shadow:0 2px 6px rgba(0,0,0,0.15);}',
       '.ninja-ui-top-close:hover{background:rgba(0,0,0,0.15);}',
       '.ninja-ui-top-close:active{background:rgba(0,0,0,0.25);transform:scale(0.93);}',
@@ -71,7 +71,7 @@
       // ── Status-card avatar: fixed 120×120 box (matches eigo-ninja
       //    home profile card byte-for-byte) with consistent inner image
       //    sizing across all 14 ninja designs. ──
-      '.ninja-ui-avatar{width:120px;height:120px;flex:0 0 120px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);}',
+      '.ninja-ui-avatar{width:min(120px,28vw);height:min(120px,28vw);flex:0 0 min(120px,28vw);background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);}',
       '.ninja-ui-avatar img{width:100%;height:100%;object-fit:contain;display:block;}',
       // Compact variant for in-modal usage where space is tight.
       '.ninja-ui-avatar.compact{width:80px;height:80px;flex:0 0 80px;border-width:2px;}',
@@ -109,7 +109,7 @@
       '.ninja-ui-add-card:active{border-color:#7C3AED;background:#F3E8FF;color:#7C3AED;}',
       // ── Inline XP feedback row (placed by host games right below the
       //    question card). Mirrors eigo-ninja's `.feedback-row`. ──
-      '.ninja-xp-feedback{text-align:center;min-height:32px;font-size:21px;font-weight:900;margin:6px 0 4px;line-height:1.25;}',
+      '.ninja-xp-feedback{text-align:center;min-height:32px;font-size:clamp(14px,4vw,21px);font-weight:900;margin:6px 0 4px;line-height:1.25;}',
       '.ninja-xp-fb-ok{color:#0a5c2d;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
       '.ninja-xp-fb-bad{color:#E63946;animation:ninjaUiPopIn 0.2s ease;display:inline-block;}',
       '.ninja-xp-fb-ok .xp-amount{color:#7C3AED;font-weight:900;margin-left:6px;}',
@@ -345,14 +345,14 @@
           '<div class="ninja-ui-avatar">', avatarHTML, '</div>',
           '<div style="flex:1;min-width:0;text-align:left;">',
             // Name
-            '<div style="font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;">',
-              '<span style="font-family:\'Bangers\',cursive;color:' + _nameColor + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
-              '<span style="font-family:\'Nunito\',sans-serif;">', nameMarker, '</span>',
+            '<div style="font-size:clamp(18px,5.5vw,28px);letter-spacing:1.5px;line-height:1.05;overflow:hidden;display:flex;align-items:center;gap:6px;">',
+              '<span style="font-family:\'Bangers\',cursive;color:' + _nameColor + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;">', htmlEsc(p.name || 'Ninja'), '</span>',
+              '<span style="font-family:\'Nunito\',sans-serif;flex-shrink:0;">', nameMarker, '</span>',
             '</div>',
             // Alias directly below name
             _aliasRow,
             // Level row
-            '<div style="font-size:16px;font-weight:900;margin-top:5px;color:#fff;">Lv ', lvl, (lvl >= N.constants.LEVEL_CAP ? ' ★MAX' : ''),
+            '<div style="font-size:clamp(13px,3.8vw,16px);font-weight:900;margin-top:5px;color:#fff;">Lv ', lvl, (lvl >= N.constants.LEVEL_CAP ? ' ★MAX' : ''),
               ' &nbsp;·&nbsp; <span style="font-size:14px;opacity:0.9;">', cur.toLocaleString(), ' XP</span></div>',
             // "tap to name" note — below level so it doesn't crowd the alias
             _tapNote,
@@ -415,7 +415,7 @@
         '<div class="ninja-ui-card-row">',
           '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
           '<div style="flex:1;min-width:0;text-align:left;">',
-            '<div style="font-size:26px;letter-spacing:1px;line-height:1.05;">',
+            '<div style="font-size:clamp(20px,6vw,26px);letter-spacing:1px;line-height:1.05;">',
               '<span style="font-family:\'Bangers\',cursive;color:' + _nameC2 + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
               (p.nameLocked ? ' <span style="font-family:\'Nunito\',sans-serif;font-size:14px;">🔒</span>' : ''),
             '</div>',
