@@ -296,35 +296,50 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (single element per sound) ───────────────────────────────────────
-const _sfxAudio = {};
-['clickysound','correctsound','wrongsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
-function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+// ── WebAudio SFX Engine (iOS Safari/Chrome 最適化) ────────────────────────
+var _sfxCtx = null;
+var _sfxBufs = {};
+function _getSfxCtx() {
+  if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _sfxCtx;
 }
-// ── iOS Audio Unlock ──────────────────────────────────────────────────────
+function _decodeAB(ctx, ab) {
+  return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
+}
 (function() {
-  function _unlock() {
-    var a = new Audio('audio/clickysound.mp3');
-    a.muted = true;
-    a.play().then(function() { a.pause(); }).catch(function(){});
-  }
-  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
-  document.addEventListener('click',      _unlock, { once: true, capture: true });
+  var SE = ['clickysound','correctsound','wrongsound'];
+  var ctx = _getSfxCtx();
+  SE.forEach(function(name) {
+    fetch('audio/' + name + '.mp3')
+      .then(function(r) { return r.arrayBuffer(); })
+      .then(function(ab) { return _decodeAB(ctx, ab); })
+      .then(function(buf) { _sfxBufs[name] = buf; })
+      .catch(function() {});
+  });
 })();
+function _playSfx(name) {
+  if (_muted) return;
+  var ctx = _sfxCtx, buf = _sfxBufs[name];
+  if (!ctx || !buf) return;
+  try {
+    if (ctx.state !== 'running') ctx.resume().catch(function(){});
+    var src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(ctx.destination); src.start(0);
+  } catch(e) {}
+}
 
-// ── Word audio (blob URL cache + new Audio) ──────────────────────────────
+// ── Word audio (Promise-based blob URL cache + new Audio) ─────────────────
 const _wordBlobUrls = {};
+const _wordLoadProm = {};
 function _preloadAudio(key) {
-  if (!key || (key in _wordBlobUrls)) return;
-  _wordBlobUrls[key] = null;  // loading
-  fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _wordBlobUrls[key] = URL.createObjectURL(blob); })
-    .catch(function() { _wordBlobUrls[key] = ''; });
+  if (!key) return Promise.resolve(null);
+  if (key in _wordBlobUrls) return Promise.resolve(_wordBlobUrls[key] || null);
+  if (_wordLoadProm[key]) return _wordLoadProm[key];
+  _wordLoadProm[key] = fetch('audio/' + key + '.mp3')
+    .then(function(r) { if (!r.ok) throw 0; return r.blob(); })
+    .then(function(blob) { _wordBlobUrls[key] = URL.createObjectURL(blob); return _wordBlobUrls[key]; })
+    .catch(function() { _wordBlobUrls[key] = ''; return null; });
+  return _wordLoadProm[key];
 }
 const _imageCache = {};
 function _preloadImage(key) {
@@ -388,13 +403,43 @@ window.getNinjaCatalogs = function () {
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
 function playSfx(f) { _playSfx(f); }
+var _wordAudio = new Audio();
+_wordAudio.preload = 'auto';
+function _playUrl(url, retry) {
+  if (!url) return;
+  _wordAudio.pause();
+  _wordAudio.src = url;
+  _wordAudio.load();
+  var p = _wordAudio.play();
+  if (p) p.catch(function(e) {
+    if (!retry && e.name !== 'NotAllowedError') {
+      setTimeout(function() { _playUrl(url, true); }, 300);
+    }
+  });
+}
 function speak(w) {
   if (_muted || !w) return;
-  const key = getFileKey(w);
-  if (!(key in _wordBlobUrls)) _preloadAudio(key);
-  var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  try { new Audio(url).play().catch(function(){}); } catch(e) {}
+  var key = getFileKey(w);
+  _preloadAudio(key).then(function(url) {
+    _playUrl(url || ('audio/' + key + '.mp3'), false);
+  });
 }
+// ── iOS Dual Audio Unlock (WebAudio + HTMLAudio) ──────────────────────────
+(function() {
+  function _unlockAll() {
+    var ctx = _getSfxCtx();
+    if (ctx.state !== 'running') {
+      ctx.resume().then(function() {
+        var b = ctx.createBuffer(1, 1, 22050); var s = ctx.createBufferSource();
+        s.buffer = b; s.connect(ctx.destination); s.start(0);
+      }).catch(function(){});
+    }
+    var a = new Audio('audio/clickysound.mp3'); a.muted = true;
+    var p = a.play(); if (p) p.then(function() { a.pause(); }).catch(function(){});
+  }
+  document.addEventListener('touchstart', _unlockAll, { once: true, capture: true });
+  document.addEventListener('click',      _unlockAll, { once: true, capture: true });
+})();
 function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
 
 function pickRandomMascot() {
