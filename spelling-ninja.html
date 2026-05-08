@@ -505,25 +505,52 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (single element per sound) ───────────────────────────────────────
-const _sfxAudio = {};
-['clickysound','correctsound','correctsound_short','wrongsound','hintsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
+// ── WebAudio SFX Engine (iOS Safari/Chrome 最適化) ────────────────────────
+var _sfxCtx = null;
+var _sfxBufs = {};
+function _getSfxCtx() {
+  if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _sfxCtx;
+}
+function _decodeAB(ctx, ab) {
+  return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
+}
+(function() {
+  var SE = ['clickysound','correctsound','correctsound_short','wrongsound','hintsound'];
+  var ctx = _getSfxCtx();
+  SE.forEach(function(name) {
+    fetch('audio/' + name + '.mp3')
+      .then(function(r) { return r.arrayBuffer(); })
+      .then(function(ab) { return _decodeAB(ctx, ab); })
+      .then(function(buf) { _sfxBufs[name] = buf; })
+      .catch(function() {});
+  });
+})();
 function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+  if (_muted) return;
+  var ctx = _sfxCtx, buf = _sfxBufs[name];
+  if (!ctx || !buf) return;
+  try {
+    if (ctx.state !== 'running') ctx.resume().catch(function(){});
+    var src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(ctx.destination); src.start(0);
+  } catch(e) {}
 }
 
-// ── Word audio (blob URL cache + new Audio) ──────────────────────────────
+// ── Word audio (Promise-based blob URL cache + new Audio) ─────────────────
+// _preloadAudio() は Promise を返す。speak() は .then() で preload 完了後に再生。
+// これにより「blob URL 未取得のまま再生」という race condition を解消する。
 const _wordBlobUrls = {};
+const _wordLoadProm = {};
 function _preloadAudio(key) {
-  if (!key || (key in _wordBlobUrls)) return;
-  _wordBlobUrls[key] = null;  // loading
-  fetch('audio/' + key + '.mp3')
-    .then(function(r) { return r.blob(); })
-    .then(function(blob) { _wordBlobUrls[key] = URL.createObjectURL(blob); })
-    .catch(function() { _wordBlobUrls[key] = ''; });
+  if (!key) return Promise.resolve(null);
+  if (key in _wordBlobUrls) return Promise.resolve(_wordBlobUrls[key] || null);
+  if (_wordLoadProm[key]) return _wordLoadProm[key];
+  _wordLoadProm[key] = fetch('audio/' + key + '.mp3')
+    .then(function(r) { if (!r.ok) throw 0; return r.blob(); })
+    .then(function(blob) { _wordBlobUrls[key] = URL.createObjectURL(blob); return _wordBlobUrls[key]; })
+    .catch(function() { _wordBlobUrls[key] = ''; return null; });
+  return _wordLoadProm[key];
 }
 const _imageCache = {};
 function _preloadImage(key) {
@@ -746,27 +773,45 @@ function ninjaLogWrong(word, ms){
 }
 
 function playSfx(f) { _playSfx(f); }
-var _wordAudio = new Audio('audio/clickysound.mp3'); // reusable element (iOS unlock seed)
+var _wordAudio = new Audio();
+_wordAudio.preload = 'auto';
+function _playUrl(url, retry) {
+  if (!url) return;
+  _wordAudio.pause();
+  _wordAudio.src = url;
+  _wordAudio.load(); // iOS に明示的にバッファリングを指示 (readyState 0 での play() 回避)
+  var p = _wordAudio.play();
+  if (p) p.catch(function(e) {
+    if (!retry && e.name !== 'NotAllowedError') {
+      // NotAllowedError はユーザージェスチャー必須のため retry 不可
+      setTimeout(function() { _playUrl(url, true); }, 300);
+    }
+  });
+}
 function speak(w) {
   if (_muted || !w) return;
-  const key = w.replace(/\s+/g, '_');
-  if (!(key in _wordBlobUrls)) _preloadAudio(key);
-  var url = _wordBlobUrls[key] || ('audio/' + key + '.mp3');
-  try {
-    _wordAudio.pause();
-    _wordAudio.src = url;
-    _wordAudio.play().catch(function(){});
-  } catch(e) {}
+  var key = w.replace(/\s+/g, '_');
+  // preload 完了後に再生 → race condition 解消
+  _preloadAudio(key).then(function(url) {
+    _playUrl(url || ('audio/' + key + '.mp3'), false);
+  });
 }
-// ── iOS Audio Unlock ──────────────────────────────────────────────────────
+// ── iOS Dual Audio Unlock (WebAudio + HTMLAudio) ──────────────────────────
+// SFX (WebAudio) と 単語音声 (HTMLAudio) の両方を初回タップで unlock する。
 (function() {
-  function _unlock() {
-    var a = new Audio('audio/clickysound.mp3');
-    a.muted = true;
-    a.play().then(function() { a.pause(); }).catch(function(){});
+  function _unlockAll() {
+    var ctx = _getSfxCtx();
+    if (ctx.state !== 'running') {
+      ctx.resume().then(function() {
+        var b = ctx.createBuffer(1, 1, 22050); var s = ctx.createBufferSource();
+        s.buffer = b; s.connect(ctx.destination); s.start(0);
+      }).catch(function(){});
+    }
+    var a = new Audio('audio/clickysound.mp3'); a.muted = true;
+    var p = a.play(); if (p) p.then(function() { a.pause(); }).catch(function(){});
   }
-  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
-  document.addEventListener('click',      _unlock, { once: true, capture: true });
+  document.addEventListener('touchstart', _unlockAll, { once: true, capture: true });
+  document.addEventListener('click',      _unlockAll, { once: true, capture: true });
 })();
 function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
 function getHeartsHTML(){ let h=''; for(let i=0;i<MAX_LIVES;i++) h+= i<state.lives?'❤️':'🖤'; return h; }

@@ -3167,26 +3167,54 @@ function toggleMute() {
   document.body.appendChild(btn);
 })();
 
-// ── SFX (single element per sound) ───────────────────────────────────────
-const _sfxAudio = {};
-['clickysound','correctsound','wrongsound'].forEach(function(name) {
-  _sfxAudio[name] = new Audio('audio/' + name + '.mp3');
-});
-function _playSfx(name) {
-  if (_muted || !_sfxAudio[name]) return;
-  try { _sfxAudio[name].currentTime = 0; _sfxAudio[name].play().catch(function(){}); } catch(e) {}
+// ── WebAudio SFX Engine (iOS Safari/Chrome 最適化) ────────────────────────
+// HTMLAudioElement + currentTime=0 は iOS WebKit で再生遅延・連打切れが起きる。
+// WebAudio API (decodeAudioData + createBufferSource.start(0)) で置き換えた。
+// 連打でも毎回新しい BufferSource を生成するため確実・低遅延に再生できる。
+var _sfxCtx = null;
+var _sfxBufs = {};
+function _getSfxCtx() {
+  if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _sfxCtx;
 }
-// ── iOS Audio Unlock ──────────────────────────────────────────────────────
-// Plays a disposable muted element on first gesture to unlock tab-level audio.
-// Never touches the SFX pool — no race condition with playClick().
+function _decodeAB(ctx, ab) {
+  // decodeAudioData の旧コールバック形式 (iOS Safari 互換) を使用
+  return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
+}
 (function() {
-  function _unlock() {
-    var a = new Audio('audio/clickysound.mp3');
-    a.muted = true;
-    a.play().then(function() { a.pause(); }).catch(function(){});
+  var SE = ['clickysound','correctsound','wrongsound'];
+  var ctx = _getSfxCtx(); // suspended 状態でも decodeAudioData は実行可能
+  SE.forEach(function(name) {
+    fetch('audio/' + name + '.mp3')
+      .then(function(r) { return r.arrayBuffer(); })
+      .then(function(ab) { return _decodeAB(ctx, ab); })
+      .then(function(buf) { _sfxBufs[name] = buf; })
+      .catch(function() {});
+  });
+})();
+function _playSfx(name) {
+  if (_muted) return;
+  var ctx = _sfxCtx, buf = _sfxBufs[name];
+  if (!ctx || !buf) return;
+  try {
+    if (ctx.state !== 'running') ctx.resume().catch(function(){});
+    var src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(ctx.destination); src.start(0);
+  } catch(e) {}
+}
+// ── iOS AudioContext Unlock ───────────────────────────────────────────────
+// 初回タップで AudioContext を resume + silent buffer 再生して確実に unlock する。
+(function() {
+  function _unlockCtx() {
+    var ctx = _getSfxCtx();
+    if (ctx.state === 'running') return;
+    ctx.resume().then(function() {
+      var b = ctx.createBuffer(1, 1, 22050); var s = ctx.createBufferSource();
+      s.buffer = b; s.connect(ctx.destination); s.start(0);
+    }).catch(function(){});
   }
-  document.addEventListener('touchstart', _unlock, { once: true, capture: true });
-  document.addEventListener('click',      _unlock, { once: true, capture: true });
+  document.addEventListener('touchstart', _unlockCtx, { once: true, capture: true });
+  document.addEventListener('click',      _unlockCtx, { once: true, capture: true });
 })();
 
 function playClick()   { _playSfx('clickysound');  }
