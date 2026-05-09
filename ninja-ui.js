@@ -71,10 +71,10 @@
       // ── Status-card avatar: fixed 120×120 box (matches eigo-ninja
       //    home profile card byte-for-byte) with consistent inner image
       //    sizing across all 14 ninja designs. ──
-      '.ninja-ui-avatar{width:min(120px,28vw);height:min(120px,28vw);flex:0 0 min(120px,28vw);background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);}',
+      '.ninja-ui-avatar{width:min(120px,28vw);height:min(120px,28vw);flex:0 0 min(120px,28vw);display:flex;align-items:center;justify-content:center;overflow:hidden;}',
       '.ninja-ui-avatar img{width:100%;height:100%;object-fit:contain;display:block;}',
       // Compact variant for in-modal usage where space is tight.
-      '.ninja-ui-avatar.compact{width:80px;height:80px;flex:0 0 80px;border-width:2px;}',
+      '.ninja-ui-avatar.compact{width:80px;height:80px;flex:0 0 80px;}',
       // ── XP progress bar ──
       '.ninja-ui-xpbar{margin-top:12px;height:10px;background:rgba(255,255,255,0.18);border-radius:999px;overflow:hidden;}',
       '.ninja-ui-xpfill{height:100%;background:linear-gradient(90deg,#FFD54F,#FFB000);transition:width 0.5s;}',
@@ -83,6 +83,16 @@
       '.ninja-ui-table th,.ninja-ui-table td{padding:6px 4px;border-bottom:1px solid #eee;text-align:left;}',
       '.ninja-ui-table th{background:#f8f8f5;font-weight:900;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.5px;}',
       '.ninja-ui-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}',
+      '.ninja-ui-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}',
+      // ── Familiar picker cards (3-column, smaller than design picks) ──
+      '.ninja-ui-famcard{border:2px solid #eee;border-radius:14px;padding:10px 6px 8px;text-align:center;cursor:pointer;background:#fff;transition:0.1s;box-shadow:0 2px 0 #eee;}',
+      '.ninja-ui-famcard:active{transform:translateY(2px);box-shadow:none;}',
+      '.ninja-ui-famcard.fam-selected{border-color:#7C3AED;background:#F3E8FF;box-shadow:0 3px 0 #7C3AED;}',
+      '.ninja-ui-famcard.fam-starter{border-color:#FFD54F;background:#FFFDE7;box-shadow:0 3px 0 #FFD54F;}',
+      '.ninja-ui-famcard.fam-locked{opacity:0.42;cursor:not-allowed;box-shadow:none;}',
+      '.ninja-ui-famsvg{width:52px;height:52px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:28px;line-height:1;}',
+      '.ninja-ui-famsvg svg{width:52px!important;height:52px!important;}',
+      '.ninja-ui-cathead{font-size:10px;font-weight:900;letter-spacing:0.8px;text-transform:uppercase;padding:10px 0 4px;grid-column:1/-1;}',
       '.ninja-ui-pickcard{border:3px solid #eee;border-radius:18px;padding:14px 10px;text-align:center;cursor:pointer;background:#fff;transition:0.1s;box-shadow:0 3px 0 #eee;}',
       '.ninja-ui-pickcard:active{transform:translateY(2px);box-shadow:0 1px 0 #ddd;}',
       '.ninja-ui-pickcard.selected{border-color:#7C3AED;background:#F3E8FF;box-shadow:0 4px 0 #7C3AED;}',
@@ -117,6 +127,14 @@
       // ── Body lock — applied to <body> when an overlay is open so the
       //    background page doesn't scroll behind the modal. ──
       'body.ninja-ui-modal-open{overflow:hidden!important;}',
+      // ── Familiar chip animation ────────────────────────────────────────
+      // Replaces the removed footer mascot: the chip in the status card now
+      // bobs gently to give the familiar a "living" presence.
+      '@keyframes ninjaFamBob{0%,100%{transform:translateY(0) rotate(0deg) scaleX(1);}30%{transform:translateY(-6px) rotate(-5deg) scaleX(1.06);}70%{transform:translateY(-3px) rotate(4deg) scaleX(0.96);}}',
+      '.ninja-ui-fam-chip{animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;}',
+      // ── In-game familiar hint row ─────────────────────────────────────
+      '.ninja-fam-hint-row{display:block;text-align:center;margin:6px 0 4px;min-height:62px;}',
+      '@keyframes popIn{0%{transform:scale(0.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}',
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -342,7 +360,13 @@
     return [
       '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;background:' + _theme.bg + ';box-shadow:0 6px 0 ' + (_theme.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;" onclick="NinjaUI.openProfile()">',
         '<div class="ninja-ui-card-row">',
-          '<div class="ninja-ui-avatar">', avatarHTML, '</div>',
+          // Wrap avatar in a relative-positioned container so the familiar
+          // overlay chip can be positioned absolutely at bottom-right
+          // WITHOUT being clipped by .ninja-ui-avatar's border-radius+overflow:hidden.
+          '<div style="position:relative;flex:0 0 min(140px,32vw);width:min(140px,32vw);height:min(140px,32vw);">',
+            '<div class="ninja-ui-avatar" style="width:min(140px,32vw);height:min(140px,32vw);">', avatarHTML, '</div>',
+            _famOverlayHTML(),
+          '</div>',
           '<div style="flex:1;min-width:0;text-align:left;">',
             // Name
             '<div style="font-size:clamp(18px,5.5vw,28px);letter-spacing:1.5px;line-height:1.05;overflow:hidden;display:flex;align-items:center;gap:6px;">',
@@ -413,7 +437,10 @@
     return [
       '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;background:' + _theme2.bg + ';box-shadow:0 4px 0 ' + (_theme2.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;">',
         '<div class="ninja-ui-card-row">',
-          '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
+          '<div style="position:relative;flex:0 0 80px;width:80px;height:80px;">',
+            '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
+            _famOverlayHTML(),
+          '</div>',
           '<div style="flex:1;min-width:0;text-align:left;">',
             '<div style="font-size:clamp(20px,6vw,26px);letter-spacing:1px;line-height:1.05;">',
               '<span style="font-family:\'Bangers\',cursive;color:' + _nameC2 + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
@@ -455,6 +482,7 @@
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#0F766E;box-shadow:0 3px 0 #0D4745;" onclick="NinjaUI.openTextColorPicker()">🎨 色の変更 / Colors</button>',
       _aliasSection,
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#A78BFA;box-shadow:0 3px 0 #7C3AED;" onclick="NinjaUI.openDesignPicker()">🎨 忍者デザイン / Change Design</button>',
+      '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#E07B39;box-shadow:0 3px 0 #a05020;" onclick="NinjaUI.openFamiliarPicker()">🐾 忍者のお供 / Familiar</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + '" onclick="NinjaUI.openNameModal()">📝 忍者の名前 / Name ' + (p.nameLocked ? '🔒' : '') + '</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#FFB000;box-shadow:0 3px 0 #b07a00;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>',
       '<button class="ninja-ui-btn primary" style="' + btnGap + 'background:#3A8EE8;box-shadow:0 3px 0 #2060b0;" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>',
@@ -829,7 +857,10 @@
   }
   function _designAction(action, id) {
     if (action === 'select') {
-      if (N.designSelect(id)) refreshDesignPicker(false);
+      if (N.designSelect(id)) {
+        refreshDesignPicker(false);
+        _refreshHubCard(); // reflect design change in hub preview card immediately
+      }
       return;
     }
     if (action === 'starter') {
@@ -1372,6 +1403,301 @@
   }
 
   // ───────────────────────────────────────────────────────────────────────
+  // Ninja Familiar — overlay helper + picker modal
+  // ───────────────────────────────────────────────────────────────────────
+
+  // _famOverlayHTML — small 26×26 chip displayed at the bottom-right of the
+  // home status card avatar (outside .ninja-ui-avatar so it's not clipped by
+  // that element's border-radius+overflow:hidden).
+  // The SVG is resized to 22×22 by replacing its width/height attributes;
+  // this is robust even when the SVG string carries explicit dimensions.
+  function _famOverlayHTML() {
+    if (!N.familiar || !N.familiar.selected) return '';
+    var selId  = N.familiar.selected;
+    var svgMap = global.FAMILIAR_SVGS || global.ANIMALS || {};
+    var def    = N.familiarMap && N.familiarMap[selId];
+    if (!def) return '';
+    var inner;
+    if (svgMap[selId]) {
+      // Resize SVG to 40×40 (up from 22×22 — mascot-sized)
+      var svgStr = svgMap[selId]
+        .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+        .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+        .replace(/<svg/, '<svg width="40" height="40"');
+      inner = svgStr;
+    } else {
+      inner = '<span style="font-size:24px;line-height:1;">' + (def.emoji || '🐾') + '</span>';
+    }
+    return '<div class="ninja-ui-fam-chip" style="position:absolute;bottom:-4px;right:-12px;width:48px;height:48px;'
+      + 'display:flex;align-items:center;justify-content:center;">'
+      + inner + '</div>';
+  }
+
+  // _famHintChipHTML — 48×48 familiar avatar for the in-game hint row.
+  // action: onclick handler string ('' = no tap action)
+  // showing: true when hint is currently revealed (golden glow)
+  function _famHintChipHTML(action, showing) {
+    var svgMap = global.FAMILIAR_SVGS || global.ANIMALS || {};
+    var selId  = N.familiar && N.familiar.selected;
+    var def    = selId && N.familiarMap && N.familiarMap[selId];
+    var inner;
+    if (selId && svgMap[selId]) {
+      var s = svgMap[selId]
+        .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+        .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+        .replace(/<svg/, '<svg width="48" height="48"');
+      inner = s;
+    } else {
+      inner = '<span style="font-size:32px;line-height:1;">' + ((def && def.emoji) || '🐾') + '</span>';
+    }
+    return '<div'
+      + (action ? ' onclick="' + action + '"' : '')
+      + ' style="width:56px;height:56px;display:inline-flex;align-items:center;justify-content:center;'
+      + 'cursor:' + (action ? 'pointer' : 'default') + ';'
+      + 'filter:' + (showing ? 'drop-shadow(0 0 6px #FFD54F)' : 'none') + ';'
+      + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+      + inner + '</div>';
+  }
+
+  // familiarHintRowHTML — renders the sub-question row for all game screens.
+  // opts:
+  //   hintAction  {string}  onclick string for hint tap ('' = no hint)
+  //   hintShown   {bool}    true when hint is currently revealed
+  //   hintText    {string}  text to show when revealed
+  //   lives       {number|null}  current lives count (null = no lives system)
+  //   isSpeedster {bool}    if true, returns empty string
+  //   cheerMsg    {string}  override cheer message (random used if omitted)
+  function familiarHintRowHTML(opts) {
+    opts = opts || {};
+    if (opts.isSpeedster) return '';
+    var hasHint   = !!(opts.hintAction);
+    var hintShown = !!(opts.hintShown);
+    var hintText  = opts.hintText || '';
+    var lives     = (opts.lives !== undefined && opts.lives !== null) ? opts.lives : -1;
+    var hasLives  = lives >= 0;
+    var CHEERS = [
+      'Go for it!', 'You can do it!', 'Believe in yourself！', 'ファイト！',
+      '頑張れ！', 'あきらめないで！', 'Keep going!', 'Believe in yourself!',
+      "You've got this!", '集中！', 'Nice and steady!', 'One step at a time!'
+    ];
+    var cheerMsg = opts.cheerMsg || CHEERS[Math.floor(Math.random() * CHEERS.length)];
+    // Hearts HTML
+    var full = Math.floor(Math.max(0, lives));
+    var half = (lives - full) >= 0.5;
+    var hearts = '';
+    for (var h = 0; h < full; h++) hearts += '❤️';
+    if (half) hearts += '💛';
+    var heartsHTML = hasLives
+      ? '<div id="lives-display" style="font-size:18px;letter-spacing:1px;line-height:1;">' + hearts + '</div>'
+      : '';
+    var chipHTML = _famHintChipHTML(hasHint ? opts.hintAction : '', hintShown);
+    var rowContent = '';
+    if (hasHint) {
+      rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;">'
+        + chipHTML + (hasLives ? heartsHTML : '') + '</div>';
+      if (hintShown && hintText) {
+        rowContent += '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
+          + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
+          + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>';
+      }
+    } else {
+      var bubble = '<div style="position:relative;display:inline-flex;align-items:center;gap:8px;">'
+        + chipHTML
+        + '<div style="background:#f1f3f5;border:1.5px solid #dee2e6;border-radius:12px;'
+        + 'padding:6px 12px;font-size:13px;font-weight:800;color:#555;max-width:160px;line-height:1.3;'
+        + 'border-bottom-left-radius:4px;">' + cheerMsg + '</div></div>';
+      rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:12px;">'
+        + bubble + (hasLives ? heartsHTML : '') + '</div>';
+    }
+    return '<div class="ninja-fam-hint-row">' + rowContent + '</div>';
+  }
+
+  // _famCardSvg — 52×52 SVG/emoji art for a familiar pick card
+  function _famCardSvg(id) {
+    var svgMap = global.FAMILIAR_SVGS || global.ANIMALS || {};
+    var def    = N.familiarMap && N.familiarMap[id];
+    if (svgMap[id]) {
+      var svgStr = svgMap[id]
+        .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+        .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+        .replace(/<svg/, '<svg width="52" height="52"');
+      return '<div class="ninja-ui-famsvg">' + svgStr + '</div>';
+    }
+    return '<div class="ninja-ui-famsvg">' + (def ? (def.emoji || '🐾') : '🐾') + '</div>';
+  }
+
+  // openFamiliarPicker — familiar selection modal (mirrors openDesignPicker UX)
+  function openFamiliarPicker(opts) {
+    var starterMode = !!(opts && opts.starterMode);
+    injectStyles();
+    // Tear down any stale picker overlay
+    var stale = document.getElementById('ninja-ui-familiar-pick');
+    if (stale) { stale.remove(); unlockBodyScroll(); }
+    var ov = document.createElement('div');
+    ov.id = 'ninja-ui-familiar-pick';
+    ov.className = 'ninja-ui-overlay';
+    ov.style.zIndex = '10010';
+    ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-ui-familiar-box">'
+      + '<button class="ninja-ui-top-close" onclick="NinjaUI._closeFamiliarPicker()" aria-label="Close">✕</button>'
+      + '</div>';
+    ov.addEventListener('click', function (ev) { if (ev.target === ov) _closeFamiliarPicker(); });
+    document.body.appendChild(ov);
+    lockBodyScroll();
+    _refreshFamiliarPicker(starterMode);
+  }
+
+  function _refreshFamiliarPicker(starterMode) {
+    var box = document.getElementById('ninja-ui-familiar-box');
+    if (!box) return;
+    var defs       = N.familiarDefs || [];
+    var hasNoFam   = !(N.familiar && N.familiar.selected);
+    var canStarter = typeof N.familiarHasStarterAvailable === 'function' && N.familiarHasStarterAvailable();
+    var isFirstPick = (starterMode || hasNoFam) && canStarter;
+    var tokens     = (typeof N.familiarTokensAvailable === 'function') ? N.familiarTokensAvailable() : 0;
+    var xpToNext   = (typeof N.familiarXpToNextToken === 'function')   ? N.familiarXpToNextToken()   : 0;
+
+    // ── Card rendering ───────────────────────────────────────────────────
+    var visibleDefs = isFirstPick
+      ? defs.filter(function(d) { return d.unlocksAt === 0; }) // starter: daily only
+      : defs;
+
+    var cards = visibleDefs.map(function (def) {
+      var id          = def.id;
+      var isSelected  = N.familiar && N.familiar.selected === id;
+      var isUnlocked  = typeof N.isFamiliarUnlocked === 'function' && N.isFamiliarUnlocked(id);
+      var isLevelGated = def.unlocksAt > 0;
+      var canUnlock   = !isLevelGated && !isUnlocked &&
+                        (typeof N.isFamiliarAvailableToUnlock === 'function') &&
+                        N.isFamiliarAvailableToUnlock(id);
+      var cls       = 'ninja-ui-famcard';
+      var action    = '';
+      var statusTxt = '';
+
+      if (isSelected) {
+        cls += ' fam-selected'; statusTxt = '✅ 選択中';
+      } else if (isFirstPick && !isLevelGated) {
+        cls += ' fam-starter'; statusTxt = '🆓 選んで！';
+        action = "NinjaUI._familiarAction('starter','" + id + "')";
+      } else if (isUnlocked) {
+        cls += ' unlocked'; statusTxt = 'タップで切替';
+        action = "NinjaUI._familiarAction('select','" + id + "')";
+      } else if (canUnlock && tokens > 0) {
+        cls += ' fam-starter'; statusTxt = '🔓 解放する';
+        action = "NinjaUI._familiarAction('unlock','" + id + "')";
+      } else if (canUnlock && tokens <= 0) {
+        cls += ' fam-locked'; statusTxt = '🎟 トークン不足';
+      } else {
+        // locked by level (level-gated or daily below level)
+        cls += ' fam-locked'; statusTxt = def.unlocksAt > 0 ? '🔒 Lv' + def.unlocksAt : '🔒';
+      }
+
+      return '<div class="' + cls + '"' + (action ? ' onclick="' + action + '"' : '') + '>'
+        + _famCardSvg(id)
+        + '<div style="font-size:10px;font-weight:800;color:#444;line-height:1.2;">' + htmlEsc(def.name) + '</div>'
+        + '<div style="font-size:10px;color:#888;margin-top:2px;">' + statusTxt + '</div>'
+        + '</div>';
+    }).join('');
+
+    // ── Banner ───────────────────────────────────────────────────────────
+    var banner;
+    if (isFirstPick) {
+      banner = '<div class="ninja-ui-banner" style="background:#FFF8E1;border:2px solid #FFD54F;color:#7a5800;">🐾 まずは1匹選んでお供にしよう！<br><span style="font-size:11px;font-weight:700;">Pick your first Ninja Familiar.</span></div>';
+    } else if (tokens > 0) {
+      banner = '<div class="ninja-ui-banner" style="background:#F3E8FF;border:2px solid #A78BFA;color:#4C1D95;">'
+        + '🎟 解放可能なお供：<span style="font-size:18px;font-weight:900;">' + tokens + '</span>　'
+        + '好きなお供を選んで解放しよう！<br>'
+        + '<span style="font-size:11px;font-weight:700;">(Lv３ごとに解放できるよ。※一部を除く)</span>'
+        + '</div>';
+    } else {
+      banner = '<div class="ninja-ui-banner" style="background:#f8f8f5;border:2px solid #ddd;color:#666;">'
+        + '🐾 いつでもお供を切り替え可能<br>'
+        + '<span style="font-size:11px;font-weight:700;color:#888;">次のトークンまで: あと ' + xpToNext.toLocaleString() + ' XP (Lv' + ((Math.floor((N.progress.level||0)/3)+1)*3) + ')</span>'
+        + '</div>';
+    }
+
+    box.innerHTML = [
+      '<button class="ninja-ui-top-close" onclick="NinjaUI._closeFamiliarPicker()" aria-label="Close">✕</button>',
+      '<div class="ninja-ui-title">🐾 忍者のお供 / Ninja Familiar</div>',
+      '<p style="text-align:center;font-size:12px;color:#666;font-weight:700;margin-bottom:10px;line-height:1.5;">',
+        isFirstPick
+          ? 'お供を選んでヒントをもらおう！<br>Your Familiar gives you hints in battle.'
+          : '解放済みのお供からいつでも切り替えられます<br>Switch between any unlocked familiar.',
+      '</p>',
+      banner,
+      '<div class="ninja-ui-grid3">' + cards + '</div>',
+      '<button class="ninja-ui-btn primary" style="margin-top:14px;" onclick="NinjaUI._closeFamiliarPicker()">',
+        isFirstPick ? '後で / Skip for now' : '✅ 決定 / Done',
+      '</button>',
+    ].join('');
+  }
+
+  // _refreshHubCard — rebuild the identityHeaderHTML card inside the profile hub
+  // popup whenever a customisation is applied (design, alias, familiar, color).
+  // Safe to call even when the hub is not open (no-op if not in DOM).
+  function _refreshHubCard() {
+    var hubCard = document.getElementById('ninja-hub-preview-card');
+    if (!hubCard) return;
+    var hubPar = hubCard.parentElement;
+    if (!hubPar) return;
+    var tmp = document.createElement('div');
+    tmp.innerHTML = identityHeaderHTML();
+    var newC = tmp.firstChild;
+    if (newC) { newC.id = 'ninja-hub-preview-card'; hubPar.replaceChild(newC, hubCard); }
+  }
+
+  function _closeFamiliarPicker() {
+    var ov = document.getElementById('ninja-ui-familiar-pick');
+    if (ov) { ov.remove(); unlockBodyScroll(); }
+    _refreshHubCard(); // reflect familiar change in hub preview card
+    if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
+  }
+
+  function _familiarAction(action, id) {
+    if (action === 'select') {
+      if (typeof N.familiarSelect === 'function' && N.familiarSelect(id)) {
+        _refreshFamiliarPicker(false);
+        _refreshHubCard();
+      }
+      return;
+    }
+    if (action === 'starter') {
+      if (typeof N.familiarHasStarterAvailable !== 'function' || !N.familiarHasStarterAvailable()) {
+        showToast('⚠️ スターター選択は別ゲームで使用済みです');
+        _refreshFamiliarPicker(false);
+        return;
+      }
+      if (typeof N.familiarStarter === 'function' && N.familiarStarter(id)) {
+        _closeFamiliarPicker();
+      }
+      return;
+    }
+    if (action === 'unlock') {
+      if (typeof N.familiarUnlock === 'function' && N.familiarUnlock(id)) {
+        var def = N.familiarMap && N.familiarMap[id];
+        var name = def ? def.name : id;
+        showToast('🐾 ' + name + ' がお供になりました！');
+        _refreshFamiliarPicker(false);
+        _refreshHubCard();
+        // Refresh home status card to show newly selected familiar chip
+        var card = document.getElementById('ninja-status-card');
+        if (card) { var par = card.parentElement; if (par) par.innerHTML = statusBadgeHTML(); }
+      } else {
+        showToast('⚠️ 解放できませんでした');
+      }
+      return;
+    }
+  }
+
+  // maybePromptFamiliarStarter — shows the familiar starter picker once the
+  // player has a design selected but hasn't chosen a familiar yet.
+  // Call this from the host game's boot sequence (after maybePromptStarter).
+  function maybePromptFamiliarStarter(delayMs) {
+    if (N.design && N.design.selected && N.familiar && N.familiar.selected === null) {
+      setTimeout(function () { openFamiliarPicker({ starterMode: true }); }, delayMs || 400);
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
   // Boot helpers
   // ───────────────────────────────────────────────────────────────────────
   // Auto-prompt the design picker on first boot when the player has no
@@ -1483,6 +1809,7 @@
       var theme = (N.STATUS_THEMES || {})[themeId] || { bg:'linear-gradient(135deg,#1a1a2e,#16213e,#0f3460)', accent:'#FFD54F' };
       rowsDiv.innerHTML = _buildAliasRows(aliases, p.selectedAlias || '', theme);
     }
+    _refreshHubCard(); // reflect alias change in hub preview card immediately
     if (typeof global.onNinjaProgressChanged === 'function') global.onNinjaProgressChanged();
   }
 
@@ -1679,9 +2006,19 @@
     copySessionText:    copySessionText,
 
     // boot helpers
-    maybePromptStarter: maybePromptStarter,
-    maybePromptName:    maybePromptName,
-    armOnLinks:         armOnLinks,
+    maybePromptStarter:        maybePromptStarter,
+    maybePromptName:           maybePromptName,
+    maybePromptFamiliarStarter: maybePromptFamiliarStarter,
+    armOnLinks:                armOnLinks,
+
+    // in-game familiar hint row
+    familiarHintRowHTML: familiarHintRowHTML,
+
+    // familiar picker
+    openFamiliarPicker:   openFamiliarPicker,
+    _closeFamiliarPicker: _closeFamiliarPicker,
+    _familiarAction:      _familiarAction,
+    _refreshHubCard:      _refreshHubCard,
 
     // village (clan system)
     clanCarouselHTML: clanCarouselHTML,

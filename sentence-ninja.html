@@ -577,6 +577,34 @@ const ANIMALS = {
 };
 const ANIMAL_KEYS = Object.keys(ANIMALS);
 
+// Stored as window.FAMILIAR_SVGS so NinjaUI's _famOverlayHTML / _famCardSvg
+// can access them via global.FAMILIAR_SVGS. viewBox="0 0 64 64" throughout.
+const FAMILIAR_SVGS = {
+  // ── daily (always available) ─────────────────────────────────────────
+  fox:     ANIMALS.fox,
+  bear:    ANIMALS.bear,
+  bunny:   ANIMALS.bunny,
+  dog:     `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(15 46 20)"/><ellipse cx="18" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(15 46 20)"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#E8C99A"/><ellipse cx="25" cy="31" rx="4" ry="4" fill="white"/><ellipse cx="39" cy="31" rx="4" ry="4" fill="white"/><circle cx="25.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="39.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="26.2" cy="30.2" r="0.8" fill="white"/><circle cx="40.2" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 42 Q32 45.5 35 42" stroke="#5C3317" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/><ellipse cx="44" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/></svg>`,
+  cat:     `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="15,18 22,5 29,20" fill="#888"/><polygon points="49,18 42,5 35,20" fill="#888"/><polygon points="17,17 22,9 27,18" fill="#FFC0CB"/><polygon points="47,17 42,9 37,18" fill="#FFC0CB"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#888"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#ccc"/><ellipse cx="24" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="40" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="24" cy="30" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="40" cy="30" rx="2" ry="4" fill="#1a1a2e"/><circle cx="24.5" cy="29" r="0.8" fill="white"/><circle cx="40.5" cy="29" r="0.8" fill="white"/><polygon points="32,37 30,39.5 34,39.5" fill="#FF9999"/><path d="M29 40.5 Q32 43 35 40.5" stroke="#777" stroke-width="1" fill="none"/><line x1="13" y1="38" x2="26" y2="39" stroke="#666" stroke-width="0.8"/><line x1="13" y1="40.5" x2="26" y2="40.5" stroke="#666" stroke-width="0.8"/><line x1="38" y1="39" x2="51" y2="38" stroke="#666" stroke-width="0.8"/><line x1="38" y1="40.5" x2="51" y2="40.5" stroke="#666" stroke-width="0.8"/></svg>`,
+  squirrel:`<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="47" cy="22" rx="13" ry="19" fill="#C87941"/><ellipse cx="45" cy="23" rx="9" ry="14" fill="#E8A86A"/><ellipse cx="20" cy="14" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="35" cy="12" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="20" cy="14" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="35" cy="12" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="26" cy="37" rx="16" ry="18" fill="#8B5E3C"/><ellipse cx="26" cy="41" rx="10" ry="11" fill="#F7C59F"/><ellipse cx="20" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="32" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="21" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="33" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="21.7" cy="30.2" r="0.7" fill="white"/><circle cx="33.7" cy="30.2" r="0.7" fill="white"/><ellipse cx="26" cy="40" rx="2.5" ry="1.8" fill="#8B4513"/></svg>`,
+  raccoon: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="46" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="18" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="46" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#999"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff"/><ellipse cx="23" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="41" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="23" cy="30" rx="4" ry="4" fill="white"/><ellipse cx="41" cy="30" rx="4" ry="4" fill="white"/><circle cx="23.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="41.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="24.2" cy="29.2" r="0.7" fill="white"/><circle cx="42.2" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#333"/><path d="M29 41 Q32 44 35 41" stroke="#555" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  deer:    `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="20" x2="12" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="5" x2="8" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="5" x2="17" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="44" y1="20" x2="52" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="5" x2="56" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="52" y1="5" x2="47" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><ellipse cx="17" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="47" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="41" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="25.8" cy="30.5" r="0.8" fill="white"/><circle cx="41.8" cy="30.5" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/><ellipse cx="45" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/></svg>`,
+  // ── japanese (Lv 4/8/16) ─────────────────────────────────────────────
+  tanuki:  `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="9" rx="10" ry="6" fill="#4CAF50" transform="rotate(-12 32 9)"/><line x1="32" y1="13" x2="32" y2="19" stroke="#388E3C" stroke-width="1.5"/><circle cx="16" cy="20" r="7" fill="#8B5E3C"/><circle cx="48" cy="20" r="7" fill="#8B5E3C"/><ellipse cx="32" cy="39" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="43" rx="16" ry="12" fill="#F7C59F"/><ellipse cx="23" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="41" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="23" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="41" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="23.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="41.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="24.2" cy="29.8" r="0.6" fill="white"/><circle cx="42.2" cy="29.8" r="0.6" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 41 Q32 44.5 35 41" stroke="#5C3317" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  crane:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="39" rx="18" ry="16" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="24" rx="6" ry="12" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="14" rx="8" ry="8" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="10" rx="5" ry="3" fill="#E63946"/><polygon points="32,12 41,14 32,17" fill="#e8a000"/><circle cx="35" cy="14" r="2.5" fill="white" stroke="#ddd" stroke-width="0.5"/><circle cx="35.5" cy="14" r="1.5" fill="#1a1a2e"/><circle cx="36" cy="13.5" r="0.5" fill="white"/><ellipse cx="16" cy="41" rx="10" ry="6" fill="#444" transform="rotate(-20 16 41)"/><ellipse cx="48" cy="41" rx="10" ry="6" fill="#444" transform="rotate(20 48 41)"/><line x1="28" y1="55" x2="24" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="55" x2="40" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  eagle:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="10" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(-15 10 33)"/><ellipse cx="54" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(15 54 33)"/><ellipse cx="32" cy="39" rx="14" ry="15" fill="#8B5E3C"/><circle cx="32" cy="21" r="11" fill="white"/><polygon points="32,23 42,21 32,26" fill="#FFB000"/><circle cx="37" cy="20" r="3" fill="#FFB000"/><circle cx="37.5" cy="20" r="2" fill="#1a1a2e"/><circle cx="38" cy="19.5" r="0.6" fill="white"/><ellipse cx="32" cy="53" rx="8" ry="5" fill="white"/></svg>`,
+  // ── fantasy (Lv 32/64/128/256) ──────────────────────────────────────
+  dragon:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="22,16 18,3 24,14" fill="#FFD700"/><polygon points="42,16 46,3 40,14" fill="#FFD700"/><ellipse cx="32" cy="39" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="27" rx="18" ry="14" fill="#2aab8a"/><ellipse cx="32" cy="35" rx="10" ry="7" fill="#3acca0"/><ellipse cx="22" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="42" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="22" cy="24" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="42" cy="24" rx="2" ry="4" fill="#1a1a2e"/><circle cx="22.5" cy="23" r="0.7" fill="white"/><circle cx="42.5" cy="23" r="0.7" fill="white"/><circle cx="29" cy="35" r="1.5" fill="#1a7a5e"/><circle cx="35" cy="35" r="1.5" fill="#1a7a5e"/><line x1="11" y1="33" x2="26" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/><line x1="53" y1="33" x2="38" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  phoenix: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="51" rx="10" ry="11" fill="#FF6B00" opacity="0.7"/><ellipse cx="20" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="44" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="11" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(-25 11 29)"/><ellipse cx="53" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(25 53 29)"/><ellipse cx="9" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(-25 9 27)"/><ellipse cx="55" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(25 55 27)"/><ellipse cx="32" cy="35" rx="16" ry="14" fill="#E63946"/><circle cx="32" cy="20" r="11" fill="#E63946"/><polygon points="32,10 28,4 32,8 36,4" fill="#FFD700"/><polygon points="30,20 40,18 30,25" fill="#FFD700"/><circle cx="35" cy="19" r="3" fill="#FFD700"/><circle cx="35.5" cy="19" r="2" fill="#1a1a2e"/><circle cx="36" cy="18.5" r="0.6" fill="white"/></svg>`,
+  griffin: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="8" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(-20 8 31)"/><ellipse cx="56" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(20 56 31)"/><ellipse cx="32" cy="44" rx="18" ry="14" fill="#C49A6C"/><circle cx="32" cy="28" r="15" fill="#8B5E3C"/><circle cx="32" cy="24" r="11" fill="white"/><polygon points="32,26 42,22 32,31" fill="#FFB000"/><circle cx="36.5" cy="22" r="3" fill="#FFD700"/><circle cx="37" cy="22" r="2" fill="#1a1a2e"/><circle cx="37.5" cy="21.5" r="0.6" fill="white"/><ellipse cx="48" cy="52" rx="6" ry="5" fill="#8B5E3C"/></svg>`,
+  unicorn: `<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="ugh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><ellipse cx="32" cy="40" rx="18" ry="16" fill="#F8F8FF"/><ellipse cx="32" cy="25" rx="9" ry="13" fill="#F8F8FF"/><ellipse cx="32" cy="16" rx="12" ry="10" fill="#F8F8FF"/><polygon points="32,4 28,18 36,18" fill="url(#ugh)"/><ellipse cx="22" cy="20" rx="6" ry="11" fill="#F48FB1" opacity="0.8"/><ellipse cx="20" cy="22" rx="4" ry="9" fill="#A78BFA" opacity="0.7"/><ellipse cx="37" cy="16" rx="4" ry="4" fill="#A78BFA"/><circle cx="37.5" cy="16" r="2.5" fill="#1a1a2e"/><circle cx="38.2" cy="15.3" r="0.8" fill="white"/><ellipse cx="42" cy="20" rx="6" ry="4" fill="#F8F8FF"/><ellipse cx="40" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><ellipse cx="44" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><circle cx="10" cy="12" r="1.5" fill="#FFD700" opacity="0.8"/><circle cx="54" cy="20" r="1.5" fill="#FF6B6B" opacity="0.8"/></svg>`,
+  // ── mythic (Lv 50/100/150) ────────────────────────────────────────────
+  kitsune: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="44" cy="48" rx="12" ry="7" fill="#F5D769" transform="rotate(-30 44 48)"/><ellipse cx="50" cy="43" rx="12" ry="7" fill="#FFE599" transform="rotate(-10 50 43)"/><ellipse cx="50" cy="36" rx="12" ry="7" fill="#F5D769" transform="rotate(10 50 36)"/><polygon points="14,22 10,4 22,18" fill="#F5D769"/><polygon points="50,22 54,4 42,18" fill="#F5D769"/><polygon points="15,21 11,8 21,18" fill="#fff5cc"/><polygon points="49,21 53,8 43,18" fill="#fff5cc"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F5D769"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff5cc"/><ellipse cx="24" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="30" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="41" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="25.7" cy="29.7" r="0.7" fill="white"/><circle cx="41.7" cy="29.7" r="0.7" fill="white"/><ellipse cx="32" cy="37.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/><ellipse cx="45" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/></svg>`,
+  kirin:   `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="18" x2="12" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="4" r="3" fill="#FFD700"/><line x1="12" y1="4" x2="8" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="10" r="2" fill="#FFD700"/><line x1="44" y1="18" x2="52" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="4" r="3" fill="#FFD700"/><line x1="52" y1="4" x2="56" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="10" r="2" fill="#FFD700"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#3acca0"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><circle cx="24.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="40.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="25.2" cy="29.8" r="0.7" fill="white"/><circle cx="41.2" cy="29.8" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3" ry="2" fill="#0d5e48"/><ellipse cx="32" cy="36" rx="21" ry="19" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.6"/></svg>`,
+  raijuu:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="32,2 28,12 20,8 26,16 16,14 24,20 16,22 26,24 18,30 28,28 24,36 32,30 40,36 36,28 46,30 38,22 48,20 40,16 50,14 42,8 38,12" fill="#FFD700" opacity="0.25"/><polygon points="18,20 14,5 26,18" fill="#e0e0e0"/><polygon points="46,20 50,5 38,18" fill="#e0e0e0"/><polygon points="19,19 16,9 25,18" fill="#FFD700" opacity="0.6"/><polygon points="45,19 48,9 39,18" fill="#FFD700" opacity="0.6"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#e0e0e0"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="white"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><circle cx="24.5" cy="30.5" r="2.5" fill="white"/><circle cx="40.5" cy="30.5" r="2.5" fill="white"/><circle cx="24" cy="30.5" r="1.5" fill="#1a1a2e"/><circle cx="40" cy="30.5" r="1.5" fill="#1a1a2e"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#666"/><path d="M29 41 Q32 44 35 41" stroke="#888" stroke-width="1.2" fill="none" stroke-linecap="round"/><polyline points="18,35 20,38 18,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/><polyline points="46,35 44,38 46,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+};
+window.FAMILIAR_SVGS = FAMILIAR_SVGS;
+
 const SPEEDSTER_SECS  = 60;
 const BLITZ_SECS      = 60;
 const ROUNDS_PER_GAME = 10;
@@ -675,9 +703,12 @@ function getMuteHTML() {
   return `<button class="mute-btn${_muted?' muted':''}" onclick="toggleMute()" aria-label="Toggle sound">${_muted?'🔇':'🔊'}</button>`;
 }
 
-// ── WebAudio SFX Engine (iOS Safari/Chrome 最適化) ────────────────────────
+// ── WebAudio SFX Engine + HTMLAudio フォールバック ────────────────────────
+// WebAudio: iOS Safari/Chrome 向け遅延ゼロ再生
+// HTMLAudio fallback: WebAudio バッファ未ロード時 / fetch ブロック時の保険
 var _sfxCtx = null;
 var _sfxBufs = {};
+var _sfxFallback = {};
 function _getSfxCtx() {
   if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
   return _sfxCtx;
@@ -687,10 +718,15 @@ function _decodeAB(ctx, ab) {
 }
 (function() {
   var SE = ['clickysound','correctsound','wrongsound','correctsound_short','correct_short'];
+  SE.forEach(function(name) {
+    var fa = new Audio('audio/' + name + '.mp3');
+    fa.preload = 'auto';
+    _sfxFallback[name] = fa;
+  });
   var ctx = _getSfxCtx();
   SE.forEach(function(name) {
     fetch('audio/' + name + '.mp3')
-      .then(function(r) { return r.arrayBuffer(); })
+      .then(function(r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
       .then(function(ab) { return _decodeAB(ctx, ab); })
       .then(function(buf) { _sfxBufs[name] = buf; })
       .catch(function() {});
@@ -699,12 +735,20 @@ function _decodeAB(ctx, ab) {
 function _playSfx(name) {
   if (_muted) return;
   var ctx = _sfxCtx, buf = _sfxBufs[name];
-  if (!ctx || !buf) return;
-  try {
-    if (ctx.state !== 'running') ctx.resume().catch(function(){});
-    var src = ctx.createBufferSource();
-    src.buffer = buf; src.connect(ctx.destination); src.start(0);
-  } catch(e) {}
+  if (ctx && buf) {
+    function _doPlay() {
+      try {
+        var src = ctx.createBufferSource();
+        src.buffer = buf; src.connect(ctx.destination); src.start(0);
+      } catch(e) {}
+    }
+    if (ctx.state === 'running') { _doPlay(); }
+    else { ctx.resume().then(_doPlay).catch(function(){}); }
+  } else {
+    var fa = _sfxFallback[name];
+    if (!fa) return;
+    try { fa.currentTime = 0; fa.play().catch(function(){}); } catch(e) {}
+  }
 }
 
 function playSfx(f) { _playSfx(f); }
@@ -764,14 +808,17 @@ function speakSentence(audio) {
 function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
 function pickMascot(exclude) { let pool=ANIMAL_KEYS.filter(k=>k!==exclude); G.avatar=pool[Math.floor(Math.random()*pool.length)]; }
 
+// getFamiliarSvg — returns the selected Familiar's SVG if available,
+// falling back to the random ANIMALS pick set by pickMascot().
+function getFamiliarSvg() {
+  try {
+    const famId = Ninja.familiar && Ninja.familiar.selected;
+    if (famId && FAMILIAR_SVGS[famId]) return FAMILIAR_SVGS[famId];
+  } catch (e) {}
+  return ANIMALS[G.avatar] || ANIMALS.fox;
+}
 function getFooter(msg, excited=false) {
-  return `<div class="footer-area">
-    <div class="mascot-row">
-      <div class="footer-mascot-svg mascot-${G.avatar}${excited?' mascot-excited':''}">${ANIMALS[G.avatar]}</div>
-      <div class="mascot-bubble">${msg}</div>
-    </div>
-    <div class="brand-footer">ELKえいご王国</div>
-  </div>`;
+  return `<div class="footer-area"><div class="brand-footer">ELKえいご王国</div></div>`;
 }
 
 // ── Click sound for menu/level/mode/link interactions ─────────────────
@@ -1161,14 +1208,12 @@ function renderGame() {
   const progress=(G.round/ROUNDS_PER_GAME)*100;
   const excitedSp=isSpeedster && G.speedsterTimeLeft<=15;
 
-  const livesHTML=isSpeedster?'⚡':('❤️'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.max(0,3-G.lives)));
   const scoreText=isSpeedster?`⚡ ${G.score} chars`:`⭐ ${G.score} | ${G.round+1}/${ROUNDS_PER_GAME}`;
 
   const topBar=`
     <div class="top-bar">
       <button class="menu-btn" onclick="renderWelcome()">🏠 Menu</button>
       <div class="top-bar-mid">
-        <div class="lives-display">${livesHTML}</div>
         ${getMuteHTML()}
       </div>
       <div class="score-pill">${scoreText}</div>
@@ -1212,9 +1257,14 @@ function renderGame() {
     </div>`;
 
   const footerMsg=isSpeedster?(excitedSp?'Hurry!!':'Go go go! ⚡'):isSense?'Use the Force! 🌌':'Build the sentence!';
+  const famHintRow=NinjaUI.familiarHintRowHTML({
+    hintAction:  '',
+    lives:       isSpeedster ? null : G.lives,
+    isSpeedster: isSpeedster,
+  });
 
   document.getElementById('game-area').innerHTML=
-    topBar+timerHTML+clueCard+mainContent+progressBar+getFooter(footerMsg,excitedSp);
+    topBar+timerHTML+clueCard+famHintRow+mainContent+progressBar+getFooter(footerMsg,excitedSp);
 }
 
 // ── Word mode ──
@@ -1429,8 +1479,8 @@ function handleWrong() {
     return;
   }
   G.lives--;
-  const ld=document.querySelector('.lives-display');
-  if(ld) ld.textContent='❤️'.repeat(Math.max(0,G.lives))+'🖤'.repeat(Math.max(0,3-G.lives));
+  const ld=document.getElementById('lives-display');
+  if(ld){ const _f=Math.floor(Math.max(0,G.lives)),_h=(G.lives-_f)>=0.5; ld.innerHTML='❤️'.repeat(_f)+(_h?'💛':''); }
   const aa=document.getElementById('answer-area');
   if(aa){ aa.classList.add('shake'); setTimeout(()=>aa.classList.remove('shake'),500); }
   if(G.lives<=0){ G.isGameOver=true; G.revealed=true; showFeedback(false); setTimeout(()=>renderEnd(),1200); }
@@ -1731,6 +1781,7 @@ function checkPassword() {
     playSfx('correctsound');
     renderWelcome();
     NinjaUI.maybePromptStarter(300);
+    NinjaUI.maybePromptFamiliarStarter(600);
   } else {
     playSfx('wrongsound');
     inp.style.borderColor = '#E63946';

@@ -43,6 +43,7 @@
   var LEVEL_FACTOR            = 50;     // level = floor(sqrt(exp / 50)) → Lv1000 = 50,000,000 XP
   var LEVEL_FACTOR_LEGACY     = 10;     // Patch1 test builds used lf:10 — scale on import
   var DESIGN_UNLOCK_EVERY     = 5;      // 1 token / 5 levels (+1 free starter)
+  var FAMILIAR_UNLOCK_EVERY   = 3;      // 1 token / 3 levels (+1 free starter)
   var MASTERY_THRESHOLD       = 3;      // ≥3 correct & not lastWrong → drop from weak list
 
   // ninjaAssets — must match eigo-ninja exactly so designs round-trip via scroll
@@ -63,6 +64,53 @@
     ninja_14: { gender: null, file: 'images/Subject 14.png' },
   };
   var NINJA_ASSET_IDS = Object.keys(NINJA_ASSETS);
+
+  // ── Ninja Familiar (お供) definitions ──────────────────────────────────
+  // SVG art is hosted in each game's HTML file as window.FAMILIAR_SVGS.
+  // This table stores only metadata: id, display name, category, and the
+  // minimum player level required to unlock.
+  //
+  // Categories:
+  //   'daily'   — available from the very first pick (no level gate)
+  //   'japanese'— Japanese culture animals; level-gated (Lv 4/8/16)
+  //   'fantasy' — fantasy creatures; level-gated (Lv 32/64/128/256)
+  //   'mythic'  — mythological creatures; level-gated (Lv 50/100/150)
+  //
+  // The initial Familiar pick (before Lv 4) only shows 'daily' category.
+  // Fantasy / mythic category entries are NEVER shown at first pick.
+  var FAMILIAR_DEFS = [
+    // ── daily / token-unlockable (unlocksAt:0) ──────────────────────────
+    { id:'fox',      name:'Fox',        category:'daily',   unlocksAt:0,   emoji:'🦊' },
+    { id:'bear',     name:'Bear',       category:'daily',   unlocksAt:0,   emoji:'🐻' },
+    { id:'bunny',    name:'Bunny',      category:'daily',   unlocksAt:0,   emoji:'🐰' },
+    { id:'dog',      name:'Dog',        category:'daily',   unlocksAt:0,   emoji:'🐕' },
+    { id:'cat',      name:'Cat',        category:'daily',   unlocksAt:0,   emoji:'🐱' },
+    { id:'squirrel', name:'Squirrel',   category:'daily',   unlocksAt:0,   emoji:'🐿️' },
+    { id:'raccoon',  name:'Raccoon',    category:'daily',   unlocksAt:0,   emoji:'🦝' },
+    { id:'deer',     name:'Deer',       category:'daily',   unlocksAt:0,   emoji:'🦌' },
+    { id:'crane',    name:'Crane',      category:'daily',   unlocksAt:0,   emoji:'🦢' },
+    { id:'tanuki',   name:'Tanuki',     category:'daily',   unlocksAt:0,   emoji:'🦡' },
+    { id:'eagle',    name:'Eagle',      category:'daily',   unlocksAt:0,   emoji:'🦅' },
+    // ── level-gated / auto-unlock on level reach (unlocksAt > 0) ────────
+    { id:'unicorn',  name:'Unicorn',    category:'fantasy', unlocksAt:32,  emoji:'🦄' },
+    { id:'kitsune',  name:'Fox Spirit', category:'mythic',  unlocksAt:54,  emoji:'🦊' },
+    { id:'griffin',  name:'Griffin',    category:'fantasy', unlocksAt:64,  emoji:'🦁' },
+    { id:'kirin',    name:'Kirin',      category:'mythic',  unlocksAt:96,  emoji:'🌿' },
+    { id:'phoenix',  name:'Phoenix',    category:'fantasy', unlocksAt:128, emoji:'🔥' },
+    { id:'raijuu',   name:'Raijuu',     category:'mythic',  unlocksAt:192, emoji:'⚡' },
+    { id:'dragon',   name:'Dragon',     category:'fantasy', unlocksAt:256, emoji:'🐉' },
+  ];
+  var FAMILIAR_IDS = FAMILIAR_DEFS.map(function(d) { return d.id; });
+
+  // Lookup by id (built once for O(1) access)
+  var FAMILIAR_MAP = (function() {
+    var m = {};
+    FAMILIAR_DEFS.forEach(function(d) { m[d.id] = d; });
+    return m;
+  }());
+
+  // ── Familiar storage key ──────────────────────────────────────────────
+  var FAMILIAR_KEY = 'ninja_familiar_v1';
 
   // ───────────────────────────────────────────────────────────────────────
   // 2.  STATE
@@ -136,6 +184,14 @@
   var design = {
     selected: null,   // id of the currently active design (null = no pick yet)
     unlocked: [],     // ordered list of unlocked design ids
+  };
+
+  // ── Ninja Familiar (お供) in-memory state ─────────────────────────────
+  var familiar = {
+    selected:   null,  // currently active Familiar id (null = not chosen yet)
+    unlocked:   [],    // ordered list of unlocked Familiar ids
+    firstPicked: null, // the very first Familiar ever chosen (commemoration)
+    v:          1,     // schema version for future migrations
   };
 
   var _clanActiveSlot = 0;   // in-memory cache of the active clan slot index
@@ -473,6 +529,8 @@
       words:         progress.words,
       lastTrainedAt: progress.lastTrainedAt,
       design:        { selected: design.selected, unlocked: design.unlocked.slice() },
+      // Familiar block (additive — old readers without this key ignore it gracefully)
+      familiar:      _famDataObj(),
       lf:            LEVEL_FACTOR,   // scroll version stamp — used for XP migration
     };
   }
@@ -520,6 +578,12 @@
         design.selected = null;
       }
       designSave();
+    }
+    // Familiar block — purely additive; old scrolls without this key leave
+    // the familiar state untouched (the game will prompt a fresh first pick).
+    if (d.familiar && typeof d.familiar === 'object') {
+      _applyFamiliarData(d.familiar);
+      familiarSave();
     }
     // Aliases: REPLACE local list with the scroll's list (same semantics as
     // design — the scroll is authoritative; merging would let stale aliases
@@ -646,11 +710,13 @@
       localStorage.removeItem(SHARED_KEY);
       localStorage.removeItem(DESIGN_KEY);
       localStorage.removeItem(HANDOFF_KEY);
+      localStorage.removeItem(FAMILIAR_KEY);
       // Clear only the active clan slot — other members are unaffected
       localStorage.removeItem(_slotProgressKey(_clanActiveSlot));
       localStorage.removeItem(_slotDesignKey(_clanActiveSlot));
     } catch (e) {}
     designReset();
+    familiarReset();
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -743,6 +809,170 @@
   // claim ANY design. Used by the picker UI to gate "free starter" cards.
   function designHasStarterAvailable() {
     return design.unlocked.length === 0;
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // 10b.  NINJA FAMILIAR  —  お供システム
+  // ───────────────────────────────────────────────────────────────────────
+
+  // isFamiliarUnlocked — true when this Familiar is available to use.
+  // level-gated familiars auto-unlock on reaching the required level (no token).
+  // daily familiars require explicit unlock (starter or token spend).
+  function isFamiliarUnlocked(id) {
+    var def = FAMILIAR_MAP[id];
+    if (!def) return false;
+    // level-gated familiars auto-unlock on level reach (no token needed)
+    if (def.unlocksAt > 0) return (progress.level || 0) >= def.unlocksAt;
+    // daily familiars require explicit unlock (starter or token)
+    return familiar.unlocked.indexOf(id) >= 0;
+  }
+  // isFamiliarAvailableToUnlock — true when the player CAN spend a token on
+  // this Familiar: daily only (level-gated familiars auto-unlock, no token needed).
+  function isFamiliarAvailableToUnlock(id) {
+    var def = FAMILIAR_MAP[id];
+    if (!def) return false;
+    // level-gated familiars are auto-unlocked; token system does not apply
+    if (def.unlocksAt > 0) return false;
+    // daily: not yet in unlocked list, and level gate met (always 0)
+    return familiar.unlocked.indexOf(id) < 0;
+  }
+  // isFamiliarFirstPickable — can this Familiar be selected at the very first
+  // pick (before levelling)? Only 'daily' (non-level-specific) familiars qualify.
+  // Crane is daily, so it qualifies too.
+  function isFamiliarFirstPickable(id) {
+    var def = FAMILIAR_MAP[id];
+    return !!(def && def.category === 'daily');
+  }
+  // familiarTokensTotal — total tokens earned so far (1 per 3 levels + 1 starter).
+  function familiarTokensTotal() {
+    return Math.floor((progress.level || 0) / FAMILIAR_UNLOCK_EVERY) + 1;
+  }
+  // familiarTokensAvailable — unspent tokens (each unlock costs 1 token).
+  function familiarTokensAvailable() {
+    return Math.max(0, familiarTokensTotal() - familiar.unlocked.length);
+  }
+  // familiarXpToNextToken — XP remaining until the next token milestone.
+  function familiarXpToNextToken() {
+    var lvl = progress.level || 0;
+    var next = (Math.floor(lvl / FAMILIAR_UNLOCK_EVERY) + 1) * FAMILIAR_UNLOCK_EVERY;
+    return Math.max(0, expForLevel(next) - progress.exp);
+  }
+  // familiarUnlock — spend 1 token to unlock a non-starter familiar.
+  // Requires: token available + level gate met + not already unlocked.
+  function familiarUnlock(id) {
+    if (!FAMILIAR_MAP[id])               return false;
+    if (familiarIsUnlockedLocal(id))     return false; // already unlocked
+    if (familiarTokensAvailable() <= 0) return false; // no tokens
+    if (!isFamiliarAvailableToUnlock(id)) return false; // level not met
+    familiar.unlocked.push(id);
+    familiar.selected = id;
+    familiarSave();
+    return true;
+  }
+
+  function familiarSave() {
+    try {
+      localStorage.setItem(FAMILIAR_KEY, JSON.stringify({
+        selected:    familiar.selected,
+        unlocked:    familiar.unlocked.slice(),
+        firstPicked: familiar.firstPicked,
+        v:           1,
+      }));
+      // Also persist alongside the per-slot design key
+      _saveFamiliarToSlotDesign(_clanActiveSlot);
+    } catch (e) {}
+  }
+  function familiarLoad() {
+    try {
+      var raw = localStorage.getItem(FAMILIAR_KEY);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (d && typeof d === 'object') {
+        _applyFamiliarData(d);
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function familiarReset() {
+    familiar.selected    = null;
+    familiar.unlocked.splice(0, familiar.unlocked.length);
+    familiar.firstPicked = null;
+    try {
+      localStorage.removeItem(FAMILIAR_KEY);
+      _saveFamiliarToSlotDesign(_clanActiveSlot);
+    } catch (e) {}
+  }
+  function _applyFamiliarData(d) {
+    if (!d || typeof d !== 'object') return;
+    var unlockedArr = [];
+    if (Array.isArray(d.unlocked)) {
+      unlockedArr = d.unlocked.filter(function(id) { return !!FAMILIAR_MAP[id]; });
+    }
+    familiar.unlocked.splice(0, familiar.unlocked.length);
+    unlockedArr.forEach(function(id) { familiar.unlocked.push(id); });
+    if (d.selected && FAMILIAR_MAP[d.selected] && isFamiliarUnlocked(d.selected)) {
+      familiar.selected = d.selected;
+    } else if (familiar.unlocked.length > 0) {
+      familiar.selected = familiar.unlocked[0]; // pick first unlocked as fallback
+    } else {
+      familiar.selected = null;
+    }
+    familiar.firstPicked = (d.firstPicked && FAMILIAR_MAP[d.firstPicked]) ? d.firstPicked : null;
+  }
+
+  // familiarSelect — switch to an already-unlocked Familiar.
+  // Works for both daily (in unlocked list) and level-gated (auto-unlocked by level).
+  function familiarSelect(id) {
+    if (!FAMILIAR_MAP[id]) return false;
+    if (!isFamiliarUnlocked(id)) return false;
+    familiar.selected = id;
+    familiarSave();
+    return true;
+  }
+  // familiarStarter — claim the FREE first pick (only when unlocked is empty).
+  // Mirrors the designStarter() hardening: if a starter was already used in
+  // any Ninja game (unlocked.length > 0), refuse to grant another free pick.
+  function familiarStarter(id) {
+    if (!FAMILIAR_MAP[id])                 return false;
+    if (!isFamiliarFirstPickable(id))      return false;
+    if (familiar.unlocked.length > 0)      return false; // already used starter
+    familiar.unlocked.push(id);
+    familiar.selected    = id;
+    familiar.firstPicked = id;
+    familiarSave();
+    return true;
+  }
+  // familiarHasStarterAvailable — true when no Familiar has been picked yet.
+  function familiarHasStarterAvailable() {
+    return familiar.unlocked.length === 0;
+  }
+  // familiarIsSelected — quick check for UI.
+  function familiarIsSelected(id) { return familiar.selected === id; }
+  function familiarIsUnlockedLocal(id) { return familiar.unlocked.indexOf(id) >= 0; }
+
+  // Helper: read familiar block out of a slot-design object
+  function _readFamiliarFromSlotDesign(des) {
+    if (!des || !des.familiar) return null;
+    return des.familiar;
+  }
+  // Helper: write familiar block into a slot-design object (returns modified copy)
+  function _famDataObj() {
+    return {
+      selected:    familiar.selected,
+      unlocked:    familiar.unlocked.slice(),
+      firstPicked: familiar.firstPicked,
+      v: 1,
+    };
+  }
+  // Persist familiar state into the per-slot design key (slot N)
+  function _saveFamiliarToSlotDesign(n) {
+    try {
+      var raw = localStorage.getItem(_slotDesignKey(n));
+      var des = raw ? JSON.parse(raw) : {};
+      des.familiar = _famDataObj();
+      localStorage.setItem(_slotDesignKey(n), JSON.stringify(des));
+    } catch (e) {}
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -931,7 +1161,13 @@
       statusTheme:     progress.statusTheme,
       textColors:      progress.textColors,
     });
-    _saveSlotDesign(n, { selected: design.selected, unlocked: design.unlocked.slice(), v: 2 });
+    // Persist design AND familiar together in the slot-design key
+    _saveSlotDesign(n, {
+      selected: design.selected,
+      unlocked: design.unlocked.slice(),
+      v: 2,
+      familiar: _famDataObj(),
+    });
   }
 
   // _applySlotToMemory — load a slot's data into progress/design state
@@ -979,6 +1215,16 @@
         design.selected = des.selected;
       }
     }
+    // Restore familiar from per-slot design key.
+    // IMPORTANT: do NOT fall back to the global FAMILIAR_KEY — that key
+    // always holds the *current* active ninja's familiar, so falling back
+    // would accidentally give a new/empty slot the previous ninja's familiar.
+    familiar.selected    = null;
+    familiar.unlocked.splice(0, familiar.unlocked.length);
+    familiar.firstPicked = null;
+    var famSrc = (des && des.familiar) ? des.familiar : null;
+    if (famSrc) _applyFamiliarData(famSrc);
+    // (No fallback — new slots intentionally start with no familiar chosen)
     _clanActiveSlot = n;
   }
 
@@ -1143,6 +1389,15 @@
       if (des.selected)                           m.d.s = des.selected;
       if (des.unlocked && des.unlocked.length)    m.d.u = des.unlocked;
     }
+    // Pack familiar data (additive — old readers without 'fam' key ignore it)
+    if (des && des.familiar && des.familiar.unlocked && des.familiar.unlocked.length) {
+      if (!m.d) m.d = {};
+      m.d.fam = {
+        s:  des.familiar.selected    || null,
+        u:  des.familiar.unlocked.slice(),
+        fp: des.familiar.firstPicked || null,
+      };
+    }
     return m;
   }
   function _c2UnpackMember(m) {
@@ -1150,7 +1405,7 @@
     var exp = m.e || 0;
     if (scrollLF !== LEVEL_FACTOR && scrollLF > 0)
       exp = Math.round(exp * LEVEL_FACTOR / scrollLF);
-    return {
+    var result = {
       slot:          m.sl,
       name:          m.n  || 'Ninja',
       nameLocked:    !!m.nl,
@@ -1160,9 +1415,13 @@
       globalIndex:   m.gi || 0,
       totalSessions: m.ts || 0,
       lastTrainedAt: m.lt || 0,
-      design: { selected: (m.d && m.d.s) || null, unlocked: (m.d && m.d.u) || [] },
+      design:   { selected: (m.d && m.d.s) || null, unlocked: (m.d && m.d.u) || [] },
+      familiar: (m.d && m.d.fam)
+        ? { selected: m.d.fam.s || null, unlocked: m.d.fam.u || [], firstPicked: m.d.fam.fp || null }
+        : null,
       lf:            LEVEL_FACTOR,   // already migrated above
     };
+    return result;
   }
 
   function generateBloodlineScroll() {
@@ -1241,7 +1500,11 @@
         words: m.words || {}, globalIndex: m.globalIndex || 0,
         totalSessions: m.totalSessions || 0, lastTrainedAt: m.lastTrainedAt || 0,
       });
-      if (m.design) _saveSlotDesign(n, { selected: m.design.selected || null, unlocked: m.design.unlocked || [], v: 2 });
+      if (m.design) {
+        var desData = { selected: m.design.selected || null, unlocked: m.design.unlocked || [], v: 2 };
+        if (m.familiar) desData.familiar = m.familiar; // carry familiar data alongside design
+        _saveSlotDesign(n, desData);
+      }
     });
     var newSlots = data.members
       .map(function (m) { return m.slot; })
@@ -1310,8 +1573,9 @@
   function boot() {
     loadLocal();
     designLoad();
-    clanBoot();          // clan init — loads active slot, may overwrite sessionPending
-    consumeHandoff();    // restores handoff session state (sibling→sibling navigation)
+    familiarLoad();       // load familiar before clanBoot (which may overwrite with slot data)
+    clanBoot();           // clan init — loads active slot, may overwrite sessionPending
+    consumeHandoff();     // restores handoff session state (sibling→sibling navigation)
     _syncSharedSession(); // final pass: SHARED_KEY wins if another game trained more recently
   }
 
@@ -1323,19 +1587,25 @@
     // raw state (read-only by convention; mutate via APIs below)
     progress:    progress,
     design:      design,
+    familiar:    familiar,
     profile:     profile,
     assets:      NINJA_ASSETS,
     assetIds:    NINJA_ASSET_IDS,
+    familiarDefs: FAMILIAR_DEFS,
+    familiarIds:  FAMILIAR_IDS,
+    familiarMap:  FAMILIAR_MAP,
     constants:   {
       LEVEL_CAP: LEVEL_CAP,
       LEVEL_FACTOR: LEVEL_FACTOR,
       DESIGN_UNLOCK_EVERY: DESIGN_UNLOCK_EVERY,
+      FAMILIAR_UNLOCK_EVERY: FAMILIAR_UNLOCK_EVERY,
       MASTERY_THRESHOLD: MASTERY_THRESHOLD,
       SHARED_KEY: SHARED_KEY,
       DESIGN_KEY: DESIGN_KEY,
       HANDOFF_KEY: HANDOFF_KEY,
       CLAN_KEY: CLAN_KEY,
       MAX_CLAN_SIZE: MAX_CLAN_SIZE,
+      FAMILIAR_KEY: FAMILIAR_KEY,
     },
 
     // XP / level
@@ -1398,6 +1668,23 @@
     designUnlock:           designUnlock,
     designStarter:          designStarter,
     designHasStarterAvailable: designHasStarterAvailable,
+
+    // Ninja Familiar (お供)
+    isFamiliarUnlocked:          isFamiliarUnlocked,
+    isFamiliarAvailableToUnlock: isFamiliarAvailableToUnlock,
+    isFamiliarFirstPickable:     isFamiliarFirstPickable,
+    familiarTokensTotal:         familiarTokensTotal,
+    familiarTokensAvailable:     familiarTokensAvailable,
+    familiarXpToNextToken:       familiarXpToNextToken,
+    familiarSave:                familiarSave,
+    familiarLoad:                familiarLoad,
+    familiarReset:               familiarReset,
+    familiarSelect:              familiarSelect,
+    familiarUnlock:              familiarUnlock,
+    familiarStarter:             familiarStarter,
+    familiarHasStarterAvailable: familiarHasStarterAvailable,
+    familiarIsSelected:          familiarIsSelected,
+    familiarIsUnlockedLocal:     familiarIsUnlockedLocal,
 
     // exports / share
     csvEscape:        csvEscape,

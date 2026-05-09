@@ -63,13 +63,14 @@
     @keyframes shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
     @keyframes starBurst { 0%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.3) rotate(15deg)} 100%{transform:scale(1) rotate(0deg)} }
     @keyframes bob       { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    @keyframes ninjaFamBob{0%,100%{transform:translateY(0) rotate(0deg) scaleX(1);}30%{transform:translateY(-6px) rotate(-5deg) scaleX(1.06);}70%{transform:translateY(-3px) rotate(4deg) scaleX(0.96);}}
 
     .screen { animation: fadeUp 0.3s ease; width: 100%; }
 
     .home-header { text-align: center; padding: 18px 0 20px; }
     .brand-label { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: #6A5ACD; margin-bottom: 4px; }
     .game-title { font-family: 'Bangers', cursive; font-size: clamp(44px, 10vw, 62px); letter-spacing: 3px; line-height: 1; color: var(--ink); text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
-    .game-title span { color: var(--red); }
+    .game-title span { font-family: 'Bangers', cursive; color: var(--red); }
     .ninja-mascot { font-size: 48px; display: block; margin: 6px auto; animation: bob 2.5s ease-in-out infinite; }
 
     .section-label { font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #999; text-align: center; margin: 18px 0 10px; }
@@ -1014,6 +1015,443 @@ const gradeLabels = {
   "2":    { name: "Grade 2",     sub: "Advanced level" },
 };
 
+// Stored as window.FAMILIAR_SVGS so NinjaUI's _famOverlayHTML / _famCardSvg
+// can access them via global.FAMILIAR_SVGS. viewBox="0 0 64 64" throughout.
+const FAMILIAR_SVGS = {
+  // ── daily (always available) ─────────────────────────────────────────
+  fox:     `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,
+  bear:    `<svg viewBox="0 0 64 64" width="56" height="56"><circle cx="16" cy="20" r="8" fill="#8B5E3C"/><circle cx="48" cy="20" r="8" fill="#8B5E3C"/><circle cx="16" cy="20" r="5" fill="#C49A6C"/><circle cx="48" cy="20" r="5" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="40" rx="14" ry="12" fill="#C49A6C"/><ellipse cx="23" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="41" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="24" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="42" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="24.8" cy="30.2" r="0.8" fill="white"/><circle cx="42.8" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="39" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M28.5 43 Q32 46.5 35.5 43" stroke="#5C3317" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/><ellipse cx="44" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/></svg>`,
+  bunny:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="22" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="42" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="22" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="42" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F2C9D8"/><ellipse cx="32" cy="40" rx="13" ry="10" fill="white"/><ellipse cx="24" cy="31" rx="3.8" ry="4.2" fill="white"/><ellipse cx="40" cy="31" rx="3.8" ry="4.2" fill="white"/><circle cx="24.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="40.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="25.2" cy="30.2" r="0.7" fill="white"/><circle cx="41.2" cy="30.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="2.5" ry="1.8" fill="#F08CA0"/><path d="M29 41 Q32 44 35 41" stroke="#C06070" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="21" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/><ellipse cx="43" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/></svg>`,
+  dog:     `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(15 46 20)"/><ellipse cx="18" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(15 46 20)"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#E8C99A"/><ellipse cx="25" cy="31" rx="4" ry="4" fill="white"/><ellipse cx="39" cy="31" rx="4" ry="4" fill="white"/><circle cx="25.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="39.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="26.2" cy="30.2" r="0.8" fill="white"/><circle cx="40.2" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 42 Q32 45.5 35 42" stroke="#5C3317" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/><ellipse cx="44" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/></svg>`,
+  cat:     `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="15,18 22,5 29,20" fill="#888"/><polygon points="49,18 42,5 35,20" fill="#888"/><polygon points="17,17 22,9 27,18" fill="#FFC0CB"/><polygon points="47,17 42,9 37,18" fill="#FFC0CB"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#888"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#ccc"/><ellipse cx="24" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="40" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="24" cy="30" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="40" cy="30" rx="2" ry="4" fill="#1a1a2e"/><circle cx="24.5" cy="29" r="0.8" fill="white"/><circle cx="40.5" cy="29" r="0.8" fill="white"/><polygon points="32,37 30,39.5 34,39.5" fill="#FF9999"/><path d="M29 40.5 Q32 43 35 40.5" stroke="#777" stroke-width="1" fill="none"/><line x1="13" y1="38" x2="26" y2="39" stroke="#666" stroke-width="0.8"/><line x1="13" y1="40.5" x2="26" y2="40.5" stroke="#666" stroke-width="0.8"/><line x1="38" y1="39" x2="51" y2="38" stroke="#666" stroke-width="0.8"/><line x1="38" y1="40.5" x2="51" y2="40.5" stroke="#666" stroke-width="0.8"/></svg>`,
+  squirrel:`<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="47" cy="22" rx="13" ry="19" fill="#C87941"/><ellipse cx="45" cy="23" rx="9" ry="14" fill="#E8A86A"/><ellipse cx="20" cy="14" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="35" cy="12" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="20" cy="14" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="35" cy="12" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="26" cy="37" rx="16" ry="18" fill="#8B5E3C"/><ellipse cx="26" cy="41" rx="10" ry="11" fill="#F7C59F"/><ellipse cx="20" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="32" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="21" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="33" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="21.7" cy="30.2" r="0.7" fill="white"/><circle cx="33.7" cy="30.2" r="0.7" fill="white"/><ellipse cx="26" cy="40" rx="2.5" ry="1.8" fill="#8B4513"/></svg>`,
+  raccoon: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="46" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="18" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="46" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#999"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff"/><ellipse cx="23" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="41" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="23" cy="30" rx="4" ry="4" fill="white"/><ellipse cx="41" cy="30" rx="4" ry="4" fill="white"/><circle cx="23.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="41.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="24.2" cy="29.2" r="0.7" fill="white"/><circle cx="42.2" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#333"/><path d="M29 41 Q32 44 35 41" stroke="#555" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  deer:    `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="20" x2="12" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="5" x2="8" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="5" x2="17" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="44" y1="20" x2="52" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="5" x2="56" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="52" y1="5" x2="47" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><ellipse cx="17" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="47" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="41" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="25.8" cy="30.5" r="0.8" fill="white"/><circle cx="41.8" cy="30.5" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/><ellipse cx="45" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/></svg>`,
+  // ── japanese (Lv 4/8/16) ─────────────────────────────────────────────
+  tanuki:  `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="9" rx="10" ry="6" fill="#4CAF50" transform="rotate(-12 32 9)"/><line x1="32" y1="13" x2="32" y2="19" stroke="#388E3C" stroke-width="1.5"/><circle cx="16" cy="20" r="7" fill="#8B5E3C"/><circle cx="48" cy="20" r="7" fill="#8B5E3C"/><ellipse cx="32" cy="39" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="43" rx="16" ry="12" fill="#F7C59F"/><ellipse cx="23" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="41" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="23" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="41" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="23.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="41.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="24.2" cy="29.8" r="0.6" fill="white"/><circle cx="42.2" cy="29.8" r="0.6" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 41 Q32 44.5 35 41" stroke="#5C3317" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  crane:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="39" rx="18" ry="16" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="24" rx="6" ry="12" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="14" rx="8" ry="8" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="10" rx="5" ry="3" fill="#E63946"/><polygon points="32,12 41,14 32,17" fill="#e8a000"/><circle cx="35" cy="14" r="2.5" fill="white" stroke="#ddd" stroke-width="0.5"/><circle cx="35.5" cy="14" r="1.5" fill="#1a1a2e"/><circle cx="36" cy="13.5" r="0.5" fill="white"/><ellipse cx="16" cy="41" rx="10" ry="6" fill="#444" transform="rotate(-20 16 41)"/><ellipse cx="48" cy="41" rx="10" ry="6" fill="#444" transform="rotate(20 48 41)"/><line x1="28" y1="55" x2="24" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="55" x2="40" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  eagle:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="10" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(-15 10 33)"/><ellipse cx="54" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(15 54 33)"/><ellipse cx="32" cy="39" rx="14" ry="15" fill="#8B5E3C"/><circle cx="32" cy="21" r="11" fill="white"/><polygon points="32,23 42,21 32,26" fill="#FFB000"/><circle cx="37" cy="20" r="3" fill="#FFB000"/><circle cx="37.5" cy="20" r="2" fill="#1a1a2e"/><circle cx="38" cy="19.5" r="0.6" fill="white"/><ellipse cx="32" cy="53" rx="8" ry="5" fill="white"/></svg>`,
+  // ── fantasy (Lv 32/64/128/256) ──────────────────────────────────────
+  dragon:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="22,16 18,3 24,14" fill="#FFD700"/><polygon points="42,16 46,3 40,14" fill="#FFD700"/><ellipse cx="32" cy="39" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="27" rx="18" ry="14" fill="#2aab8a"/><ellipse cx="32" cy="35" rx="10" ry="7" fill="#3acca0"/><ellipse cx="22" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="42" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="22" cy="24" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="42" cy="24" rx="2" ry="4" fill="#1a1a2e"/><circle cx="22.5" cy="23" r="0.7" fill="white"/><circle cx="42.5" cy="23" r="0.7" fill="white"/><circle cx="29" cy="35" r="1.5" fill="#1a7a5e"/><circle cx="35" cy="35" r="1.5" fill="#1a7a5e"/><line x1="11" y1="33" x2="26" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/><line x1="53" y1="33" x2="38" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  phoenix: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="51" rx="10" ry="11" fill="#FF6B00" opacity="0.7"/><ellipse cx="20" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="44" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="11" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(-25 11 29)"/><ellipse cx="53" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(25 53 29)"/><ellipse cx="9" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(-25 9 27)"/><ellipse cx="55" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(25 55 27)"/><ellipse cx="32" cy="35" rx="16" ry="14" fill="#E63946"/><circle cx="32" cy="20" r="11" fill="#E63946"/><polygon points="32,10 28,4 32,8 36,4" fill="#FFD700"/><polygon points="30,20 40,18 30,25" fill="#FFD700"/><circle cx="35" cy="19" r="3" fill="#FFD700"/><circle cx="35.5" cy="19" r="2" fill="#1a1a2e"/><circle cx="36" cy="18.5" r="0.6" fill="white"/></svg>`,
+  griffin: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="8" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(-20 8 31)"/><ellipse cx="56" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(20 56 31)"/><ellipse cx="32" cy="44" rx="18" ry="14" fill="#C49A6C"/><circle cx="32" cy="28" r="15" fill="#8B5E3C"/><circle cx="32" cy="24" r="11" fill="white"/><polygon points="32,26 42,22 32,31" fill="#FFB000"/><circle cx="36.5" cy="22" r="3" fill="#FFD700"/><circle cx="37" cy="22" r="2" fill="#1a1a2e"/><circle cx="37.5" cy="21.5" r="0.6" fill="white"/><ellipse cx="48" cy="52" rx="6" ry="5" fill="#8B5E3C"/></svg>`,
+  unicorn: `<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="ugh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><ellipse cx="32" cy="40" rx="18" ry="16" fill="#F8F8FF"/><ellipse cx="32" cy="25" rx="9" ry="13" fill="#F8F8FF"/><ellipse cx="32" cy="16" rx="12" ry="10" fill="#F8F8FF"/><polygon points="32,4 28,18 36,18" fill="url(#ugh)"/><ellipse cx="22" cy="20" rx="6" ry="11" fill="#F48FB1" opacity="0.8"/><ellipse cx="20" cy="22" rx="4" ry="9" fill="#A78BFA" opacity="0.7"/><ellipse cx="37" cy="16" rx="4" ry="4" fill="#A78BFA"/><circle cx="37.5" cy="16" r="2.5" fill="#1a1a2e"/><circle cx="38.2" cy="15.3" r="0.8" fill="white"/><ellipse cx="42" cy="20" rx="6" ry="4" fill="#F8F8FF"/><ellipse cx="40" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><ellipse cx="44" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><circle cx="10" cy="12" r="1.5" fill="#FFD700" opacity="0.8"/><circle cx="54" cy="20" r="1.5" fill="#FF6B6B" opacity="0.8"/></svg>`,
+  // ── mythic (Lv 50/100/150) ────────────────────────────────────────────
+  kitsune: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="44" cy="48" rx="12" ry="7" fill="#F5D769" transform="rotate(-30 44 48)"/><ellipse cx="50" cy="43" rx="12" ry="7" fill="#FFE599" transform="rotate(-10 50 43)"/><ellipse cx="50" cy="36" rx="12" ry="7" fill="#F5D769" transform="rotate(10 50 36)"/><polygon points="14,22 10,4 22,18" fill="#F5D769"/><polygon points="50,22 54,4 42,18" fill="#F5D769"/><polygon points="15,21 11,8 21,18" fill="#fff5cc"/><polygon points="49,21 53,8 43,18" fill="#fff5cc"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F5D769"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff5cc"/><ellipse cx="24" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="30" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="41" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="25.7" cy="29.7" r="0.7" fill="white"/><circle cx="41.7" cy="29.7" r="0.7" fill="white"/><ellipse cx="32" cy="37.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/><ellipse cx="45" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/></svg>`,
+  kirin:   `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="18" x2="12" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="4" r="3" fill="#FFD700"/><line x1="12" y1="4" x2="8" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="10" r="2" fill="#FFD700"/><line x1="44" y1="18" x2="52" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="4" r="3" fill="#FFD700"/><line x1="52" y1="4" x2="56" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="10" r="2" fill="#FFD700"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#3acca0"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><circle cx="24.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="40.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="25.2" cy="29.8" r="0.7" fill="white"/><circle cx="41.2" cy="29.8" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3" ry="2" fill="#0d5e48"/><ellipse cx="32" cy="36" rx="21" ry="19" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.6"/></svg>`,
+  raijuu:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="32,2 28,12 20,8 26,16 16,14 24,20 16,22 26,24 18,30 28,28 24,36 32,30 40,36 36,28 46,30 38,22 48,20 40,16 50,14 42,8 38,12" fill="#FFD700" opacity="0.25"/><polygon points="18,20 14,5 26,18" fill="#e0e0e0"/><polygon points="46,20 50,5 38,18" fill="#e0e0e0"/><polygon points="19,19 16,9 25,18" fill="#FFD700" opacity="0.6"/><polygon points="45,19 48,9 39,18" fill="#FFD700" opacity="0.6"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#e0e0e0"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="white"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><circle cx="24.5" cy="30.5" r="2.5" fill="white"/><circle cx="40.5" cy="30.5" r="2.5" fill="white"/><circle cx="24" cy="30.5" r="1.5" fill="#1a1a2e"/><circle cx="40" cy="30.5" r="1.5" fill="#1a1a2e"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#666"/><path d="M29 41 Q32 44 35 41" stroke="#888" stroke-width="1.2" fill="none" stroke-linecap="round"/><polyline points="18,35 20,38 18,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/><polyline points="46,35 44,38 46,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+};
+window.FAMILIAR_SVGS = FAMILIAR_SVGS;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// NINJA FAMILIAR SYSTEM (inline — eigo-ninja is self-contained, no ninja-core.js)
+// Structure mirrors ninja-core.js so Shadow Clone Scroll 'familiar' block is
+// cross-game compatible. Uses the shared localStorage key 'ninja_familiar_v1'.
+// ══════════════════════════════════════════════════════════════════════════════
+const EIGO_FAM_DEFS = [
+  // ── daily / token-unlockable ─────────────────────────────────────────
+  { id:'fox',      name:'Fox',        unlocksAt:0   },
+  { id:'bear',     name:'Bear',       unlocksAt:0   },
+  { id:'bunny',    name:'Bunny',      unlocksAt:0   },
+  { id:'dog',      name:'Dog',        unlocksAt:0   },
+  { id:'cat',      name:'Cat',        unlocksAt:0   },
+  { id:'squirrel', name:'Squirrel',   unlocksAt:0   },
+  { id:'raccoon',  name:'Raccoon',    unlocksAt:0   },
+  { id:'deer',     name:'Deer',       unlocksAt:0   },
+  { id:'crane',    name:'Crane',      unlocksAt:0   },
+  { id:'tanuki',   name:'Tanuki',     unlocksAt:0   },
+  { id:'eagle',    name:'Eagle',      unlocksAt:0   },
+  // ── level-gated / auto-unlock ────────────────────────────────────────
+  { id:'unicorn',  name:'Unicorn',    unlocksAt:32  },
+  { id:'kitsune',  name:'Fox Spirit', unlocksAt:54  },
+  { id:'griffin',  name:'Griffin',    unlocksAt:64  },
+  { id:'kirin',    name:'Kirin',      unlocksAt:96  },
+  { id:'phoenix',  name:'Phoenix',    unlocksAt:128 },
+  { id:'raijuu',   name:'Raijuu',     unlocksAt:192 },
+  { id:'dragon',   name:'Dragon',     unlocksAt:256 },
+];
+const EIGO_FAM_UNLOCK_EVERY = 3; // 1 token / 3 levels (+1 free starter)
+const EIGO_FAM_MAP = {};
+EIGO_FAM_DEFS.forEach(d => { EIGO_FAM_MAP[d.id] = d; });
+const EIGO_FAM_KEY = 'ninja_familiar_v1'; // shared key — same as ninja-core.js
+
+// In-memory familiar state (loaded from localStorage at boot via eigoFamiliarLoad)
+const eigoFamiliar = { selected: null, unlocked: [], firstPicked: null };
+
+function eigoFamiliarSave() {
+  try {
+    const famData = {
+      selected:    eigoFamiliar.selected,
+      unlocked:    eigoFamiliar.unlocked.slice(),
+      firstPicked: eigoFamiliar.firstPicked,
+    };
+    localStorage.setItem(EIGO_FAM_KEY, JSON.stringify(famData));
+    // Also persist to the active clan slot design key for per-ninja storage
+    const slotKey = 'ninja_clan_design_' + _eigoClanActiveSlot + '_v1';
+    try {
+      const raw = localStorage.getItem(slotKey);
+      const des = raw ? JSON.parse(raw) : {};
+      des.familiar = famData;
+      localStorage.setItem(slotKey, JSON.stringify(des));
+    } catch(e2) {}
+  } catch(e) {}
+}
+
+function eigoFamiliarLoad() {
+  try {
+    const raw = localStorage.getItem(EIGO_FAM_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    const arr = Array.isArray(d.unlocked) ? d.unlocked.filter(id => !!EIGO_FAM_MAP[id]) : [];
+    eigoFamiliar.unlocked.splice(0, eigoFamiliar.unlocked.length);
+    arr.forEach(id => eigoFamiliar.unlocked.push(id));
+    if (d.selected && EIGO_FAM_MAP[d.selected] && eigoIsFamiliarUnlocked(d.selected)) {
+      eigoFamiliar.selected = d.selected;
+    } else if (eigoFamiliar.unlocked.length > 0) {
+      eigoFamiliar.selected = eigoFamiliar.unlocked[0];
+    } else {
+      eigoFamiliar.selected = null;
+    }
+    eigoFamiliar.firstPicked = (d.firstPicked && EIGO_FAM_MAP[d.firstPicked]) ? d.firstPicked : null;
+  } catch(e) {}
+}
+
+function eigoFamiliarReset() {
+  eigoFamiliar.selected = null;
+  eigoFamiliar.unlocked.splice(0, eigoFamiliar.unlocked.length);
+  eigoFamiliar.firstPicked = null;
+  try { localStorage.removeItem(EIGO_FAM_KEY); } catch(e) {}
+}
+
+// eigoFamiliarSelect — switch to an already-unlocked familiar.
+// Works for both daily (in unlocked list) and level-gated (auto-unlocked by level).
+function eigoFamiliarSelect(id) {
+  const def = EIGO_FAM_MAP[id];
+  if (!def) return false;
+  if (!eigoIsFamiliarUnlocked(id)) return false;
+  eigoFamiliar.selected = id;
+  eigoFamiliarSave();
+  return true;
+}
+
+// eigoFamiliarStarter — claim the free first pick (only when unlocked[] is empty).
+// Only works for daily (non-level-specific) familiars.
+function eigoFamiliarStarter(id) {
+  const def = EIGO_FAM_MAP[id];
+  if (!def) return false;
+  if (def.unlocksAt > 0) return false;  // starter is for daily (unlocksAt:0) only
+  if (eigoFamiliar.unlocked.length > 0) return false; // already used
+  eigoFamiliar.unlocked.push(id);
+  eigoFamiliar.selected = id;
+  eigoFamiliar.firstPicked = id;
+  eigoFamiliarSave();
+  return true;
+}
+
+// eigoFamiliarUnlock — spend 1 token to unlock a daily familiar (level-gated are auto-unlocked).
+function eigoFamiliarTokensTotal()     { return Math.floor((progress.level || 0) / EIGO_FAM_UNLOCK_EVERY) + 1; }
+function eigoFamiliarTokensAvailable() { return Math.max(0, eigoFamiliarTokensTotal() - eigoFamiliar.unlocked.length); }
+function eigoFamiliarXpToNextToken() {
+  const lvl = progress.level || 0;
+  const next = (Math.floor(lvl / EIGO_FAM_UNLOCK_EVERY) + 1) * EIGO_FAM_UNLOCK_EVERY;
+  const nextExp = next * next * 50; // mirrors eigo-ninja's ninjaLevelFromExp formula (lf=50)
+  return Math.max(0, nextExp - (progress.exp || 0));
+}
+function eigoFamiliarUnlock(id) {
+  const def = EIGO_FAM_MAP[id];
+  if (!def) return false;
+  if (def.unlocksAt > 0) return false;                      // level-gated: auto-unlock, no token
+  if (eigoFamiliar.unlocked.indexOf(id) >= 0) return false; // already unlocked
+  if (eigoFamiliarTokensAvailable() <= 0) return false;     // no tokens
+  eigoFamiliar.unlocked.push(id);
+  eigoFamiliar.selected = id;
+  eigoFamiliarSave();
+  return true;
+}
+
+// eigoIsFamiliarUnlocked — daily: checks unlocked list; level-gated: auto-unlocks on level reach.
+function eigoIsFamiliarUnlocked(id) {
+  const def = EIGO_FAM_MAP[id];
+  if (!def) return false;
+  // level-gated: auto-unlock on level reach
+  if (def.unlocksAt > 0) return progress.level >= def.unlocksAt;
+  // daily: requires explicit unlock
+  return eigoFamiliar.unlocked.indexOf(id) >= 0;
+}
+// eigoIsFamiliarAvailableToUnlock — daily only; level-gated auto-unlock, no token needed.
+function eigoIsFamiliarAvailableToUnlock(id) {
+  const def = EIGO_FAM_MAP[id];
+  if (!def) return false;
+  // level-gated: auto-unlock, no token needed
+  if (def.unlocksAt > 0) return false;
+  // daily: not yet unlocked
+  return eigoFamiliar.unlocked.indexOf(id) < 0;
+}
+
+function eigoFamiliarHasStarter() {
+  return eigoFamiliar.unlocked.length === 0;
+}
+
+// Apply familiar block from a scroll import (additive — does not clear owned list
+// if the block is absent, preserving backward compat with old scrolls).
+function eigoFamiliarApply(d) {
+  if (!d || typeof d !== 'object') return;
+  const arr = Array.isArray(d.unlocked) ? d.unlocked.filter(id => !!EIGO_FAM_MAP[id]) : [];
+  eigoFamiliar.unlocked.splice(0, eigoFamiliar.unlocked.length);
+  arr.forEach(id => eigoFamiliar.unlocked.push(id));
+  if (d.selected && EIGO_FAM_MAP[d.selected] && eigoIsFamiliarUnlocked(d.selected)) {
+    eigoFamiliar.selected = d.selected;
+  } else if (eigoFamiliar.unlocked.length > 0) {
+    eigoFamiliar.selected = eigoFamiliar.unlocked[0];
+  } else {
+    eigoFamiliar.selected = null;
+  }
+  eigoFamiliar.firstPicked = (d.firstPicked && EIGO_FAM_MAP[d.firstPicked]) ? d.firstPicked : null;
+  eigoFamiliarSave();
+}
+
+// Ninja facade — exposes familiar state so _eigoFamChip() and the
+// boot-time starter check can use Ninja.familiar without crashing.
+const Ninja = {
+  familiar:                    eigoFamiliar,
+  familiarDefs:                EIGO_FAM_DEFS,
+  familiarMap:                 EIGO_FAM_MAP,
+  isFamiliarUnlocked:          eigoIsFamiliarUnlocked,
+  isFamiliarAvailableToUnlock: eigoIsFamiliarAvailableToUnlock,
+  familiarTokensTotal:         eigoFamiliarTokensTotal,
+  familiarTokensAvailable:     eigoFamiliarTokensAvailable,
+  familiarXpToNextToken:       eigoFamiliarXpToNextToken,
+  familiarSelect:              eigoFamiliarSelect,
+  familiarUnlock:              eigoFamiliarUnlock,
+  familiarStarter:             eigoFamiliarStarter,
+  familiarHasStarterAvailable: eigoFamiliarHasStarter,
+};
+
+// ── NinjaUI facade (familiar picker) ─────────────────────────────────────────
+// Reuses eigo-ninja's native .overlay / .modal-box CSS so no extra styles needed.
+const NinjaUI = {};
+
+NinjaUI.maybePromptFamiliarStarter = function(delayMs) {
+  if (shadowNinja.selected && eigoFamiliarHasStarter()) {
+    setTimeout(() => NinjaUI.openFamiliarPicker({ starterMode: true }), delayMs || 400);
+  }
+};
+
+NinjaUI.openFamiliarPicker = function(opts) {
+  const starterMode = !!(opts && opts.starterMode);
+  const stale = document.getElementById('eigo-fam-picker-overlay');
+  if (stale) stale.remove();
+  const ov = document.createElement('div');
+  ov.id = 'eigo-fam-picker-overlay';
+  ov.className = 'overlay';
+  ov.style.zIndex = '10010';
+  ov.onclick = function(e) { if (e.target === ov) NinjaUI._closeFamiliarPicker(); };
+  const box = document.createElement('div');
+  box.id = 'eigo-fam-picker-box';
+  box.className = 'modal-box';
+  box.onclick = function(e) { e.stopPropagation(); };
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  NinjaUI._refreshFamiliarPicker(starterMode);
+};
+
+NinjaUI._closeFamiliarPicker = function() {
+  const ov = document.getElementById('eigo-fam-picker-overlay');
+  if (ov) ov.remove();
+  _ninjaRebuildHubCard();
+  if (state.screen === 'home') renderHome();
+};
+
+NinjaUI._familiarAction = function(action, id) {
+  if (action === 'select') {
+    if (eigoFamiliarSelect(id)) {
+      NinjaUI._refreshFamiliarPicker(false);
+      _ninjaRebuildHubCard();
+      if (state.screen === 'home') renderHome();
+    }
+    return;
+  }
+  if (action === 'starter') {
+    if (!eigoFamiliarHasStarter()) {
+      showToast('⚠️ スターター選択は別ゲームで使用済みです');
+      NinjaUI._refreshFamiliarPicker(false);
+      return;
+    }
+    if (eigoFamiliarStarter(id)) {
+      const name = EIGO_FAM_MAP[id] ? EIGO_FAM_MAP[id].name : id;
+      showToast('🐾 ' + name + ' がお供になりました！');
+      NinjaUI._closeFamiliarPicker();
+    }
+    return;
+  }
+  if (action === 'unlock') {
+    if (eigoFamiliarUnlock(id)) {
+      const name = EIGO_FAM_MAP[id] ? EIGO_FAM_MAP[id].name : id;
+      showToast('🎟 ' + name + ' を解放しました！');
+      NinjaUI._refreshFamiliarPicker(false);
+      _ninjaRebuildHubCard();
+      if (state.screen === 'home') renderHome();
+    } else {
+      showToast('⚠️ 解放できません（トークン不足またはすでに解放済み）');
+    }
+    return;
+  }
+};
+
+NinjaUI._refreshFamiliarPicker = function(starterMode) {
+  const box = document.getElementById('eigo-fam-picker-box');
+  if (!box) return;
+  const isFirstPick = starterMode && eigoFamiliarHasStarter();
+  const tokensAvail = eigoFamiliarTokensAvailable();
+  const tokensTotal = eigoFamiliarTokensTotal();
+
+  const visibleDefs = isFirstPick
+    ? EIGO_FAM_DEFS.filter(d => d.unlocksAt === 0)  // starter: daily only
+    : EIGO_FAM_DEFS;
+
+  const cards = visibleDefs.map(def => {
+    const id = def.id;
+    const isSelected  = eigoFamiliar.selected === id;
+    const isUnlocked  = eigoIsFamiliarUnlocked(id);
+    const isLevelGated = def.unlocksAt > 0;
+    const canUnlock   = !isLevelGated && !isUnlocked && eigoIsFamiliarAvailableToUnlock(id);
+    let action = '', extraStyle = '', statusTxt = '';
+
+    if (isSelected) {
+      extraStyle = 'border-color:#7C3AED;background:#F3E8FF;box-shadow:0 3px 0 #7C3AED;';
+      statusTxt  = '✅ 選択中';
+    } else if (isFirstPick && !isLevelGated) {
+      extraStyle = 'border-color:#FFD54F;background:#FFFDE7;box-shadow:0 3px 0 #FFD54F;';
+      statusTxt  = '🆓 選んで！';
+      action     = `NinjaUI._familiarAction('starter','${id}')`;
+    } else if (isUnlocked) {
+      extraStyle = 'border-color:#34D399;background:#F0FDF4;box-shadow:0 3px 0 #34D399;';
+      statusTxt  = 'タップ';
+      action     = `NinjaUI._familiarAction('select','${id}')`;
+    } else if (canUnlock && tokensAvail > 0) {
+      extraStyle = 'border-color:#A78BFA;background:#F3E8FF;box-shadow:0 3px 0 #A78BFA;';
+      statusTxt  = '🔓 解放する';
+      action     = `NinjaUI._familiarAction('unlock','${id}')`;
+    } else if (canUnlock && tokensAvail <= 0) {
+      extraStyle = 'opacity:0.55;cursor:not-allowed;box-shadow:none;';
+      statusTxt  = '🎟 トークン不足';
+    } else {
+      extraStyle = 'opacity:0.42;cursor:not-allowed;box-shadow:none;';
+      statusTxt  = '🔒 Lv' + def.unlocksAt;
+    }
+
+    const svgMap = window.FAMILIAR_SVGS || {};
+    const svgStr = svgMap[id]
+      ? svgMap[id].replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+                  .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+                  .replace(/<svg/, '<svg width="52" height="52"')
+      : '<span style="font-size:28px;">🐾</span>';
+    const svgBox = `<div style="width:52px;height:52px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;">${svgStr}</div>`;
+
+    return `<div style="border:2px solid #eee;border-radius:14px;padding:10px 6px 8px;text-align:center;`
+      + `cursor:${action ? 'pointer' : 'default'};background:#fff;box-shadow:0 2px 0 #eee;${extraStyle}"`
+      + (action ? ` onclick="${action}"` : '') + '>'
+      + svgBox
+      + `<div style="font-size:10px;font-weight:800;color:#444;line-height:1.2;">${def.name}</div>`
+      + `<div style="font-size:10px;color:#888;margin-top:2px;">${statusTxt}</div>`
+      + '</div>';
+  }).join('');
+
+  let banner;
+  if (isFirstPick) {
+    banner = '<div style="background:#FFF8E1;border:2px solid #FFD54F;color:#7a5800;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;margin-bottom:12px;">🐾 まずは1匹選んでお供にしよう！<br><span style="font-size:11px;font-weight:700;">Pick your first Ninja Familiar.</span></div>';
+  } else if (tokensAvail > 0) {
+    banner = `<div style="background:#F3E8FF;border:2px solid #A78BFA;color:#4C1D95;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;margin-bottom:12px;">🎟 解放可能なお供：${tokensAvail}　好きなお供を選んで解放しよう！<br><span style="font-size:11px;font-weight:700;">(Lv３ごとに解放できるよ。※一部を除く)</span></div>`;
+  } else {
+    const xpNeeded = eigoFamiliarXpToNextToken();
+    banner = `<div style="background:#F3E8FF;border:2px solid #A78BFA;color:#4C1D95;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;text-align:center;margin-bottom:12px;">🐾 お供を切り替えよう！<br><span style="font-size:11px;font-weight:700;">次の解放トークン：あと ${xpNeeded.toLocaleString()} XP</span></div>`;
+  }
+
+  box.innerHTML = `
+    <button class="modal-top-close" onclick="NinjaUI._closeFamiliarPicker()" aria-label="Close">✕</button>
+    <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;text-align:center;margin-bottom:8px;padding-top:4px;">🐾 忍者のお供 / Ninja Familiar</div>
+    <p style="text-align:center;font-size:12px;color:#666;font-weight:700;margin-bottom:10px;line-height:1.5;">${
+      isFirstPick
+        ? 'お供を選んでヒントをもらおう！<br>Your Familiar gives you hints in battle.'
+        : '解放済みのお供からいつでも切り替えられます<br>Switch between any unlocked familiar.'
+    }</p>
+    ${banner}
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">${cards}</div>
+    <button onclick="NinjaUI._closeFamiliarPicker()" style="display:block;width:100%;padding:13px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;border:none;border-radius:14px;cursor:pointer;color:#fff;background:#7C3AED;box-shadow:0 4px 0 #5B21B6;">
+      ${isFirstPick ? '後で / Skip for now' : '✅ 決定 / Done'}
+    </button>
+  `;
+};
+
+// getFamiliarSvg — returns selected Familiar's SVG, or empty string if none chosen.
+function getFamiliarSvg() {
+  try {
+    const famId = eigoFamiliar.selected;
+    if (famId && FAMILIAR_SVGS[famId]) return FAMILIAR_SVGS[famId];
+  } catch (e) {}
+  return '';
+}
+
+// _eigoFamChip — animated Familiar overlay chip for avatar circles.
+// Transparent background, no circle border — blends with the status card.
+function _eigoFamChip() {
+  try {
+    const famId = eigoFamiliar.selected;
+    if (!famId || !FAMILIAR_SVGS[famId]) return '';
+    const svgStr = FAMILIAR_SVGS[famId]
+      .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+      .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+      .replace(/<svg/, '<svg width="40" height="40"');
+    return '<div style="position:absolute;bottom:-4px;right:-12px;width:48px;height:48px;'
+      + 'display:flex;align-items:center;justify-content:center;'
+      + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+      + svgStr + '</div>';
+  } catch (e) { return ''; }
+}
+
+// _eigoFamHintChipHTML — 48×48 familiar chip for the in-game hint row.
+// action: onclick handler string ('' = no tap action)
+// showing: true when hint revealed (golden glow)
+function _eigoFamHintChipHTML(action, showing) {
+  try {
+    const fid = eigoFamiliar.selected;
+    let inner;
+    if (fid && FAMILIAR_SVGS[fid]) {
+      const s = FAMILIAR_SVGS[fid]
+        .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+        .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+        .replace(/<svg/, '<svg width="48" height="48"');
+      inner = s;
+    } else {
+      inner = '<span style="font-size:32px;line-height:1;">🐾</span>';
+    }
+    return '<div'
+      + (action ? ` onclick="${action}"` : '')
+      + ' style="width:56px;height:56px;display:inline-flex;align-items:center;justify-content:center;'
+      + `cursor:${action ? 'pointer' : 'default'};`
+      + `filter:${showing ? 'drop-shadow(0 0 6px #FFD54F)' : 'none'};`
+      + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+      + inner + '</div>';
+  } catch (e) {
+    return '<span style="font-size:36px;">🐾</span>';
+  }
+}
+
+// _eigoFamCheerHTML — familiar + speech bubble (no hint mode)
+const _EIGO_CHEER_MSGS = [
+  'Go for it!', 'You can do it!', 'Believe in yourself！', 'ファイト！',
+  '頑張れ！', '諦めるな！', 'Keep going!', "You've got this!", '集中！'
+];
+function _eigoFamCheerHTML() {
+  const msg = _EIGO_CHEER_MSGS[Math.floor(Math.random() * _EIGO_CHEER_MSGS.length)];
+  return '<div style="display:inline-flex;align-items:center;gap:8px;">'
+    + _eigoFamHintChipHTML('', false)
+    + `<div style="background:#f1f3f5;border:1.5px solid #dee2e6;border-radius:12px;`
+    + `padding:6px 12px;font-size:13px;font-weight:800;color:#555;`
+    + `border-bottom-left-radius:4px;line-height:1.3;">${msg}</div>`
+    + '</div>';
+}
+
 // Shared snippet: top-right × close button injected into every dynamic modal-box.
 const TOP_CLOSE = '<button class="modal-top-close" onclick="this.closest(\'.overlay\').remove()" aria-label="Close">✕</button>';
 
@@ -1153,6 +1591,7 @@ function ninjaSetSelectedAlias(alias) {
   progress.selectedAlias = alias || '';
   ninjaSaveLocal();
   renderHome();
+  _ninjaRebuildHubCard();
 }
 function ninjaSetTheme(id) {
   if (!id || !NINJA_STATUS_THEMES[id]) return;
@@ -1197,7 +1636,9 @@ function _ninjaRebuildHubCard() {
   hubCard.style.boxShadow   = `0 4px 0 ${th.dot||'rgba(0,0,0,0.35)'}`;
   hubCard.innerHTML = `
     <div style="display:flex;gap:14px;align-items:center;">
-      <div style="width:80px;height:80px;flex:0 0 80px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.35);">${avBox}</div>
+      <div style="position:relative;width:80px;height:80px;flex:0 0 80px;">
+      <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
+      ${_eigoFamChip()}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;color:${nameC};">${safeName} <span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;">${lockMark}</span></div>
         ${aliasRow}
@@ -1296,10 +1737,12 @@ function _ninjaColorPreviewHTML() {
     : '';
   return `<div style="background:${th.bg};color:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 0 ${th.dot||'rgba(0,0,0,0.35)'};">
     <div style="display:flex;gap:14px;align-items:center;">
-      <div style="width:80px;height:80px;flex:0 0 80px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.35);">${avBox}</div>
+      <div style="position:relative;width:80px;height:80px;flex:0 0 80px;">
+      <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
+      ${_eigoFamChip()}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;display:flex;align-items:center;gap:8px;color:${nameC};">
-          <span>${safeName}</span><span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${lockMark}</span>
+          <span style="font-family:'Bangers',cursive;">${safeName}</span><span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${lockMark}</span>
         </div>
         ${aliasRow}
         <div style="font-size:14px;font-weight:900;margin-top:4px;color:#fff;">Lv ${lv} · ${ex.toLocaleString()} XP</div>
@@ -1707,6 +2150,8 @@ function ninjaExportData() {
     words:      progress.words,
     lastTrainedAt: progress.lastTrainedAt,
     design:     designBlock,
+    // Familiar block (additive — old readers without this key ignore it gracefully)
+    familiar:   { selected: eigoFamiliar.selected, unlocked: eigoFamiliar.unlocked.slice(), firstPicked: eigoFamiliar.firstPicked },
     lf:         NINJA_LEVEL_FACTOR,   // scroll version stamp for XP migration
   };
 }
@@ -1770,6 +2215,10 @@ function ninjaImportData(d) {
     progress.unlockedAliases = d.unlockedAliases.filter(a => !!NINJA_ALIAS_RANKS[a]);
     progress.selectedAlias = (d.selectedAlias && progress.unlockedAliases.indexOf(d.selectedAlias) >= 0)
       ? d.selectedAlias : '';
+  }
+  // Familiar block (additive — old scrolls without this key leave current familiar untouched)
+  if (d.familiar && typeof d.familiar === 'object') {
+    eigoFamiliarApply(d.familiar);
   }
   ninjaSaveLocal();
   return true;
@@ -1965,9 +2414,11 @@ function ninjaIdentityHeader(label) {
     : `<span style="font-size:11px;font-weight:800;color:#fff;text-align:center;padding:6px;line-height:1.3;">未選択<br>Tap home<br>to choose</span>`;
   return `
     <div style="display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;padding:14px;box-shadow:0 4px 0 #5B21B6;margin:6px 0 14px;">
-      <div style="width:90px;height:90px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2.5px solid rgba(255,255,255,0.35);">
+      <div style="position:relative;width:90px;height:90px;flex-shrink:0;">
+      <div style="width:90px;height:90px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
         ${avatarHTML}
       </div>
+      ${_eigoFamChip()}</div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.9;">${label || '忍者 / NINJA'}</div>
         <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;line-height:1.05;word-break:break-word;margin-top:2px;">${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}${progress.nameLocked?' <span style="font-size:12px;opacity:0.85;">🔒</span>':''}</div>
@@ -2004,6 +2455,7 @@ function ninjaResetProgress() {
     localStorage.removeItem('ninja_clan_slot_' + _eigoClanActiveSlot + '_v1');
     localStorage.removeItem('ninja_clan_design_' + _eigoClanActiveSlot + '_v1');
     if (typeof shadowNinjaResetState === 'function') shadowNinjaResetState();
+    eigoFamiliarReset(); // wipe familiar so starter pick re-prompts after reset
   } catch(e) {}
   showToast('🌅 原点回帰しました — Reset complete.');
   // Tear down transient overlays — the Shadow Clone Scroll modal AND
@@ -2403,12 +2855,15 @@ function showProfileHub() {
   const idCard = `
     <div id="ninja-hub-preview-card" style="background:${_hubTheme.bg};color:#fff;border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:0 4px 0 ${_hubTheme.dot||'rgba(0,0,0,0.35)'};">
       <div style="display:flex;gap:14px;align-items:center;">
-        <div style="width:80px;height:80px;flex:0 0 80px;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.35);">
-          ${avatarBox}
+        <div style="position:relative;width:80px;height:80px;flex:0 0 80px;">
+          <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            ${avatarBox}
+          </div>
+          ${_eigoFamChip()}
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;display:flex;align-items:center;gap:8px;color:${_hubNameC};">
-            <span>${safeName}</span>${nameLockMark}
+            <span style="font-family:'Bangers',cursive;">${safeName}</span>${nameLockMark}
           </div>
           ${_hubAlias}
           <div style="font-size:14px;font-weight:900;margin-top:4px;color:#fff;">Lv ${progress.level} · ${progress.exp.toLocaleString()} XP</div>
@@ -2428,7 +2883,7 @@ function showProfileHub() {
   const _aliases = progress.unlockedAliases || [];
   const _aliasSection = _aliases.length > 0
     ? `<button style="${btnBase}background:#D97706;box-shadow:0 4px 0 #92400e;"
-               onclick="document.getElementById('ninja-profile-hub').remove(); ninjaOpenAliasPicker();">
+               onclick="ninjaOpenAliasPicker();">
          通り名 / Alias${progress.selectedAlias ? ' · ' + displayAlias(progress.selectedAlias).replace(/</g,'&lt;') : ''}
        </button>`
     : '';
@@ -2437,13 +2892,17 @@ function showProfileHub() {
       ${TOP_CLOSE}
       ${idCard}
       <button style="${btnBase}background:#0F766E;box-shadow:0 4px 0 #0D4745;"
-              onclick="document.getElementById('ninja-profile-hub').remove(); ninjaOpenTextColorPicker();">
+              onclick="ninjaOpenTextColorPicker();">
         🎨 色の変更 / Colors
       </button>
       ${_aliasSection}
       <button style="${btnBase}background:#A78BFA;box-shadow:0 4px 0 #7C3AED;"
-              onclick="document.getElementById('ninja-profile-hub').remove(); shadowNinjaShowPicker({firstRun:false});">
+              onclick="shadowNinjaShowPicker({firstRun:false});">
         🎨 忍者デザイン / Change Design
+      </button>
+      <button style="${btnBase}background:#F59E0B;box-shadow:0 4px 0 #B45309;"
+              onclick="NinjaUI.openFamiliarPicker();">
+        🐾 忍者のお供 / Familiar
       </button>
       <button style="${btnBase}background:#7C3AED;box-shadow:0 4px 0 #5B21B6;"
               onclick="document.getElementById('ninja-profile-hub').remove(); ${progress.nameLocked ? "showToast('🔒 名前は登録済み — 原点回帰でリセットできます')" : "showNameModal()"};">
@@ -3169,26 +3628,30 @@ function getMuteHTML() {
   return `<button class="mute-btn${_muted?' muted':''}" onclick="toggleMute()" aria-label="Toggle sound">${_muted?'🔇':'🔊'}</button>`;
 }
 
-// ── WebAudio SFX Engine (iOS Safari/Chrome 最適化) ────────────────────────
-// HTMLAudioElement + currentTime=0 は iOS WebKit で再生遅延・連打切れが起きる。
-// WebAudio API (decodeAudioData + createBufferSource.start(0)) で置き換えた。
-// 連打でも毎回新しい BufferSource を生成するため確実・低遅延に再生できる。
+// ── WebAudio SFX Engine + HTMLAudio フォールバック ────────────────────────
+// WebAudio: iOS Safari/Chrome 向け遅延ゼロ再生
+// HTMLAudio fallback: WebAudio バッファ未ロード時 / fetch ブロック時の保険
 var _sfxCtx = null;
 var _sfxBufs = {};
+var _sfxFallback = {};
 function _getSfxCtx() {
   if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
   return _sfxCtx;
 }
 function _decodeAB(ctx, ab) {
-  // decodeAudioData の旧コールバック形式 (iOS Safari 互換) を使用
   return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
 }
 (function() {
   var SE = ['clickysound','correctsound','wrongsound'];
-  var ctx = _getSfxCtx(); // suspended 状態でも decodeAudioData は実行可能
+  SE.forEach(function(name) {
+    var fa = new Audio('audio/' + name + '.mp3');
+    fa.preload = 'auto';
+    _sfxFallback[name] = fa;
+  });
+  var ctx = _getSfxCtx();
   SE.forEach(function(name) {
     fetch('audio/' + name + '.mp3')
-      .then(function(r) { return r.arrayBuffer(); })
+      .then(function(r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
       .then(function(ab) { return _decodeAB(ctx, ab); })
       .then(function(buf) { _sfxBufs[name] = buf; })
       .catch(function() {});
@@ -3197,12 +3660,20 @@ function _decodeAB(ctx, ab) {
 function _playSfx(name) {
   if (_muted) return;
   var ctx = _sfxCtx, buf = _sfxBufs[name];
-  if (!ctx || !buf) return;
-  try {
-    if (ctx.state !== 'running') ctx.resume().catch(function(){});
-    var src = ctx.createBufferSource();
-    src.buffer = buf; src.connect(ctx.destination); src.start(0);
-  } catch(e) {}
+  if (ctx && buf) {
+    function _doPlay() {
+      try {
+        var src = ctx.createBufferSource();
+        src.buffer = buf; src.connect(ctx.destination); src.start(0);
+      } catch(e) {}
+    }
+    if (ctx.state === 'running') { _doPlay(); }
+    else { ctx.resume().then(_doPlay).catch(function(){}); }
+  } else {
+    var fa = _sfxFallback[name];
+    if (!fa) return;
+    try { fa.currentTime = 0; fa.play().catch(function(){}); } catch(e) {}
+  }
 }
 // ── iOS AudioContext Unlock ───────────────────────────────────────────────
 // 初回タップで AudioContext を resume + silent buffer 再生して確実に unlock する。
@@ -3370,12 +3841,15 @@ function renderHome() {
         return `
         <div style="background:${_cardBg};color:white;border-radius:22px;padding:18px 18px 14px;box-shadow:0 6px 0 ${_dot};margin-bottom:16px;cursor:pointer;" onclick="showProfileHub()" title="プロフィールメニュー / Profile menu">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:120px;height:120px;flex-shrink:0;background:rgba(255,255,255,0.18);border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.35);">
-              ${_avatarSrc}
+            <div style="position:relative;width:140px;height:140px;flex-shrink:0;">
+              <div style="width:140px;height:140px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                ${_avatarSrc}
+              </div>
+              ${_eigoFamChip()}
             </div>
             <div style="min-width:0;flex:1;">
               <div style="font-family:'Bangers',cursive;font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;color:${_nameColor};">
-                <span>${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+                <span style="font-family:'Bangers',cursive;">${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
                 <span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${progress.nameLocked ? '🔒' : '✏️'}</span>
               </div>
               ${_aliasRow}
@@ -3666,12 +4140,11 @@ function renderQuestion() {
 
   // FIXED: hint shows full sentence Japanese meaning (exJP), falls back to word meaning (jp)
   const hintText = current.exJP || current.jp;
-  const hintHTML = effectiveMode === 2
-    ? `<div style="text-align:center; margin-bottom:8px;">
-         <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 ヒント (hint)</button>
-         <div id="hint-bubble" style="display:none;" class="hint-bubble">${hintText}</div>
-       </div>`
-    : '';
+  // Familiar hint row — tappable chip for Fill-in-Blank (mode 2), cheer bubble otherwise.
+  const hasHintBtn = effectiveMode === 2;
+  const famHintRow = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
+    + (hasHintBtn ? _eigoFamHintChipHTML('showHint()', false) : _eigoFamCheerHTML())
+    + '</div>';
 
   // ── Middle-of-screen quiz layout ──
   // The screen is a flex column. Two equal-flex spacers (top + bottom)
@@ -3694,7 +4167,7 @@ function renderQuestion() {
         </div>
         ${catStrip}
         <div class="quiz-card ${cardClass}">${qText}</div>
-        ${hintHTML}
+        ${famHintRow}
       </div>
       <div class="quiz-spacer-top"></div>
       <div class="choices-grid">
@@ -3711,12 +4184,19 @@ function renderQuestion() {
 }
 
 function showHint() {
-  const btn = document.getElementById('hint-btn');
-  const bubble = document.getElementById('hint-bubble');
-  if (!bubble) return;
-  bubble.style.display = 'block';
-  if (btn) btn.style.display = 'none';
+  if (state.hintUsedThisRound) return;
   state.hintUsedThisRound = true;  // triggers ×0.9 XP penalty for fill-in mode
+  const current = state.sessionWords[state.currentIndex];
+  const hintText = current ? (current.exJP || current.jp || '') : '';
+  const row = document.querySelector('.ninja-fam-hint-row');
+  if (row) {
+    row.outerHTML = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
+      + _eigoFamHintChipHTML('', true)
+      + '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
+      + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
+      + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>'
+      + '</div>';
+  }
 }
 
 function checkAnswer(btn, selected, correct) {
@@ -4073,9 +4553,9 @@ function blitzLoadItem() {
 }
 
 function blitzHeartsHTML() {
-  let h = '';
-  for (let i = 0; i < BLITZ_MAX_LIVES; i++) h += i < blitz.lives ? '❤️' : '🖤';
-  return h;
+  const full = Math.floor(Math.max(0, blitz.lives));
+  const half = (blitz.lives - full) >= 0.5;
+  return '❤️'.repeat(full) + (half ? '💛' : '');
 }
 
 function blitzUpdateTimer() {
@@ -4796,6 +5276,7 @@ function shadowNinjaClosePicker() {
     _eigoPendingVillageReopen = false;
     setTimeout(showVillageModal, 60);  // reopen village with fresh carousel data
   }
+  _ninjaRebuildHubCard();
   if (state.screen === 'home') renderHome();
 }
 // Single click handler — covers select / starter / unlock paths.
@@ -4804,6 +5285,7 @@ function shadowNinjaPickAction(action, id) {
   if (action === 'select') {
     if (!shadowNinjaSelect(id)) return;
     shadowNinjaRefreshPickerUI(false);
+    _ninjaRebuildHubCard();
     return;
   }
   if (action === 'starter') {
@@ -4827,6 +5309,7 @@ function shadowNinjaPickAction(action, id) {
     if (!shadowNinjaUnlock(id)) return;
     showToast('🔓 ' + _name + ' を解放！');
     shadowNinjaRefreshPickerUI(false);
+    _ninjaRebuildHubCard();
     return;
   }
 }
@@ -4877,7 +5360,7 @@ function _eigoSaveSlotDesign(n, d) {
   try { localStorage.setItem(_eigoSlotDesignKey(n), JSON.stringify(d)); } catch(e) {}
 }
 
-// Snapshot current in-memory progress + design into a slot
+// Snapshot current in-memory progress + design (+ familiar) into a slot
 function _eigoCaptureToSlot(n) {
   _eigoSaveSlotProgress(n, {
     name: progress.name, nameLocked: progress.nameLocked,
@@ -4889,10 +5372,15 @@ function _eigoCaptureToSlot(n) {
     selected: shadowNinja.selected,
     unlocked: shadowNinja.unlocked.slice(),
     v: 2,
+    familiar: {
+      selected:    eigoFamiliar.selected,
+      unlocked:    eigoFamiliar.unlocked.slice(),
+      firstPicked: eigoFamiliar.firstPicked,
+    },
   });
 }
 
-// Load a slot into memory (progress + design)
+// Load a slot into memory (progress + design + familiar)
 function _eigoApplySlot(n) {
   const d = _eigoLoadSlotProgress(n);
   if (d) {
@@ -4919,6 +5407,13 @@ function _eigoApplySlot(n) {
       shadowNinja.selected = des.selected;
     }
   }
+  // Restore familiar from per-slot design (do NOT fall back to global key —
+  // that would give a new slot the previous ninja's familiar).
+  eigoFamiliar.selected    = null;
+  eigoFamiliar.unlocked.splice(0, eigoFamiliar.unlocked.length);
+  eigoFamiliar.firstPicked = null;
+  const famSrc = (des && des.familiar) ? des.familiar : null;
+  if (famSrc) eigoFamiliarApply(famSrc);
   _eigoClanActiveSlot = n;
 }
 
@@ -5511,12 +6006,18 @@ clanBoot();         // clan init — may overwrite sessionPending from slot data
     }
   } catch(e) {}
 })();
+eigoFamiliarLoad(); // load familiar state from shared localStorage before first render
 renderHome();
 // First-time users (or anyone who hasn't picked a starter yet) see the
 // design picker as a friendly welcome. After 原点回帰 this also re-runs
 // because shadowNinjaResetState() clears `selected`.
 if (!shadowNinja.selected) {
   setTimeout(() => shadowNinjaShowPicker({ firstRun: true }), 200);
+}
+// After the design picker, prompt the familiar starter picker if no familiar is selected yet.
+// Uses eigoFamiliar directly (no Ninja.familiar alias needed — same object).
+if (shadowNinja.selected && eigoFamiliarHasStarter()) {
+  setTimeout(() => NinjaUI.openFamiliarPicker({ starterMode: true }), 800);
 }
 </script>
 </body>
