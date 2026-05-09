@@ -1536,7 +1536,7 @@
     var ov = document.createElement('div');
     ov.id = 'ninja-ui-familiar-pick';
     ov.className = 'ninja-ui-overlay';
-    ov.style.zIndex = '10010';
+    ov.style.zIndex = '100010';
     ov.innerHTML = '<div class="ninja-ui-modal" id="ninja-ui-familiar-box">'
       + '<button class="ninja-ui-top-close" onclick="NinjaUI._closeFamiliarPicker()" aria-label="Close">✕</button>'
       + '</div>';
