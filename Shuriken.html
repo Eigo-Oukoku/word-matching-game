@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="google" content="notranslate">
-  <title>Shuriken Slinger - ELKえいご王国</title>
+  <title>Magical Shuriken Slinger - ELKえいご王国</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,36 +12,26 @@
 
   <style>
     :root {
-      --ink: #1a1a2e;
-      --gold: #dfb15b;
-      --crimson: #E63946;
-      --bg: #f5f5f0;
+      --bg: #FFFAF0;
+      --elk-header-bg: #FFE4E1;
+      --ink: #5D4037;
+      --title: #FF1493;
+      --gold: #FFD700;
+      --crimson: #FF69B4;
+      --item-border: #FFB6C1;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      font-family: 'Nunito', 'Noto Sans JP', sans-serif;
-    }
-
-    body {
-      background-color: var(--ink);
-      color: #fff;
-      overflow: hidden;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; font-family: 'Nunito', 'Noto Sans JP', sans-serif; }
+    body { background-color: var(--bg); color: var(--ink); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
 
     #elk-header {
-      background: rgba(0,0,0,0.4);
-      padding: 12px;
-      text-align: center;
-      z-index: 100;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: var(--elk-header-bg);
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid var(--item-border);
     }
 
     #game-container {
@@ -50,7 +40,7 @@
       width: 100%;
       max-width: 500px;
       margin: 0 auto;
-      background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+      background: linear-gradient(180deg, #FFF0F5 0%, #FFB6C1 100%);
       overflow: hidden;
     }
 
@@ -59,145 +49,141 @@
       display: flex;
       justify-content: space-between;
       pointer-events: none;
-      position: relative;
-      z-index: 10;
+      z-index: 500;
     }
+    .stat-label { font-family: 'Bangers', cursive; font-size: 28px; color: var(--title); text-shadow: 0 2px 2px rgba(255,255,255,0.8); }
 
-    .stat-label {
-      font-family: 'Bangers', cursive;
-      font-size: 26px;
-      letter-spacing: 1px;
-      color: var(--gold);
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    }
-
-    /* お題エリア */
     #prompt-box {
       text-align: center;
       padding: 15px;
-      background: rgba(255,255,255,0.03);
-      border-bottom: 2px solid var(--gold);
-      margin-bottom: 10px;
-    }
-    #prompt-word {
-      font-size: 40px; /* お題も少し大きく */
-      font-weight: 900;
-      color: #fff;
-      text-shadow: 0 0 15px rgba(223, 177, 91, 0.4);
-    }
-
-    /* プレイエリア */
-    #stage {
+      background: rgba(255,255,255,0.5);
+      border-bottom: 3px solid var(--gold);
       position: relative;
-      width: 100%;
-      height: 100%;
+      z-index: 500;
+      border-radius: 15px;
+      margin: 0 10px 10px 10px;
     }
+    #prompt-word { font-size: 48px; font-weight: 900; color: var(--title); text-shadow: 0 0 10px rgba(255,20,147,0.3); }
 
-    /* 【修正】単語を大きく、札をタップしやすく */
+    #stage { position: absolute; inset: 0; z-index: 10; pointer-events: auto; }
+
     .falling-item {
       position: absolute;
-      padding: 15px 30px; /* 余白を増やしてタップ判定を拡大 */
-      background: #fff;
+      padding: 12px 25px;
+      background: rgba(255, 255, 255, 0.95);
       color: var(--ink);
-      border-radius: 12px;
+      border-radius: 50px;
       font-weight: 900;
-      font-size: 2.2rem; /* フォントサイズを大幅に拡大 */
-      box-shadow: 0 6px 0 #bbb;
+      font-size: 2.2rem;
+      border: 2px solid var(--item-border);
+      box-shadow: 0 6px 0 var(--item-border);
       white-space: nowrap;
       cursor: pointer;
       will-change: transform;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-width: 120px;
+      min-width: 150px;
+      text-align: center;
+      z-index: 100;
     }
 
+    /* 忍者の姿 */
+    .ninja-character {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 110px;
+      z-index: 50;
+      transition: transform 0.1s ease-out;
+    }
+    /* 投げた時のアクション */
+    .ninja-character.throwing {
+      transform: translateX(-50%) translateY(-20px) scale(1.1);
+    }
+
+    /* 魔法の星（手裏剣） */
     .shuriken {
       position: absolute;
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       pointer-events: none;
-      z-index: 20;
-      transition: all 0.1s linear;
-    }
-
-    /* スクリーン */
-    .overlay-screen {
-      position: absolute;
-      inset: 0;
-      background: var(--ink);
       z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      text-align: center;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
-    h1.title {
-      font-family: 'Bangers', cursive;
-      font-size: 64px;
-      color: var(--gold);
-      line-height: 0.9;
-      margin-bottom: 30px;
-      text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    .hit-effect {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      pointer-events: none;
+      z-index: 150;
+      animation: explode 0.3s ease-out forwards;
+    }
+    @keyframes explode {
+      0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
     }
 
+    .overlay-screen {
+      position: absolute; inset: 0; background: var(--bg); z-index: 2000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 30px; text-align: center;
+      background-image: linear-gradient(180deg, #FFF0F5 0%, #FFD1DC 100%);
+    }
+    h1.title { font-family: 'Bangers', cursive; font-size: 55px; color: var(--title); margin-bottom: 25px; }
+    
     .btn-main {
-      background: var(--gold);
-      color: var(--ink);
-      border: none;
-      padding: 18px 50px;
-      font-family: 'Bangers', cursive;
-      font-size: 32px;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 6px 0 #b08d48;
-      margin: 12px;
-      width: 85%;
-      max-width: 320px;
+      background: var(--title); color: #fff; border: none;
+      padding: 15px 40px; font-family: 'Bangers', cursive; font-size: 28px;
+      border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #D14789;
+      margin: 10px; width: 280px;
     }
-    .btn-main:active { transform: translateY(3px); box-shadow: 0 3px 0 #b08d48; }
-
-    .result-score-val {
-      font-family: 'Bangers', cursive;
-      font-size: 80px;
-      color: var(--gold);
-      margin: 10px 0;
-    }
+    .btn-main:active { transform: translateY(3px); box-shadow: 0 3px 0 #D14789; }
   </style>
 </head>
 <body>
 
   <div id="elk-header">
-    <div style="font-family:'Bangers'; color:var(--gold); letter-spacing: 4px; font-size: 18px;">SHURIKEN SLINGER</div>
+    <button class="btn-menu" onclick="location.reload()">HOME</button>
+    <div style="font-family:'Bangers'; color:var(--title); letter-spacing: 2px; font-size: 18px;">MAGICAL NINJA</div>
+    <div style="width:60px"></div>
   </div>
 
   <div id="game-container">
     <div class="shuriken-ui-top">
       <div class="stat-label" id="ui-score">SCORE: 0</div>
-      <div class="stat-label" id="ui-timer">60s</div>
+      <div class="stat-label" id="ui-timer">90s</div>
     </div>
 
     <div id="prompt-box">
-      <div style="font-size: 12px; color: var(--gold); letter-spacing: 3px; font-weight: 700;">MISSION TARGET</div>
       <div id="prompt-word">READY?</div>
     </div>
 
-    <div id="stage"></div>
+    <div id="stage">
+      <div class="ninja-character" id="ninja-char">
+        <svg viewBox="0 0 100 100">
+          <rect x="35" y="45" width="30" height="35" fill="#FFB6C1" rx="10" />
+          <rect x="30" y="15" width="40" height="35" fill="#FFB6C1" rx="15" />
+          <rect x="28" y="20" width="44" height="8" fill="#FFD700" rx="4" />
+          <rect x="38" y="28" width="24" height="10" fill="#e5c1a0" rx="2" />
+          <circle cx="42" cy="32" r="2" fill="#5D4037" />
+          <circle cx="54" cy="32" r="2" fill="#5D4037" />
+          <path d="M30 45 Q15 48 10 38 Q15 53 30 48 Z" fill="#FF1493" />
+          <path d="M70 45 Q85 48 90 38 Q85 53 70 48 Z" fill="#FF1493" />
+        </svg>
+      </div>
+    </div>
 
     <div id="start-screen" class="overlay-screen">
-      <h1 class="title">SHURIKEN<br>SLINGER</h1>
-      <button class="btn-main" onclick="bootGame()">START MISSION</button>
+      <h1 class="title">MAGICAL NINJA</h1>
+      <button class="btn-main" onclick="bootGame('weak')">WEAK POINT MODE</button>
+      <button class="btn-main" style="background:#8E44AD; box-shadow:0 6px 0 #5b2d6e;" onclick="bootGame('daily')">DAILY MODE</button>
     </div>
 
     <div id="result-screen" class="overlay-screen" style="display:none;">
-      <h1 class="title">MISSION<br>COMPLETE</h1>
-      <div class="result-score-val" id="final-score">0</div>
-      <div id="result-stats" style="font-size:20px; margin-bottom:30px; color: #aaa;"></div>
+      <h1 class="title">COMPLETE!</h1>
+      <div id="final-score" style="font-size:70px; color:var(--title); font-family:'Bangers';">0</div>
       <button class="btn-main" onclick="location.reload()">RETRY</button>
-      <button class="btn-main" style="background:#8E44AD; color:#fff; box-shadow:0 6px 0 #5b2d6e;" onclick="NinjaUI.openAnalysis()">ANALYSIS</button>
     </div>
   </div>
 
@@ -205,164 +191,208 @@
   <script src="ninja-ui.js"></script>
 
   <script>
-    Ninja.configure({
-      gameId: 'shuriken-slinger',
-      gameLabel: 'Shuriken Slinger',
-      xpMultiplier: 1.0
-    });
-    Ninja.boot();
-
-    const vocab = [
-      {en: "apple", jp: "りんご"}, {en: "run", jp: "走る"}, {en: "fast", jp: "速い"},
-      {en: "jump", jp: "飛ぶ"}, {en: "book", jp: "本"}, {en: "water", jp: "水"},
-      {en: "sword", jp: "剣"}, {en: "night", jp: "夜"}, {en: "silent", jp: "静かな"}
+    const WEAK_POINT_VOCAB = [
+      {en:"pants", jp:"ズボン"}, {en:"towel", jp:"タオル"}, {en:"soap", jp:"せっけん"}, 
+      {en:"two", jp:"2"}, {en:"plate", jp:"おさら"}, {en:"airplane", jp:"ひこうき"}, {en:"train", jp:"でんしゃ"}
     ];
 
+    const DAILY_VOCAB = [{en:"apple", jp:"りんご"}, {en:"banana", jp:"バナナ"}, {en:"cat", jp:"ねこ"}];
+
+    Ninja.configure({ gameId: 'magical-shuriken', gameLabel: 'Magical Shuriken' });
+    Ninja.boot();
+
+    let currentVocabSet = [];
     let score = 0;
-    let timeLeft = 60;
-    let currentTarget = null;
+    let timeLeft = 90;
     let gameActive = false;
     let activeItems = [];
-    let lastTime = 0;
+    let currentTarget = null;
+    const WORD_STAY_DURATION = 8000;
 
-    function bootGame() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // --- 効果音生成エンジン ---
+    function playThrowSound() { // 「シュッ」
+      const osc = audioCtx.createOscillator();
+      const noise = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      // ノイズ生成
+      const bufferSize = audioCtx.sampleRate * 0.1;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      noise.buffer = buffer;
+
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(5000, audioCtx.currentTime + 0.1);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      noise.start();
+    }
+
+    function playHitSound(correct) { // 「サクッ/ザクッ」
+      const freq = correct ? 800 : 200;
+      const gain = audioCtx.createGain();
+      const osc = audioCtx.createOscillator();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.1);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function bootGame(mode) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      currentVocabSet = mode === 'weak' ? WEAK_POINT_VOCAB : DAILY_VOCAB;
       document.getElementById('start-screen').style.display = 'none';
       gameActive = true;
-      nextTarget();
+      switchTarget();
       spawnLoop();
+      timerLoop();
       requestAnimationFrame(gameLoop);
-      startTimer();
     }
 
-    function startTimer() {
-      const t = setInterval(() => {
-        if(!gameActive) { clearInterval(t); return; }
-        timeLeft--;
-        document.getElementById('ui-timer').textContent = `${timeLeft}s`;
-        if (timeLeft <= 0) endGame();
-      }, 1000);
-    }
-
-    function nextTarget() {
-      currentTarget = vocab[Math.floor(Math.random() * vocab.length)];
+    function switchTarget() {
+      if (!gameActive) return;
+      currentTarget = currentVocabSet[Math.floor(Math.random() * currentVocabSet.length)];
       document.getElementById('prompt-word').textContent = currentTarget.jp;
-      speak(currentTarget.en);
+      
+      // 単語読み上げ
+      const ut = new SpeechSynthesisUtterance(currentTarget.en);
+      ut.lang = 'en-US';
+      speechSynthesis.speak(ut);
+
+      setTimeout(() => { if (gameActive) switchTarget(); }, WORD_STAY_DURATION);
     }
 
     function spawnLoop() {
-      if (!gameActive) return;
-      
+      if (!gameActive || !currentTarget) { setTimeout(spawnLoop, 500); return; }
+
       const item = document.createElement('div');
       item.className = 'falling-item';
-      
-      const isCorrect = Math.random() > 0.7;
-      const wordObj = isCorrect ? currentTarget : vocab[Math.floor(Math.random()*vocab.length)];
-      
+      const isCorrect = Math.random() > 0.4;
+      const wordObj = isCorrect ? currentTarget : currentVocabSet[Math.floor(Math.random() * currentVocabSet.length)];
+
       item.textContent = wordObj.en;
-      
-      // 文字が大きいため、画面端から少し内側に出現させる
-      item.style.left = Math.random() * 50 + 10 + "%";
+      item.style.left = (Math.random() * 60 + 5) + "%";
       item.style.top = "-100px";
-      
       document.getElementById('stage').appendChild(item);
-      
-      const data = { 
-        el: item, 
-        y: -100, 
-        word: wordObj.en, 
+
+      const data = {
+        el: item, y: -100, word: wordObj.en,
         correct: (wordObj.en === currentTarget.en),
-        speed: 1.8 + Math.random() * 1.5 
+        speed: 0.8 + Math.random() * 0.7
       };
+
+      item.addEventListener('touchstart', (e) => { e.preventDefault(); throwShuriken(e.touches[0], data); });
+      item.addEventListener('mousedown', (e) => throwShuriken(e, data));
+
       activeItems.push(data);
-
-      item.onmousedown = (e) => throwShuriken(e, data);
-      item.ontouchstart = (e) => { e.preventDefault(); throwShuriken(e.touches[0], data); };
-
-      setTimeout(spawnLoop, 1200 - Math.min(score, 600)); 
-    }
-
-    function gameLoop(timestamp) {
-      if (!gameActive) return;
-
-      for (let i = activeItems.length - 1; i >= 0; i--) {
-        const item = activeItems[i];
-        item.y += item.speed;
-        item.el.style.transform = `translateY(${item.y}px)`;
-        
-        if (item.y > 800) {
-          item.el.remove();
-          activeItems.splice(i, 1);
-        }
-      }
-      requestAnimationFrame(gameLoop);
+      setTimeout(spawnLoop, 2000);
     }
 
     function throwShuriken(e, data) {
+      if (!gameActive) return;
+
       const stage = document.getElementById('stage');
       const rect = stage.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      const shuriken = document.createElement('img');
-      shuriken.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" fill="%23dfb15b" stroke="%23000" stroke-width="4"/></svg>`;
-      shuriken.className = 'shuriken';
-      shuriken.style.left = "50%";
-      shuriken.style.top = "95%";
-      stage.appendChild(shuriken);
+      // 音とアクション
+      playThrowSound();
+      const ninja = document.getElementById('ninja-char');
+      ninja.classList.add('throwing');
+      setTimeout(() => ninja.classList.remove('throwing'), 150);
 
-      setTimeout(() => {
-        shuriken.style.left = (clickX - 20) + "px";
-        shuriken.style.top = (clickY - 20) + "px";
-        shuriken.style.transform = "rotate(360deg)";
+      // 星（手裏剣）作成
+      const star = document.createElement('div');
+      star.className = 'shuriken';
+      star.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 0 L61 35 L98 35 L68 57 L79 91 L50 70 L21 91 L32 57 L2 35 L39 35 Z" fill="#FFD700" stroke="#FF69B4" stroke-width="5"/></svg>`;
+      star.style.left = "50%";
+      star.style.top = "90%";
+      star.style.transform = "translate(-50%, -50%)";
+      stage.appendChild(star);
+
+      requestAnimationFrame(() => {
+        star.style.left = clickX + "px";
+        star.style.top = clickY + "px";
+        star.style.transform = "translate(-50%, -50%) rotate(360deg)";
         
         setTimeout(() => {
-          shuriken.remove();
-          handleHit(data);
-        }, 100);
-      }, 10);
+          star.remove();
+          handleHit(clickX, clickY, data);
+        }, 200);
+      });
     }
 
-    function handleHit(data) {
-      Ninja.recordAnswer({word: data.word}, data.correct, 1000);
+    function handleHit(x, y, data) {
+      if (!data.el.parentNode) return;
+      
+      playHitSound(data.correct);
+      Ninja.recordAnswer({word: data.word}, data.correct, 2000);
+
+      const effect = document.createElement('div');
+      effect.className = 'hit-effect';
+      effect.innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="${data.correct ? '#FFD700' : '#FF69B4'}" stroke-width="10" stroke-dasharray="20 10"/></svg>`;
+      effect.style.left = x + "px";
+      effect.style.top = y + "px";
+      document.getElementById('stage').appendChild(effect);
+      setTimeout(() => effect.remove(), 300);
 
       if (data.correct) {
         score += 10;
-        document.getElementById('ui-score').textContent = `SCORE: ${score}`;
         data.el.style.backgroundColor = "var(--gold)";
-        data.el.style.color = "#000";
-        nextTarget();
       } else {
         score = Math.max(0, score - 5);
-        document.getElementById('ui-score').textContent = `SCORE: ${score}`;
         data.el.style.backgroundColor = "var(--crimson)";
         data.el.style.color = "#fff";
       }
-
-      data.el.style.opacity = "0";
-      data.el.style.pointerEvents = "none";
-      setTimeout(() => data.el.remove(), 150);
       
-      const idx = activeItems.indexOf(data);
-      if(idx > -1) activeItems.splice(idx, 1);
+      document.getElementById('ui-score').textContent = `SCORE: ${score}`;
+      data.el.style.opacity = "0";
+      setTimeout(() => { if(data.el.parentNode) data.el.remove(); }, 150);
+    }
+
+    function gameLoop() {
+      if (!gameActive) return;
+      for (let i = activeItems.length - 1; i >= 0; i--) {
+        const item = activeItems[i];
+        item.y += item.speed;
+        item.el.style.transform = `translateY(${item.y}px)`;
+        if (item.y > 800) { item.el.remove(); activeItems.splice(i, 1); }
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    function timerLoop() {
+      if (!gameActive) return;
+      timeLeft--;
+      document.getElementById('ui-timer').textContent = `${timeLeft}s`;
+      if (timeLeft <= 0) endGame();
+      else setTimeout(timerLoop, 1000);
     }
 
     function endGame() {
       gameActive = false;
-      const earnedXp = Math.floor(score / 2);
-      Ninja.addExp(earnedXp);
-
+      Ninja.addExp(Math.floor(score / 2));
       document.getElementById('result-screen').style.display = 'flex';
       document.getElementById('final-score').textContent = score;
-      document.getElementById('result-stats').innerHTML = `GAINED XP: +${earnedXp}`;
-    }
-
-    function speak(text) {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-      const ut = new SpeechSynthesisUtterance(text);
-      ut.lang = 'en-US';
-      ut.rate = 1.0;
-      speechSynthesis.speak(ut);
     }
   </script>
 </body>
