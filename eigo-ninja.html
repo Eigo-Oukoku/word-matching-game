@@ -297,14 +297,14 @@
         inputmode="text" enterkeyhint="go"
         oninput="blitzOnInput()"
         onkeydown="blitzOnKeydown(event)">
-      <button class="kb-btn" onclick="blitzCheckAnswer()">Go ➜</button>
+      <button class="kb-btn" onmousedown="event.preventDefault()" onclick="blitzCheckAnswer()">Go ➜</button>
     </div>
     <div class="kb-fb" id="blitz-fb"></div>
     <button id="blitz-pass-btn" onclick="blitzPass()"
       style="width:100%;padding:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
              background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:12px;
              cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
-      onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
+      onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
       onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
       わからない / Pass ›
     </button>
@@ -4854,6 +4854,9 @@ function startBlitz(subMode) {
   blitzUpdateTimer();
   blitzLoadItem();
   blitzStartTimer();
+  // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
+  const _blitzInp = document.getElementById('blitz-input');
+  if (_blitzInp) _blitzInp.focus();
 }
 
 // Sub-mode selection screen

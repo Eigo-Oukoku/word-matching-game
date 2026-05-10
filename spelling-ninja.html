@@ -280,7 +280,7 @@
          enterkeyhint="go"
          oninput="onKbInput()"
          onkeydown="if(event.key==='Enter'){event.preventDefault();checkKeyboard();}">
-       <button class="kb-btn" onclick="checkKeyboard()">Go ➜</button>
+       <button class="kb-btn" onmousedown="event.preventDefault()" onclick="checkKeyboard()">Go ➜</button>
      </div>
      <div class="kb-fb" id="kb-fb"></div>
      <!-- Inline XP-bonus feedback row for Type Blitz mode. -->
@@ -289,7 +289,7 @@
        style="width:100%;padding:9px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:bold;
               background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:10px;
               cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
-       onmousedown="this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
+       onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
        onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
        わからない / Pass ›
      </button>
@@ -1298,7 +1298,8 @@ function initGame(mode){
     blitzLoadNextWord();
     startBlitzTimer();
     const inp=document.getElementById('kb-input');
-    if(inp){ inp.value=''; inp.className='kb-input'; setTimeout(()=>inp.focus(), 70); }
+    // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
+    if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
   } else {
     nextRound();
   }

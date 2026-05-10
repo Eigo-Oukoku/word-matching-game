@@ -261,7 +261,7 @@
          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
          inputmode="text" enterkeyhint="go"
          onkeydown="if(event.key==='Enter'){event.preventDefault();checkBlitz();}">
-       <button class="blitz-submit" onclick="checkBlitz()">Go ➜</button>
+       <button class="blitz-submit" onmousedown="event.preventDefault()" onclick="checkBlitz()">Go ➜</button>
      </div>
      <div id="blitz-feedback"></div>
      <!-- Inline XP-bonus feedback row for Type Blitz mode. -->
@@ -1101,7 +1101,8 @@ function startGame(level) {
     blitzNextSentence();
     startBlitzTimer();
     const inp=document.getElementById('blitz-inp');
-    if(inp){ inp.value=''; inp.className='blitz-input'; setTimeout(()=>inp.focus(), 70); }
+    // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
+    if(inp){ inp.value=''; inp.className='blitz-input'; inp.focus(); }
   } else {
     nextRound();
   }
