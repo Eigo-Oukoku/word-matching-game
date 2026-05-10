@@ -978,7 +978,7 @@ function blitzNextSentence() {
 
   const inp=document.getElementById('blitz-inp');
   const fb=document.getElementById('blitz-feedback');
-  if(inp){ inp.value=''; inp.className='blitz-input'; }
+  if(inp){ inp.value=''; inp.className='blitz-input'; setTimeout(()=>inp.focus(), 70); }
   if(fb)  fb.innerHTML='';
 }
 
@@ -1101,7 +1101,7 @@ function startGame(level) {
     blitzNextSentence();
     startBlitzTimer();
     const inp=document.getElementById('blitz-inp');
-    if(inp){ inp.value=''; inp.className='blitz-input'; setTimeout(()=>inp.focus(), 100); }
+    if(inp){ inp.value=''; inp.className='blitz-input'; setTimeout(()=>inp.focus(), 70); }
   } else {
     nextRound();
   }
