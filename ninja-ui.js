@@ -360,11 +360,10 @@
     return [
       '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;background:' + _theme.bg + ';box-shadow:0 6px 0 ' + (_theme.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;" onclick="NinjaUI.openProfile()">',
         '<div class="ninja-ui-card-row">',
-          '<div style="flex:0 0 min(140px,32vw);width:min(140px,32vw);height:min(140px,32vw);">',
+          '<div style="position:relative;flex:0 0 min(140px,32vw);width:min(140px,32vw);height:min(140px,32vw);overflow:visible;">',
+            _famBadgeHTML(55, {abs:true, left:100, top:100}),
             '<div class="ninja-ui-avatar" style="width:min(140px,32vw);height:min(140px,32vw);">', avatarHTML, '</div>',
           '</div>',
-          // Familiar chip — standalone flex item between avatar and name column
-          _famBadgeHTML(44),
           '<div style="flex:1;min-width:0;text-align:left;">',
             // Name
             '<div style="font-size:clamp(18px,5.5vw,28px);letter-spacing:1.5px;line-height:1.05;overflow:hidden;display:flex;align-items:center;gap:6px;">',
@@ -435,11 +434,10 @@
     return [
       '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;background:' + _theme2.bg + ';box-shadow:0 4px 0 ' + (_theme2.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;">',
         '<div class="ninja-ui-card-row">',
-          '<div style="flex:0 0 80px;width:80px;height:80px;">',
+          '<div style="position:relative;flex:0 0 80px;width:80px;height:80px;overflow:visible;">',
+            _famBadgeHTML(38, {abs:true, left:53, top:45}),
             '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
           '</div>',
-          // Familiar chip — between avatar and name column
-          _famBadgeHTML(32),
           '<div style="flex:1;min-width:0;text-align:left;">',
             '<div style="font-size:clamp(20px,6vw,26px);letter-spacing:1px;line-height:1.05;">',
               '<span style="font-family:\'Bangers\',cursive;color:' + _nameC2 + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
@@ -1409,10 +1407,11 @@
   // by statusBadgeHTML / identityHeaderHTML (replaced by _famBadgeHTML).
   function _famOverlayHTML() { return ''; }
 
-  // _famBadgeHTML — standalone familiar chip rendered as a flex sibling
-  // between the avatar and the name column in status cards.
+  // _famBadgeHTML — familiar chip for status cards.
   // size: pixel dimension for the SVG (default 44 for home card, 32 for hub).
-  function _famBadgeHTML(size) {
+  // opts.abs: if true, renders position:absolute so it floats over the avatar
+  //           without affecting flex layout. opts.left / opts.top set the offset.
+  function _famBadgeHTML(size, opts) {
     size = size || 44;
     if (!N.familiar || !N.familiar.selected) return '';
     var selId  = N.familiar.selected;
@@ -1429,8 +1428,14 @@
     } else {
       inner = '<span style="font-size:' + Math.round(size * 0.6) + 'px;line-height:1;">' + (def.emoji || '🐾') + '</span>';
     }
-    // margin-left pulls the chip toward the avatar (gap is 14px, -8px → ~6px clearance)
-    // giving the "loyal familiar following close behind" feel without overlapping.
+    if (opts && opts.abs) {
+      return '<div class="ninja-ui-fam-chip" style="position:absolute;left:' + (opts.left || 0) + 'px;top:' + (opts.top || 0) + 'px;z-index:3;'
+        + 'width:' + (size + 10) + 'px;height:' + (size + 10) + 'px;'
+        + 'display:flex;align-items:center;justify-content:center;'
+        + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+        + inner + '</div>';
+    }
+    // flex sibling mode: margin-left pulls chip toward avatar
     return '<div class="ninja-ui-fam-chip" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;'
       + 'margin-left:-8px;'
       + 'width:' + (size + 10) + 'px;height:' + (size + 10) + 'px;">'

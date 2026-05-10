@@ -1083,7 +1083,7 @@ function blitzLoadNextWord(){
 
   const inp = document.getElementById('kb-input');
   const fb  = document.getElementById('kb-fb');
-  if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
+  if(inp){ inp.value=''; inp.className='kb-input'; setTimeout(()=>inp.focus(), 100); }
   if(fb)  fb.innerHTML='';
 }
 
@@ -1298,7 +1298,7 @@ function initGame(mode){
     blitzLoadNextWord();
     startBlitzTimer();
     const inp=document.getElementById('kb-input');
-    if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
+    if(inp){ inp.value=''; inp.className='kb-input'; setTimeout(()=>inp.focus(), 100); }
   } else {
     nextRound();
   }

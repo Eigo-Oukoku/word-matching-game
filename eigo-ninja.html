@@ -1397,7 +1397,11 @@ function _eigoFamChip() { return ''; }
 
 // _eigoFamBadgeHTML — standalone familiar chip as a flex sibling between avatar and name.
 // size: pixel dimension of the SVG (default 40).
-function _eigoFamBadgeHTML(size) {
+// _eigoFamBadgeHTML(size, opts)
+//   opts.abs = true  → position:absolute inside a position:relative avatar wrapper
+//   opts.left / opts.top → pixel offsets for absolute mode
+//   (no opts)        → flex sibling mode with margin-left:-8px
+function _eigoFamBadgeHTML(size, opts) {
   try {
     size = size || 30;
     const famId = eigoFamiliar.selected;
@@ -1406,10 +1410,17 @@ function _eigoFamBadgeHTML(size) {
       .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
       .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
       .replace(/<svg/, '<svg width="' + size + '" height="' + size + '"');
-    // margin-left pulls chip toward avatar (gap 14px, -8px → ~6px clearance)
+    if (opts && opts.abs) {
+      // Absolute mode: sits inside a position:relative avatar wrapper, left of avatar
+      return '<div style="position:absolute;left:' + (opts.left||0) + 'px;top:' + (opts.top||0) + 'px;z-index:3;'
+        + 'width:' + (size + 10) + 'px;height:' + (size + 10) + 'px;'
+        + 'display:flex;align-items:center;justify-content:center;'
+        + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+        + svgStr + '</div>';
+    }
+    // Flex sibling mode (hub cards)
     return '<div style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;'
-      + 'margin-left:-30px;'
-      + 'margin-top:-40px;'
+      + 'margin-left:-8px;'
       + 'width:' + (size + 10) + 'px;height:' + (size + 10) + 'px;'
       + 'animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
       + svgStr + '</div>';
@@ -1643,10 +1654,10 @@ function _ninjaRebuildHubCard() {
   hubCard.style.boxShadow   = `0 4px 0 ${th.dot||'rgba(0,0,0,0.35)'}`;
   hubCard.innerHTML = `
     <div style="display:flex;gap:14px;align-items:center;">
-      <div style="width:80px;height:80px;flex:0 0 80px;">
-      <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
+      <div style="position:relative;width:80px;height:80px;flex:0 0 80px;overflow:visible;">
+        ${_eigoFamBadgeHTML(38, {abs:true, left:53, top:45})}
+        <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
       </div>
-      ${_eigoFamBadgeHTML(36)}
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;color:${nameC};">${safeName} <span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;">${lockMark}</span></div>
         ${aliasRow}
@@ -1745,10 +1756,10 @@ function _ninjaColorPreviewHTML() {
     : '';
   return `<div style="background:${th.bg};color:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 0 ${th.dot||'rgba(0,0,0,0.35)'};">
     <div style="display:flex;gap:14px;align-items:center;">
-      <div style="width:80px;height:80px;flex:0 0 80px;">
-      <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
+      <div style="position:relative;width:80px;height:80px;flex:0 0 80px;overflow:visible;">
+        ${_eigoFamBadgeHTML(38, {abs:true, left:53, top:45})}
+        <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${avBox}</div>
       </div>
-      ${_eigoFamBadgeHTML(36)}
       <div style="flex:1;min-width:0;">
         <div style="font-family:'Bangers',cursive;font-size:26px;letter-spacing:1px;line-height:1.05;display:flex;align-items:center;gap:8px;color:${nameC};">
           <span style="font-family:'Bangers',cursive;">${safeName}</span><span style="font-size:14px;opacity:0.85;font-family:'Nunito',sans-serif;font-weight:800;">${lockMark}</span>
@@ -3851,12 +3862,12 @@ function renderHome() {
         return `
         <div style="background:${_cardBg};color:white;border-radius:22px;padding:18px 18px 14px;box-shadow:0 6px 0 ${_dot};margin-bottom:16px;cursor:pointer;" onclick="showProfileHub()" title="プロフィールメニュー / Profile menu">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:140px;height:140px;flex-shrink:0;">
+            <div style="position:relative;width:140px;height:140px;flex:0 0 140px;overflow:visible;">
+              ${_eigoFamBadgeHTML(55, {abs:true, left:100, top:100})}
               <div style="width:140px;height:140px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
                 ${_avatarSrc}
               </div>
             </div>
-            ${_eigoFamBadgeHTML(70)}
             <div style="min-width:0;flex:1;">
               <div style="font-family:'Bangers',cursive;font-size:30px;letter-spacing:1.5px;line-height:1.05;word-break:break-word;display:flex;align-items:center;gap:8px;color:${_nameColor};">
                 <span style="font-family:'Bangers',cursive;">${(progress.name || 'Ninja').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
@@ -4558,7 +4569,7 @@ function blitzLoadItem() {
     inp.value     = '';
     inp.className = 'kb-input';
     inp.disabled  = false;
-    setTimeout(() => inp.focus(), 70);
+    setTimeout(() => inp.focus(), 100);
   }
   if (fb) fb.innerHTML = '';
 

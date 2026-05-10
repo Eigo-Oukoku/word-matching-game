@@ -1101,7 +1101,7 @@ function startGame(level) {
     blitzNextSentence();
     startBlitzTimer();
     const inp=document.getElementById('blitz-inp');
-    if(inp){ inp.value=''; inp.className='blitz-input'; inp.focus(); }
+    if(inp){ inp.value=''; inp.className='blitz-input'; setTimeout(()=>inp.focus(), 100); }
   } else {
     nextRound();
   }
