@@ -4854,9 +4854,14 @@ function startBlitz(subMode) {
   blitzUpdateTimer();
   blitzLoadItem();
   blitzStartTimer();
+  window.scrollTo(0, 0);
   // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
   const _blitzInp = document.getElementById('blitz-input');
-  if (_blitzInp) _blitzInp.focus();
+  if (_blitzInp) {
+    _blitzInp.focus();
+    // iOS scrolls the page when the keyboard animates in — scroll back to top afterwards
+    setTimeout(() => window.scrollTo(0, 0), 300);
+  }
 }
 
 // Sub-mode selection screen

@@ -1299,7 +1299,7 @@ function initGame(mode){
     startBlitzTimer();
     const inp=document.getElementById('kb-input');
     // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
-    if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); }
+    if(inp){ inp.value=''; inp.className='kb-input'; inp.focus(); setTimeout(()=>window.scrollTo(0,0), 300); }
   } else {
     nextRound();
   }

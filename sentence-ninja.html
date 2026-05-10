@@ -1102,7 +1102,7 @@ function startGame(level) {
     startBlitzTimer();
     const inp=document.getElementById('blitz-inp');
     // iOS: focus synchronously from within the user gesture — setTimeout cannot open keyboard
-    if(inp){ inp.value=''; inp.className='blitz-input'; inp.focus(); }
+    if(inp){ inp.value=''; inp.className='blitz-input'; inp.focus(); setTimeout(()=>window.scrollTo(0,0), 300); }
   } else {
     nextRound();
   }
