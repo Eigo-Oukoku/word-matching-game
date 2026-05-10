@@ -320,7 +320,10 @@
     if (!entry) return { firstTimeCorrect: false, recovered: false };
     // Stamp session-start time on the very first answer of a new session so
     // "Last trained" reflects when the user began, not when they finished.
-    if (!progress.sessionPending) {
+    // Also treat _newSessionFlag (set by setTrainingMode) as a fresh start —
+    // this replaces the old pattern of clearing sessionPending in setTrainingMode.
+    if (!progress.sessionPending || _newSessionFlag) {
+      _newSessionFlag = false;
       progress.lastTrainedAt  = Date.now();
       progress.sessionPending = true;
     }
@@ -616,16 +619,19 @@
     // ended rather than when it started, and sibling games see T_end > T_start.
     progress.lastTrainedAt  = Date.now();
     progress.sessionPending = false;
+    _newSessionFlag = false;
     saveLocal();
   }
+  // _newSessionFlag: set by setTrainingMode() so recordAnswer() knows to start
+  // a fresh session — WITHOUT wiping an existing sessionPending=true (⚠️中断)
+  // from a previous game.  The interrupted state remains visible until the
+  // user actually begins answering in the new game.
+  var _newSessionFlag = false;
   function setTrainingMode(mode) {
-    // Reset sessionPending so that recordAnswer() re-stamps lastTrainedAt on
-    // the first answer of the new session — even if localStorage had a stale
-    // sessionPending=true from a previously abandoned session.
-    // saveLocal() is still deferred to recordAnswer() so SHARED_KEY is only
-    // written once real training begins.
-    progress.sessionPending    = false;
-    progress.lastTrainingMode  = (mode || '').trim();
+    // Do NOT clear sessionPending here — that would erase cross-game ⚠️中断.
+    // Instead, flag that the next recordAnswer() should begin a fresh session.
+    progress.lastTrainingMode = (mode || '').trim();
+    _newSessionFlag = true;
   }
   function setTrainingGame(game) {
     // Same rationale — no saveLocal() here.

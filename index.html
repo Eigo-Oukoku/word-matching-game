@@ -315,7 +315,7 @@ function _decodeAB(ctx, ab) {
   return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
 }
 (function() {
-  var SE = ['clickysound','correctsound','wrongsound'];
+  var SE = ['clickysound','correctsound','wrongsound','hintsound'];
   SE.forEach(function(name) {
     var fa = new Audio('audio/' + name + '.mp3');
     fa.preload = 'auto';
@@ -402,7 +402,7 @@ const FAMILIAR_SVGS = {
   // ── fantasy (Lv 32/64/128/256) ──────────────────────────────────────
   dragon:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="22,16 18,3 24,14" fill="#FFD700"/><polygon points="42,16 46,3 40,14" fill="#FFD700"/><ellipse cx="32" cy="39" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="27" rx="18" ry="14" fill="#2aab8a"/><ellipse cx="32" cy="35" rx="10" ry="7" fill="#3acca0"/><ellipse cx="22" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="42" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="22" cy="24" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="42" cy="24" rx="2" ry="4" fill="#1a1a2e"/><circle cx="22.5" cy="23" r="0.7" fill="white"/><circle cx="42.5" cy="23" r="0.7" fill="white"/><circle cx="29" cy="35" r="1.5" fill="#1a7a5e"/><circle cx="35" cy="35" r="1.5" fill="#1a7a5e"/><line x1="11" y1="33" x2="26" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/><line x1="53" y1="33" x2="38" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   phoenix: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="51" rx="10" ry="11" fill="#FF6B00" opacity="0.7"/><ellipse cx="20" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="44" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="11" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(-25 11 29)"/><ellipse cx="53" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(25 53 29)"/><ellipse cx="9" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(-25 9 27)"/><ellipse cx="55" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(25 55 27)"/><ellipse cx="32" cy="35" rx="16" ry="14" fill="#E63946"/><circle cx="32" cy="20" r="11" fill="#E63946"/><polygon points="32,10 28,4 32,8 36,4" fill="#FFD700"/><polygon points="30,20 40,18 30,25" fill="#FFD700"/><circle cx="35" cy="19" r="3" fill="#FFD700"/><circle cx="35.5" cy="19" r="2" fill="#1a1a2e"/><circle cx="36" cy="18.5" r="0.6" fill="white"/></svg>`,
-  griffin: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="8" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(-20 8 31)"/><ellipse cx="56" cy="31" rx="12" ry="8" fill="#8B5E3C" transform="rotate(20 56 31)"/><ellipse cx="32" cy="44" rx="18" ry="14" fill="#C49A6C"/><circle cx="32" cy="28" r="15" fill="#8B5E3C"/><circle cx="32" cy="24" r="11" fill="white"/><polygon points="32,26 42,22 32,31" fill="#FFB000"/><circle cx="36.5" cy="22" r="3" fill="#FFD700"/><circle cx="37" cy="22" r="2" fill="#1a1a2e"/><circle cx="37.5" cy="21.5" r="0.6" fill="white"/><ellipse cx="48" cy="52" rx="6" ry="5" fill="#8B5E3C"/></svg>`,
+  griffin: `<svg viewBox="0 0 64 64" width="56" height="56"><!-- wings --><path d="M32,33 Q18,23 6,25 Q14,31 32,35Z" fill="#8B5E3C"/><path d="M32,33 Q46,23 58,25 Q50,31 32,35Z" fill="#8B5E3C"/><path d="M32,33 Q18,21 4,21 Q12,29 32,35Z" fill="#A0724A" opacity="0.7"/><path d="M32,33 Q46,21 60,21 Q52,29 32,35Z" fill="#A0724A" opacity="0.7"/><!-- rear lion legs (behind body) --><path d="M19,49 Q16,54 17,61" stroke="#B8895E" stroke-width="5.5" stroke-linecap="round" fill="none"/><ellipse cx="17" cy="61" rx="5" ry="2.5" fill="#9A6E3A"/><path d="M26,50 Q23,55 24,61" stroke="#C49A6C" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="24" cy="61" rx="5" ry="2.5" fill="#A07840"/><!-- lion body --><ellipse cx="32" cy="41" rx="18" ry="12" fill="#C49A6C"/><!-- eagle front talons --><line x1="38" y1="52" x2="36" y2="61" stroke="#6B4226" stroke-width="3.5" stroke-linecap="round"/><line x1="36" y1="61" x2="32" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="61" x2="36" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="61" x2="40" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="44" y1="51" x2="43" y2="61" stroke="#6B4226" stroke-width="3.5" stroke-linecap="round"/><line x1="43" y1="61" x2="39" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="43" y1="61" x2="43" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="43" y1="61" x2="47" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><!-- eagle head --><circle cx="32" cy="25" r="14" fill="#8B5E3C"/><circle cx="32" cy="21" r="10" fill="white"/><polygon points="32,23 41,19 32,28" fill="#FFB000"/><circle cx="36" cy="19" r="2.8" fill="#FFD700"/><circle cx="36.5" cy="19" r="1.9" fill="#1a1a2e"/><circle cx="37" cy="18.5" r="0.55" fill="white"/></svg>`,
   unicorn: `<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="ugh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><ellipse cx="32" cy="40" rx="18" ry="16" fill="#F8F8FF"/><ellipse cx="32" cy="25" rx="9" ry="13" fill="#F8F8FF"/><ellipse cx="32" cy="16" rx="12" ry="10" fill="#F8F8FF"/><polygon points="32,4 28,18 36,18" fill="url(#ugh)"/><ellipse cx="22" cy="20" rx="6" ry="11" fill="#F48FB1" opacity="0.8"/><ellipse cx="20" cy="22" rx="4" ry="9" fill="#A78BFA" opacity="0.7"/><ellipse cx="37" cy="16" rx="4" ry="4" fill="#A78BFA"/><circle cx="37.5" cy="16" r="2.5" fill="#1a1a2e"/><circle cx="38.2" cy="15.3" r="0.8" fill="white"/><ellipse cx="42" cy="20" rx="6" ry="4" fill="#F8F8FF"/><ellipse cx="40" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><ellipse cx="44" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><circle cx="10" cy="12" r="1.5" fill="#FFD700" opacity="0.8"/><circle cx="54" cy="20" r="1.5" fill="#FF6B6B" opacity="0.8"/></svg>`,
   // ── mythic (Lv 50/100/150) ────────────────────────────────────────────
   kitsune: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="44" cy="48" rx="12" ry="7" fill="#F5D769" transform="rotate(-30 44 48)"/><ellipse cx="50" cy="43" rx="12" ry="7" fill="#FFE599" transform="rotate(-10 50 43)"/><ellipse cx="50" cy="36" rx="12" ry="7" fill="#F5D769" transform="rotate(10 50 36)"/><polygon points="14,22 10,4 22,18" fill="#F5D769"/><polygon points="50,22 54,4 42,18" fill="#F5D769"/><polygon points="15,21 11,8 21,18" fill="#fff5cc"/><polygon points="49,21 53,8 43,18" fill="#fff5cc"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F5D769"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff5cc"/><ellipse cx="24" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="30" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="41" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="25.7" cy="29.7" r="0.7" fill="white"/><circle cx="41.7" cy="29.7" r="0.7" fill="white"/><ellipse cx="32" cy="37.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/><ellipse cx="45" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/></svg>`,
@@ -514,39 +514,33 @@ function getHeartsHTML(lives) {
   return '❤️'.repeat(full) + (half ? '💛' : '');
 }
 
-// useHint — Familiar tap during gameplay: costs 0.5 heart, reveals a hint.
-//   • Ninja / Phantom mode → reveal the hidden target word text in yellow.
-//   • Regular mode         → dim one random wrong choice button.
+// useHint — Familiar tap during gameplay: costs 0.5 heart, eliminates one wrong choice.
+//   Works in all modes including Speedster.
 function useHint() {
-  if (state.isGameOver || state.revealed || state.isSpeedster) return;
+  if (state.isGameOver || state.revealed) return;
   if (state.lives < 0.5) { NinjaUI.showToast('❤️ ライフが足りません'); return; }
+  _playSfx('hintsound');
   state.lives -= 0.5;
-  if (state.isNinja || state.isPhantom) {
-    // Reveal the target word in the question card
-    const tt = document.getElementById('target-text');
-    if (tt) { tt.textContent = state.current; tt.style.color = '#FFD700'; }
-  } else {
-    // Eliminate one random wrong choice
-    const wrongIdxs = state.choices.reduce((acc, w, i) => {
-      if (w !== state.current) acc.push(i); return acc;
-    }, []);
-    if (wrongIdxs.length) {
-      const i = wrongIdxs[Math.floor(Math.random() * wrongIdxs.length)];
-      const btn = document.getElementById('btn-' + i);
-      if (btn && !btn.classList.contains('wrong')) {
-        btn.style.opacity = '0.3';
-        btn.style.pointerEvents = 'none';
-      }
+  // Eliminate one random wrong choice button
+  const wrongIdxs = state.choices.reduce((acc, w, i) => {
+    if (w !== state.current) acc.push(i); return acc;
+  }, []);
+  if (wrongIdxs.length) {
+    const i = wrongIdxs[Math.floor(Math.random() * wrongIdxs.length)];
+    const btn = document.getElementById('btn-' + i);
+    if (btn && !btn.classList.contains('wrong')) {
+      btn.style.opacity = '0.3';
+      btn.style.pointerEvents = 'none';
     }
   }
-  // Re-render familiar hint row with updated hearts
+  // Re-render familiar hint row with updated hearts (speedster has no lives display)
   const row = document.querySelector('.ninja-fam-hint-row');
   if (row) {
     row.outerHTML = NinjaUI.familiarHintRowHTML({
       hintAction: 'useHint()',
       hintShown:  false,
       hintText:   '',
-      lives:      state.lives,
+      lives:      state.isSpeedster ? null : state.lives,
     });
   }
   NinjaUI.showToast('🐾 ヒント！ (−0.5♥)');
@@ -600,6 +594,13 @@ function initGame(count, ninja, phantom, speedster) {
   state.round = 0; state.score = 0; state.lives = 3;
   state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
   state.streak = 0; state.sessionBonusXp = 0;
+  // Training record
+  try {
+    Ninja.setTrainingGame('Word-N Vol.1');
+    var _mn = speedster ? '⚡ Speedster' : phantom ? '👻 Phantom' : ninja ? '🥷 Ninja'
+            : count <= 2 ? '😊 Easy' : count === 3 ? '👊 Normal' : count === 4 ? '💪 Hard' : '🏆 Very Hard';
+    Ninja.setTrainingMode(_mn);
+  } catch(e) {}
   // Pre-load audio + image for first two words immediately
   [0, 1].forEach(function(i) {
     var k = state.words[i] ? getFileKey(state.words[i]) : null;
@@ -753,11 +754,10 @@ function render() {
   const scoreText = state.isSpeedster ? `⭐ ${state.score} words` : `⭐ ${state.score} | ${state.round + 1}/10`;
   const footerMsg = state.isSpeedster ? (excited ? 'Hurry!!' : 'Quick! Tap it!') : 'Go for it!';
   const famHintRow = NinjaUI.familiarHintRowHTML({
-    hintAction:  !state.isSpeedster ? 'useHint()' : '',
-    hintShown:   false,
-    hintText:    '',
-    lives:       state.isSpeedster ? null : state.lives,
-    isSpeedster: state.isSpeedster,
+    hintAction: 'useHint()',
+    hintShown:  false,
+    hintText:   '',
+    lives:      state.isSpeedster ? null : state.lives,
   });
   document.getElementById('game-area').innerHTML = `
     <div class="top-bar">
@@ -853,7 +853,7 @@ function renderEnd() {
   let newAliasUnlockedEnd = '';
   try {
     if (isPerfect) gainedLv = Ninja.addExp(10);
-    Ninja.touchTrained();
+    if (state.lives > 0) Ninja.touchTrained(); // only mark complete when not failed by losing all lives
     // Mode-specific aliases (Gemini-based)
     let _rankTitle = '';
     if (isPerfect) {

@@ -360,13 +360,11 @@
     return [
       '<div class="ninja-ui-card" id="ninja-status-card" style="cursor:pointer;background:' + _theme.bg + ';box-shadow:0 6px 0 ' + (_theme.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;" onclick="NinjaUI.openProfile()">',
         '<div class="ninja-ui-card-row">',
-          // Wrap avatar in a relative-positioned container so the familiar
-          // overlay chip can be positioned absolutely at bottom-right
-          // WITHOUT being clipped by .ninja-ui-avatar's border-radius+overflow:hidden.
-          '<div style="position:relative;flex:0 0 min(140px,32vw);width:min(140px,32vw);height:min(140px,32vw);">',
+          '<div style="flex:0 0 min(140px,32vw);width:min(140px,32vw);height:min(140px,32vw);">',
             '<div class="ninja-ui-avatar" style="width:min(140px,32vw);height:min(140px,32vw);">', avatarHTML, '</div>',
-            _famOverlayHTML(),
           '</div>',
+          // Familiar chip — standalone flex item between avatar and name column
+          _famBadgeHTML(44),
           '<div style="flex:1;min-width:0;text-align:left;">',
             // Name
             '<div style="font-size:clamp(18px,5.5vw,28px);letter-spacing:1.5px;line-height:1.05;overflow:hidden;display:flex;align-items:center;gap:6px;">',
@@ -437,10 +435,11 @@
     return [
       '<div class="ninja-ui-card" style="margin:6px 0 14px;padding:14px;background:' + _theme2.bg + ';box-shadow:0 4px 0 ' + (_theme2.dot || 'rgba(0,0,0,0.35)') + ';text-align:left;">',
         '<div class="ninja-ui-card-row">',
-          '<div style="position:relative;flex:0 0 80px;width:80px;height:80px;">',
+          '<div style="flex:0 0 80px;width:80px;height:80px;">',
             '<div class="ninja-ui-avatar compact">', avatarHTML, '</div>',
-            _famOverlayHTML(),
           '</div>',
+          // Familiar chip — between avatar and name column
+          _famBadgeHTML(32),
           '<div style="flex:1;min-width:0;text-align:left;">',
             '<div style="font-size:clamp(20px,6vw,26px);letter-spacing:1px;line-height:1.05;">',
               '<span style="font-family:\'Bangers\',cursive;color:' + _nameC2 + ';">', htmlEsc(p.name || 'Ninja'), '</span>',
@@ -1406,12 +1405,15 @@
   // Ninja Familiar — overlay helper + picker modal
   // ───────────────────────────────────────────────────────────────────────
 
-  // _famOverlayHTML — small 26×26 chip displayed at the bottom-right of the
-  // home status card avatar (outside .ninja-ui-avatar so it's not clipped by
-  // that element's border-radius+overflow:hidden).
-  // The SVG is resized to 22×22 by replacing its width/height attributes;
-  // this is robust even when the SVG string carries explicit dimensions.
-  function _famOverlayHTML() {
+  // _famOverlayHTML — kept for backward-compat callers but no longer used
+  // by statusBadgeHTML / identityHeaderHTML (replaced by _famBadgeHTML).
+  function _famOverlayHTML() { return ''; }
+
+  // _famBadgeHTML — standalone familiar chip rendered as a flex sibling
+  // between the avatar and the name column in status cards.
+  // size: pixel dimension for the SVG (default 44 for home card, 32 for hub).
+  function _famBadgeHTML(size) {
+    size = size || 44;
     if (!N.familiar || !N.familiar.selected) return '';
     var selId  = N.familiar.selected;
     var svgMap = global.FAMILIAR_SVGS || global.ANIMALS || {};
@@ -1419,17 +1421,19 @@
     if (!def) return '';
     var inner;
     if (svgMap[selId]) {
-      // Resize SVG to 40×40 (up from 22×22 — mascot-sized)
       var svgStr = svgMap[selId]
         .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
         .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
-        .replace(/<svg/, '<svg width="40" height="40"');
+        .replace(/<svg/, '<svg width="' + size + '" height="' + size + '"');
       inner = svgStr;
     } else {
-      inner = '<span style="font-size:24px;line-height:1;">' + (def.emoji || '🐾') + '</span>';
+      inner = '<span style="font-size:' + Math.round(size * 0.6) + 'px;line-height:1;">' + (def.emoji || '🐾') + '</span>';
     }
-    return '<div class="ninja-ui-fam-chip" style="position:absolute;bottom:-4px;right:-12px;width:48px;height:48px;'
-      + 'display:flex;align-items:center;justify-content:center;">'
+    // margin-left pulls the chip toward the avatar (gap is 14px, -8px → ~6px clearance)
+    // giving the "loyal familiar following close behind" feel without overlapping.
+    return '<div class="ninja-ui-fam-chip" style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;'
+      + 'margin-left:-8px;'
+      + 'width:' + (size + 10) + 'px;height:' + (size + 10) + 'px;">'
       + inner + '</div>';
   }
 
@@ -1465,11 +1469,10 @@
   //   hintShown   {bool}    true when hint is currently revealed
   //   hintText    {string}  text to show when revealed
   //   lives       {number|null}  current lives count (null = no lives system)
-  //   isSpeedster {bool}    if true, returns empty string
   //   cheerMsg    {string}  override cheer message (random used if omitted)
+  // NOTE: isSpeedster flag removed — speedster modes now support hints too.
   function familiarHintRowHTML(opts) {
     opts = opts || {};
-    if (opts.isSpeedster) return '';
     var hasHint   = !!(opts.hintAction);
     var hintShown = !!(opts.hintShown);
     var hintText  = opts.hintText || '';
@@ -1493,14 +1496,26 @@
     var chipHTML = _famHintChipHTML(hasHint ? opts.hintAction : '', hintShown);
     var rowContent = '';
     if (hasHint) {
-      rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;">'
-        + chipHTML + (hasLives ? heartsHTML : '') + '</div>';
-      if (hintShown && hintText) {
-        rowContent += '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
-          + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
-          + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>';
+      if (!hintShown) {
+        // Hint available but not yet used — show speech bubble prompting tap
+        var hintPromptBubble = '<div style="background:#FFFDE7;border:1.5px solid #FFD54F;border-radius:12px;'
+          + 'padding:5px 11px;font-size:12px;font-weight:800;color:#5a4000;max-width:150px;line-height:1.4;'
+          + 'border-bottom-left-radius:4px;text-align:center;">🐾 タップでヒント！<br>'
+          + '<span style="font-size:11px;font-weight:700;">(−0.5♥)</span></div>';
+        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;">'
+          + chipHTML + hintPromptBubble + (hasLives ? heartsHTML : '') + '</div>';
+      } else {
+        // Hint used — show hint text if provided, otherwise just chip + hearts
+        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;">'
+          + chipHTML + (hasLives ? heartsHTML : '') + '</div>';
+        if (hintText) {
+          rowContent += '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
+            + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
+            + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>';
+        }
       }
     } else {
+      // No hint available — show cheer message bubble
       var bubble = '<div style="position:relative;display:inline-flex;align-items:center;gap:8px;">'
         + chipHTML
         + '<div style="background:#f1f3f5;border:1.5px solid #dee2e6;border-radius:12px;'
