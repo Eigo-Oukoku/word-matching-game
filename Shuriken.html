@@ -4,396 +4,1401 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="google" content="notranslate">
-  <title>Magical Shuriken Slinger - ELKえいご王国</title>
-  
+  <title>Shuriken Slinger - ELKえいご王国</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
 
   <style>
+    /* ── CSS variables / reset ─────────────────────────────────────── */
     :root {
-      --bg: #FFFAF0;
-      --elk-header-bg: #FFE4E1;
-      --ink: #5D4037;
-      --title: #FF1493;
-      --gold: #FFD700;
-      --crimson: #FF69B4;
-      --item-border: #FFB6C1;
+      --bg:        #0d0f1a;
+      --header-bg: #111827;
+      --gold:      #FFD54F;
+      --crimson:   #E63946;
+      --ink:       #e8eaf0;
+      --accent:    #7C3AED;
+      --green:     #2DD368;
     }
+    * { box-sizing:border-box; margin:0; padding:0;
+        -webkit-user-select:none; user-select:none;
+        font-family:'Nunito','Noto Sans JP',sans-serif;
+        -webkit-tap-highlight-color:transparent; }
+    html, body { height:100%; overflow:hidden; background:var(--bg); }
+    body { display:flex; flex-direction:column; color:var(--ink); }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; font-family: 'Nunito', 'Noto Sans JP', sans-serif; }
-    body { background-color: var(--bg); color: var(--ink); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-
+    /* ── Header ────────────────────────────────────────────────────── */
     #elk-header {
-      background: var(--elk-header-bg);
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-      border-bottom: 1px solid var(--item-border);
+      background:var(--header-bg);
+      border-bottom:2px solid rgba(255,213,79,0.25);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 14px; height:50px; flex-shrink:0; z-index:500;
+    }
+    #btn-home {
+      font-family:'Bangers',cursive; font-size:16px; letter-spacing:1px;
+      background:rgba(255,255,255,0.08); color:var(--gold);
+      border:2px solid rgba(255,213,79,0.35); border-radius:10px;
+      padding:5px 14px; cursor:pointer;
+    }
+    #btn-home:active { opacity:0.7; }
+    #header-title {
+      font-family:'Bangers',cursive; font-size:19px;
+      letter-spacing:2px; color:var(--gold);
     }
 
+    /* ── Game container ─────────────────────────────────────────────── */
     #game-container {
-      flex: 1;
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      margin: 0 auto;
-      background: linear-gradient(180deg, #FFF0F5 0%, #FFB6C1 100%);
-      overflow: hidden;
+      flex:1; display:flex; flex-direction:column; overflow:hidden;
+      position:relative; max-width:500px; width:100%; margin:0 auto;
     }
 
-    .shuriken-ui-top {
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      z-index: 500;
+    /* ── Top HUD ────────────────────────────────────────────────────── */
+    #top-hud {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 12px 3px; flex-shrink:0; gap:6px;
     }
-    .stat-label { font-family: 'Bangers', cursive; font-size: 28px; color: var(--title); text-shadow: 0 2px 2px rgba(255,255,255,0.8); }
+    .hud-pill {
+      font-family:'Bangers',cursive; font-size:17px; letter-spacing:1px;
+      background:rgba(255,255,255,0.07);
+      border:2px solid rgba(255,255,255,0.11);
+      border-radius:20px; padding:3px 12px; white-space:nowrap;
+    }
+    #ui-score  { color:var(--gold); }
+    #ui-combo  { color:#60D9B0; transition:opacity 0.2s, transform 0.2s; }
+    #ui-combo.hidden { opacity:0; transform:scale(0.8); pointer-events:none; }
+    #ui-timer  { color:var(--crimson); }
+    #ui-timer.urgent { animation:timerPulse 0.5s ease infinite alternate; }
+    @keyframes timerPulse { from{opacity:1} to{opacity:0.45} }
 
-    #prompt-box {
-      text-align: center;
-      padding: 15px;
-      background: rgba(255,255,255,0.5);
-      border-bottom: 3px solid var(--gold);
-      position: relative;
-      z-index: 500;
-      border-radius: 15px;
-      margin: 0 10px 10px 10px;
+    /* ── Target box ─────────────────────────────────────────────────── */
+    #target-box {
+      margin:3px 10px 5px;
+      background:rgba(255,255,255,0.06);
+      border:2px solid rgba(255,213,79,0.35);
+      border-radius:16px; padding:9px 12px;
+      display:flex; align-items:center; gap:10px;
+      flex-shrink:0;
     }
-    #prompt-word { font-size: 48px; font-weight: 900; color: var(--title); text-shadow: 0 0 10px rgba(255,20,147,0.3); }
+    #target-label-wrap { flex:1; min-width:0; }
+    #target-label {
+      font-size:10px; font-weight:900; letter-spacing:1.5px;
+      color:var(--gold); opacity:0.75; text-transform:uppercase;
+    }
+    #target-jp {
+      font-size:clamp(20px,6vw,30px); font-weight:900; color:#fff;
+      line-height:1.1; letter-spacing:0.5px;
+    }
+    #target-en { font-size:12px; font-weight:700; color:rgba(255,255,255,0.45); }
+    #target-switch-bar {
+      height:3px; background:rgba(255,213,79,0.15);
+      border-radius:2px; overflow:hidden; margin-top:5px;
+    }
+    #target-switch-fill {
+      height:100%; background:var(--gold); border-radius:2px;
+      transition:width 1s linear;
+    }
+    #btn-listen {
+      flex-shrink:0;
+      font-family:'Bangers',cursive; font-size:14px; letter-spacing:1px;
+      background:rgba(255,213,79,0.12); color:var(--gold);
+      border:2px solid rgba(255,213,79,0.4); border-radius:12px;
+      padding:7px 12px; cursor:pointer;
+    }
+    #btn-listen:active { background:rgba(255,213,79,0.28); }
+    #btn-listen.playing { animation:listenPulse 0.55s ease infinite alternate; }
+    @keyframes listenPulse { from{opacity:1} to{opacity:0.45} }
+    #btn-listen.fail { border-color:var(--crimson); color:var(--crimson); }
 
-    #stage { position: absolute; inset: 0; z-index: 10; pointer-events: auto; }
-
-    .falling-item {
-      position: absolute;
-      padding: 12px 25px;
-      background: rgba(255, 255, 255, 0.95);
-      color: var(--ink);
-      border-radius: 50px;
-      font-weight: 900;
-      font-size: 2.2rem;
-      border: 2px solid var(--item-border);
-      box-shadow: 0 6px 0 var(--item-border);
-      white-space: nowrap;
-      cursor: pointer;
-      will-change: transform;
-      min-width: 150px;
-      text-align: center;
-      z-index: 100;
+    /* ── Stage ──────────────────────────────────────────────────────── */
+    #stage {
+      flex:1; position:relative; overflow:hidden;
+      background:linear-gradient(180deg,#0d1428 0%,#111827 60%,#0d0f1a 100%);
+      touch-action:none;
     }
-
-    /* 忍者の姿 */
-    .ninja-character {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 110px;
-      height: 110px;
-      z-index: 50;
-      transition: transform 0.1s ease-out;
-    }
-    /* 投げた時のアクション */
-    .ninja-character.throwing {
-      transform: translateX(-50%) translateY(-20px) scale(1.1);
-    }
-
-    /* 魔法の星（手裏剣） */
-    .shuriken {
-      position: absolute;
-      width: 50px;
-      height: 50px;
-      pointer-events: none;
-      z-index: 200;
-      transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-    }
-
-    .hit-effect {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      pointer-events: none;
-      z-index: 150;
-      animation: explode 0.3s ease-out forwards;
-    }
-    @keyframes explode {
-      0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    /* subtle grid for depth */
+    #stage::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:
+        linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
+      background-size:44px 44px;
     }
 
-    .overlay-screen {
-      position: absolute; inset: 0; background: var(--bg); z-index: 2000;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 30px; text-align: center;
-      background-image: linear-gradient(180deg, #FFF0F5 0%, #FFD1DC 100%);
+    /* ── Countdown flash ────────────────────────────────────────────── */
+    #countdown-flash {
+      position:absolute; top:42%; left:50%;
+      transform:translate(-50%,-50%) scale(0);
+      font-family:'Bangers',cursive; font-size:88px; color:var(--crimson);
+      text-shadow:0 0 24px rgba(230,57,70,0.9);
+      pointer-events:none; z-index:600; opacity:0;
+      transition:transform 0.08s ease-out;
     }
-    h1.title { font-family: 'Bangers', cursive; font-size: 55px; color: var(--title); margin-bottom: 25px; }
-    
-    .btn-main {
-      background: var(--title); color: #fff; border: none;
-      padding: 15px 40px; font-family: 'Bangers', cursive; font-size: 28px;
-      border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #D14789;
-      margin: 10px; width: 280px;
+    #countdown-flash.show {
+      transform:translate(-50%,-50%) scale(1.15); opacity:1;
     }
-    .btn-main:active { transform: translateY(3px); box-shadow: 0 3px 0 #D14789; }
+
+    /* ── Falling word pill ──────────────────────────────────────────── */
+    .falling-word {
+      position:absolute;
+      padding:9px 20px;
+      background:rgba(255,255,255,0.97);
+      color:#1a1a2e; border-radius:50px;
+      font-weight:900;
+      font-size:clamp(17px,4.2vw,22px);
+      border:2px solid rgba(255,255,255,0.25);
+      box-shadow:0 4px 14px rgba(0,0,0,0.45);
+      white-space:nowrap; cursor:pointer;
+      will-change:top; text-align:center; z-index:100;
+      min-width:100px;
+      /* GPU layer for smooth falling */
+      -webkit-transform:translateZ(0); transform:translateZ(0);
+    }
+    .falling-word.hit-correct {
+      background:#C8F7D8 !important; border-color:var(--green) !important;
+      color:#0A5C2D !important; pointer-events:none;
+      animation:wordHit 0.28s ease-out forwards;
+    }
+    .falling-word.hit-wrong {
+      pointer-events:none;
+      animation:wordBounce 0.38s ease-out;
+    }
+    @keyframes wordHit {
+      0%   { transform:scale(1.15) translateZ(0); opacity:1; }
+      100% { transform:scale(0)    translateZ(0); opacity:0; }
+    }
+    @keyframes wordBounce {
+      0%,100% { transform:translateX(0) translateZ(0); }
+      25%     { transform:translateX(-12px) translateZ(0); }
+      75%     { transform:translateX(12px) translateZ(0); }
+    }
+
+    /* ── Ninja character ────────────────────────────────────────────── */
+    #ninja-char {
+      position:absolute; bottom:8px; left:50%;
+      transform:translateX(-50%);
+      width:78px; height:78px; z-index:50;
+      transition:transform 0.11s ease-out;
+      pointer-events:none;
+    }
+    #ninja-char.throwing {
+      transform:translateX(-50%) translateY(-14px) scale(1.18);
+    }
+    /* Familiar badge */
+    #familiar-chip {
+      position:absolute; bottom:10px; left:50%;
+      transform:translateX(-50%) translateX(30px);
+      width:30px; height:30px; border-radius:50%;
+      background:rgba(14,16,36,0.85);
+      border:2px solid var(--gold);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; z-index:51; pointer-events:none;
+      animation:famBob 2s ease-in-out infinite;
+    }
+    @keyframes famBob {
+      0%,100%{ transform:translateX(-50%) translateX(30px) translateY(0); }
+      50%    { transform:translateX(-50%) translateX(30px) translateY(-4px); }
+    }
+    #familiar-chip svg { width:24px!important; height:24px!important; }
+    #familiar-chip.hidden { display:none; }
+
+    /* ── Shuriken projectile ────────────────────────────────────────── */
+    .shuriken-proj {
+      position:absolute; width:38px; height:38px;
+      pointer-events:none; z-index:200;
+      will-change:left,top,transform;
+    }
+
+    /* ── Hit ring ───────────────────────────────────────────────────── */
+    .hit-ring {
+      position:absolute; width:72px; height:72px;
+      pointer-events:none; z-index:150; border-radius:50%;
+      border:3px solid var(--gold);
+      animation:ringExpand 0.32s ease-out forwards;
+    }
+    .hit-ring.wrong { border-color:var(--crimson); }
+    @keyframes ringExpand {
+      0%   { transform:translate(-50%,-50%) scale(0.2); opacity:1; }
+      100% { transform:translate(-50%,-50%) scale(2.4); opacity:0; }
+    }
+
+    /* ── Floating text (combo / xp) ─────────────────────────────────── */
+    .float-text {
+      position:absolute; pointer-events:none; z-index:300;
+      font-family:'Bangers',cursive; white-space:nowrap;
+      animation:floatUp 0.7s ease-out forwards;
+    }
+    .float-combo { font-size:30px; color:var(--gold); text-shadow:0 0 10px rgba(255,213,79,0.8); }
+    .float-xp    { font-size:20px; color:#60D9B0;    text-shadow:0 0 8px rgba(96,217,176,0.7); }
+    @keyframes floatUp {
+      0%   { transform:translate(-50%,-50%) scale(0.7); opacity:1; }
+      60%  { transform:translate(-50%,-90%) scale(1.05); opacity:1; }
+      100% { transform:translate(-50%,-130%) scale(0.85); opacity:0; }
+    }
+
+    /* ── SCREENS ────────────────────────────────────────────────────── */
+    .screen {
+      position:absolute; inset:0; z-index:1000;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
+      background:linear-gradient(180deg,#0d1428 0%,#111827 100%);
+      padding:14px 14px max(14px,env(safe-area-inset-bottom));
+    }
+    .game-title {
+      font-family:'Bangers',cursive;
+      font-size:clamp(42px,11vw,58px);
+      letter-spacing:3px; line-height:1; color:#fff;
+      text-shadow:4px 4px 0 rgba(0,0,0,0.45);
+      text-align:center; margin:14px 0 3px;
+    }
+    .game-title span { color:var(--gold); }
+    .game-sub {
+      font-size:12px; font-weight:700; letter-spacing:1px;
+      color:rgba(255,255,255,0.48); text-align:center; margin-bottom:14px;
+    }
+    #status-card-wrap { width:100%; margin-bottom:12px; }
+
+    .mode-section-lbl {
+      width:100%; font-size:10px; font-weight:900; letter-spacing:1.5px;
+      text-transform:uppercase; color:rgba(255,255,255,0.45);
+      margin:8px 0 5px; text-align:left; padding-left:2px;
+    }
+    .btn-mode {
+      width:100%; padding:13px 16px;
+      font-family:'Bangers',cursive; font-size:21px; letter-spacing:1px;
+      border:none; border-radius:15px; cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:9px; box-shadow:0 5px 0 rgba(0,0,0,0.4); transition:0.1s;
+      color:#fff;
+    }
+    .btn-mode:active { transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,0.4); }
+    .btn-mode .mode-sub {
+      font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; opacity:0.88;
+    }
+    .btn-weak1 { background:linear-gradient(135deg,#b71c1c,#e53935); }
+    .btn-weak2 { background:linear-gradient(135deg,#6a1b9a,#8e24aa); }
+    .btn-daily { background:linear-gradient(135deg,#1565c0,#1e88e5); }
+
+    .util-row { display:flex; gap:8px; width:100%; margin-top:6px; }
+    .btn-util {
+      flex:1; padding:11px 5px; font-size:13px; font-weight:900;
+      background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8);
+      border:2px solid rgba(255,255,255,0.13); border-radius:12px;
+      cursor:pointer; text-align:center;
+      box-shadow:0 3px 0 rgba(0,0,0,0.3); transition:0.1s;
+    }
+    .btn-util:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
+
+    /* result */
+    #result-screen { display:none; }
+    .result-title  { font-family:'Bangers',cursive; font-size:50px; color:var(--gold); text-shadow:0 4px 0 rgba(0,0,0,0.4); margin:18px 0 6px; }
+    .result-score  { font-family:'Bangers',cursive; font-size:76px; color:#fff; line-height:1; }
+    .result-sub    { font-size:13px; font-weight:700; color:rgba(255,255,255,0.6); margin-bottom:14px; }
+    .result-stats  {
+      width:100%; background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.11);
+      border-radius:15px; padding:12px 14px; margin-bottom:14px;
+    }
+    .result-row {
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:13px; font-weight:700; padding:5px 0;
+      border-bottom:1px solid rgba(255,255,255,0.07);
+    }
+    .result-row:last-child { border-bottom:none; }
+    .result-val { font-family:'Bangers',cursive; font-size:20px; color:var(--gold); }
+    .result-xp {
+      font-family:'Bangers',cursive; font-size:28px; color:#60D9B0;
+      text-align:center; margin:6px 0 14px;
+      text-shadow:0 0 12px rgba(96,217,176,0.5);
+    }
+    .btn-retry {
+      width:100%; padding:15px; font-family:'Bangers',cursive;
+      font-size:26px; letter-spacing:1px; background:var(--crimson);
+      color:#fff; border:none; border-radius:16px; cursor:pointer;
+      box-shadow:0 5px 0 #a02030; margin-bottom:10px; transition:0.1s;
+    }
+    .btn-retry:active { transform:translateY(3px); box-shadow:0 2px 0 #a02030; }
+    .btn-back {
+      width:100%; padding:13px; font-size:14px; font-weight:900;
+      background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8);
+      border:2px solid rgba(255,255,255,0.14); border-radius:14px;
+      cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,0.3); transition:0.1s;
+    }
+    .btn-back:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
+
+    /* safe-area for bottom */
+    body { padding-bottom:env(safe-area-inset-bottom,0); }
+    #stage { padding-bottom:env(safe-area-inset-bottom,0); }
   </style>
 </head>
 <body>
 
-  <div id="elk-header">
-    <button class="btn-menu" onclick="location.reload()">HOME</button>
-    <div style="font-family:'Bangers'; color:var(--title); letter-spacing: 2px; font-size: 18px;">MAGICAL NINJA</div>
-    <div style="width:60px"></div>
+<!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+<div id="elk-header">
+  <button id="btn-home">HOME</button>
+  <div id="header-title">SHURIKEN SLINGER</div>
+  <div style="width:60px"></div>
+</div>
+
+<!-- ── GAME CONTAINER ─────────────────────────────────────────────────── -->
+<div id="game-container">
+
+  <!-- HUD (score / combo / timer) -->
+  <div id="top-hud">
+    <div class="hud-pill" id="ui-score">SCORE: 0</div>
+    <div class="hud-pill hidden" id="ui-combo">COMBO ×1</div>
+    <div class="hud-pill" id="ui-timer">90s</div>
   </div>
 
-  <div id="game-container">
-    <div class="shuriken-ui-top">
-      <div class="stat-label" id="ui-score">SCORE: 0</div>
-      <div class="stat-label" id="ui-timer">90s</div>
+  <!-- Target box -->
+  <div id="target-box">
+    <div id="target-label-wrap">
+      <div id="target-label">TARGET ターゲット</div>
+      <div id="target-jp">？</div>
+      <div id="target-en"></div>
+      <div id="target-switch-bar"><div id="target-switch-fill" style="width:100%"></div></div>
+    </div>
+    <button id="btn-listen">🔊 LISTEN</button>
+  </div>
+
+  <!-- Stage -->
+  <div id="stage">
+    <!-- Ninja character -->
+    <div id="ninja-char">
+      <!-- Clean black-clad ninja SVG -->
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- body -->
+        <ellipse cx="50" cy="65" rx="22" ry="25" fill="#1a1a2e"/>
+        <!-- head -->
+        <circle cx="50" cy="32" r="20" fill="#1a1a2e"/>
+        <!-- headband -->
+        <rect x="30" y="22" width="40" height="7" rx="3" fill="#E63946"/>
+        <rect x="30" y="22" width="40" height="3" rx="1.5" fill="#c62828"/>
+        <!-- face opening -->
+        <rect x="34" y="30" width="32" height="12" rx="4" fill="#e8c49a"/>
+        <!-- eyes -->
+        <circle cx="42" cy="36" r="3" fill="#1a1a2e"/>
+        <circle cx="58" cy="36" r="3" fill="#1a1a2e"/>
+        <circle cx="43" cy="35" r="1" fill="#fff"/>
+        <circle cx="59" cy="35" r="1" fill="#fff"/>
+        <!-- mask covering lower face -->
+        <rect x="33" y="38" width="34" height="6" rx="3" fill="#1a1a2e"/>
+        <!-- arms -->
+        <path d="M28 58 Q18 62 16 72" stroke="#1a1a2e" stroke-width="9" stroke-linecap="round" fill="none"/>
+        <path d="M72 58 Q82 62 84 72" stroke="#1a1a2e" stroke-width="9" stroke-linecap="round" fill="none"/>
+        <!-- hands -->
+        <circle cx="16" cy="74" r="6" fill="#e8c49a"/>
+        <circle cx="84" cy="74" r="6" fill="#e8c49a"/>
+        <!-- belt -->
+        <rect x="28" y="55" width="44" height="6" rx="3" fill="#E63946"/>
+      </svg>
     </div>
 
-    <div id="prompt-box">
-      <div id="prompt-word">READY?</div>
-    </div>
+    <!-- Familiar chip -->
+    <div id="familiar-chip" class="hidden"></div>
 
-    <div id="stage">
-      <div class="ninja-character" id="ninja-char">
-        <svg viewBox="0 0 100 100">
-          <rect x="35" y="45" width="30" height="35" fill="#FFB6C1" rx="10" />
-          <rect x="30" y="15" width="40" height="35" fill="#FFB6C1" rx="15" />
-          <rect x="28" y="20" width="44" height="8" fill="#FFD700" rx="4" />
-          <rect x="38" y="28" width="24" height="10" fill="#e5c1a0" rx="2" />
-          <circle cx="42" cy="32" r="2" fill="#5D4037" />
-          <circle cx="54" cy="32" r="2" fill="#5D4037" />
-          <path d="M30 45 Q15 48 10 38 Q15 53 30 48 Z" fill="#FF1493" />
-          <path d="M70 45 Q85 48 90 38 Q85 53 70 48 Z" fill="#FF1493" />
-        </svg>
+    <!-- Countdown flash -->
+    <div id="countdown-flash"></div>
+
+    <!-- HOME SCREEN ─────────────────────────────────────────── -->
+    <div id="home-screen" class="screen">
+      <div class="game-title">SHURIKEN<br><span>SLINGER</span></div>
+      <div class="game-sub">ELKえいご王国 — 手裏剣英単語</div>
+
+      <!-- Status card -->
+      <div id="status-card-wrap"></div>
+
+      <div class="mode-section-lbl">⚡ WEAK POINT MODE — 弱点集中特訓</div>
+      <button class="btn-mode btn-weak1" onclick="SS.startGame('weak1')">
+        <span>WEAK POINT 1<br><span class="mode-sub">towel · soap · airplane · train · plate · pants · two</span></span>
+        <span>🎯</span>
+      </button>
+      <button class="btn-mode btn-weak2" onclick="SS.startGame('weak2')">
+        <span>WEAK POINT 2<br><span class="mode-sub">mirror · hairbrush · three · dish · five · knife · +more</span></span>
+        <span>🎯</span>
+      </button>
+
+      <div class="mode-section-lbl">📅 DAILY MODE — 総合修行</div>
+      <button class="btn-mode btn-daily" onclick="SS.startGame('daily')">
+        <span>DAILY MODE<br><span class="mode-sub">All 38 words — weak-word priority</span></span>
+        <span>🌀</span>
+      </button>
+
+      <div class="util-row">
+        <button class="btn-util" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>
+        <button class="btn-util" onclick="NinjaUI.openAnalysis(SS.getCatalogs())">🔍 Analysis Scroll</button>
       </div>
-    </div>
+      <div class="util-row" style="margin-top:8px;">
+        <button class="btn-util" onclick="NinjaUI.openFamiliarPicker()">🐾 Familiar</button>
+        <button class="btn-util" onclick="NinjaUI.openDesignPicker()">👘 Character</button>
+      </div>
+    </div><!-- /home-screen -->
 
-    <div id="start-screen" class="overlay-screen">
-      <h1 class="title">MAGICAL NINJA</h1>
-      <button class="btn-main" onclick="bootGame('weak')">WEAK POINT MODE</button>
-      <button class="btn-main" style="background:#8E44AD; box-shadow:0 6px 0 #5b2d6e;" onclick="bootGame('daily')">DAILY MODE</button>
-    </div>
+    <!-- RESULT SCREEN ───────────────────────────────────────── -->
+    <div id="result-screen" class="screen">
+      <div class="result-title">完遂！COMPLETE!</div>
+      <div class="result-score" id="final-score">0</div>
+      <div class="result-sub">points</div>
 
-    <div id="result-screen" class="overlay-screen" style="display:none;">
-      <h1 class="title">COMPLETE!</h1>
-      <div id="final-score" style="font-size:70px; color:var(--title); font-family:'Bangers';">0</div>
-      <button class="btn-main" onclick="location.reload()">RETRY</button>
-    </div>
-  </div>
+      <div class="result-stats" id="result-stats"></div>
 
-  <script src="ninja-core.js"></script>
-  <script src="ninja-ui.js"></script>
+      <div class="result-xp" id="result-xp">+ 0 XP</div>
 
-  <script>
-    const WEAK_POINT_VOCAB = [
-      {en:"pants", jp:"ズボン"}, {en:"towel", jp:"タオル"}, {en:"soap", jp:"せっけん"}, 
-      {en:"two", jp:"2"}, {en:"plate", jp:"おさら"}, {en:"airplane", jp:"ひこうき"}, {en:"train", jp:"でんしゃ"}
-    ];
+      <!-- refreshed status card -->
+      <div id="result-status-wrap" style="width:100%;margin-bottom:14px;"></div>
 
-    const DAILY_VOCAB = [{en:"apple", jp:"りんご"}, {en:"banana", jp:"バナナ"}, {en:"cat", jp:"ねこ"}];
+      <button class="btn-retry" onclick="SS.startGame(SS.lastMode)">⚔️ RETRY</button>
+      <button class="btn-back" onclick="SS.goHome()">← HOME</button>
+    </div><!-- /result-screen -->
 
-    Ninja.configure({ gameId: 'magical-shuriken', gameLabel: 'Magical Shuriken' });
-    Ninja.boot();
+  </div><!-- /stage -->
+</div><!-- /game-container -->
 
-    let currentVocabSet = [];
-    let score = 0;
-    let timeLeft = 90;
-    let gameActive = false;
-    let activeItems = [];
-    let currentTarget = null;
-    const WORD_STAY_DURATION = 8000;
+<!-- ── NinjaCore / NinjaUI ───────────────────────────────────────────── -->
+<script src="ninja-core.js"></script>
+<script src="ninja-ui.js"></script>
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+<script>
+/* =========================================================================
+ * Shuriken Slinger — メインゲームスクリプト
+ * =========================================================================
+ * 設計方針:
+ *   • 音声: fetch→Blob→URL.createObjectURL→new Audio() (iOS Safari/Chrome対応)
+ *   • SFX:  AudioContext oscillator/noise (ファイルなし、軽量)
+ *   • AudioContextはSFXのみ使用 / 単語音声はAudio要素で
+ *   • iOS Safari: AudioContextはユーザージェスチャー後にresume()
+ *   • play() Promiseのcatchを必ず実装 / 失敗時はUI通知
+ *   • NinjaCore/NinjaUI連携: Ninja.boot(), addExp(), recordAnswer()
+ *   • XP multiplier: 0.5 (word-ninja相当)
+ * ========================================================================= */
 
-    // --- 効果音生成エンジン ---
-    function playThrowSound() { // 「シュッ」
-      const osc = audioCtx.createOscillator();
-      const noise = audioCtx.createBufferSource();
-      const gain = audioCtx.createGain();
-      const filter = audioCtx.createBiquadFilter();
+/* ── FAMILIAR_SVGS (全18体 — ninja-ui.jsが window.FAMILIAR_SVGS を参照) ── */
+window.FAMILIAR_SVGS = (function(){
+  var A={};
+  A.fox=`<svg viewBox="0 0 64 64"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`;
+  A.bear=`<svg viewBox="0 0 64 64"><circle cx="16" cy="20" r="8" fill="#8B5E3C"/><circle cx="48" cy="20" r="8" fill="#8B5E3C"/><circle cx="16" cy="20" r="5" fill="#C49A6C"/><circle cx="48" cy="20" r="5" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="40" rx="14" ry="12" fill="#C49A6C"/><ellipse cx="23" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="41" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="24" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="42" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="24.8" cy="30.2" r="0.8" fill="white"/><circle cx="42.8" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="39" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M28.5 43 Q32 46.5 35.5 43" stroke="#5C3317" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`;
+  A.bunny=`<svg viewBox="0 0 64 64"><ellipse cx="22" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="42" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="22" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="42" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F2C9D8"/><ellipse cx="32" cy="40" rx="13" ry="10" fill="white"/><ellipse cx="24" cy="31" rx="3.8" ry="4.2" fill="white"/><ellipse cx="40" cy="31" rx="3.8" ry="4.2" fill="white"/><circle cx="24.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="40.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="25.2" cy="30.2" r="0.7" fill="white"/><circle cx="41.2" cy="30.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="2.5" ry="1.8" fill="#F08CA0"/></svg>`;
+  A.dog=`<svg viewBox="0 0 64 64"><ellipse cx="18" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(15 46 20)"/><ellipse cx="18" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(15 46 20)"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#E8C99A"/><ellipse cx="25" cy="31" rx="4" ry="4" fill="white"/><ellipse cx="39" cy="31" rx="4" ry="4" fill="white"/><circle cx="25.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="39.5" cy="31" r="2.5" fill="#3a1800"/></svg>`;
+  A.cat=`<svg viewBox="0 0 64 64"><polygon points="15,18 22,5 29,20" fill="#888"/><polygon points="49,18 42,5 35,20" fill="#888"/><polygon points="17,17 22,9 27,18" fill="#FFC0CB"/><polygon points="47,17 42,9 37,18" fill="#FFC0CB"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#888"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#ccc"/><ellipse cx="24" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="40" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="24" cy="30" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="40" cy="30" rx="2" ry="4" fill="#1a1a2e"/><polygon points="32,37 30,39.5 34,39.5" fill="#FF9999"/></svg>`;
+  A.squirrel=`<svg viewBox="0 0 64 64"><ellipse cx="47" cy="22" rx="13" ry="19" fill="#C87941"/><ellipse cx="45" cy="23" rx="9" ry="14" fill="#E8A86A"/><ellipse cx="20" cy="14" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="35" cy="12" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="26" cy="37" rx="16" ry="18" fill="#8B5E3C"/><ellipse cx="26" cy="41" rx="10" ry="11" fill="#F7C59F"/><ellipse cx="20" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="32" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="21" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="33" cy="31" r="2.5" fill="#1a1a2e"/></svg>`;
+  A.raccoon=`<svg viewBox="0 0 64 64"><ellipse cx="18" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="46" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#999"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff"/><ellipse cx="23" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="41" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="23" cy="30" rx="4" ry="4" fill="white"/><ellipse cx="41" cy="30" rx="4" ry="4" fill="white"/><circle cx="23.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="41.5" cy="30" r="2.5" fill="#1a1a2e"/></svg>`;
+  A.deer=`<svg viewBox="0 0 64 64"><line x1="20" y1="20" x2="12" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="5" x2="8" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="44" y1="20" x2="52" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="5" x2="56" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="31" r="2.8" fill="#3a1800"/><circle cx="41" cy="31" r="2.8" fill="#3a1800"/></svg>`;
+  A.tanuki=`<svg viewBox="0 0 64 64"><ellipse cx="32" cy="9" rx="10" ry="6" fill="#4CAF50" transform="rotate(-12 32 9)"/><circle cx="16" cy="20" r="7" fill="#8B5E3C"/><circle cx="48" cy="20" r="7" fill="#8B5E3C"/><ellipse cx="32" cy="39" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="43" rx="16" ry="12" fill="#F7C59F"/><ellipse cx="23" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="41" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="23" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="41" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="23.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="41.5" cy="30.5" r="2" fill="#1a1a2e"/></svg>`;
+  A.crane=`<svg viewBox="0 0 64 64"><ellipse cx="32" cy="39" rx="18" ry="16" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="24" rx="6" ry="12" fill="white"/><ellipse cx="32" cy="14" rx="8" ry="8" fill="white"/><ellipse cx="32" cy="10" rx="5" ry="3" fill="#E63946"/><polygon points="32,12 41,14 32,17" fill="#e8a000"/><circle cx="35" cy="14" r="2.5" fill="white"/><circle cx="35.5" cy="14" r="1.5" fill="#1a1a2e"/><ellipse cx="16" cy="41" rx="10" ry="6" fill="#444" transform="rotate(-20 16 41)"/><ellipse cx="48" cy="41" rx="10" ry="6" fill="#444" transform="rotate(20 48 41)"/></svg>`;
+  A.eagle=`<svg viewBox="0 0 64 64"><ellipse cx="10" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(-15 10 33)"/><ellipse cx="54" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(15 54 33)"/><ellipse cx="32" cy="39" rx="14" ry="15" fill="#8B5E3C"/><circle cx="32" cy="21" r="11" fill="white"/><polygon points="32,23 42,21 32,26" fill="#FFB000"/><circle cx="37" cy="20" r="3" fill="#FFB000"/><circle cx="37.5" cy="20" r="2" fill="#1a1a2e"/></svg>`;
+  A.unicorn=`<svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="18" ry="16" fill="#F8F8FF"/><ellipse cx="32" cy="25" rx="9" ry="13" fill="#F8F8FF"/><ellipse cx="32" cy="16" rx="12" ry="10" fill="#F8F8FF"/><polygon points="32,4 28,18 36,18" fill="#FFD700"/><ellipse cx="22" cy="20" rx="6" ry="11" fill="#F48FB1" opacity="0.8"/><ellipse cx="37" cy="16" rx="4" ry="4" fill="#A78BFA"/><circle cx="37.5" cy="16" r="2.5" fill="#1a1a2e"/></svg>`;
+  A.kitsune=`<svg viewBox="0 0 64 64"><ellipse cx="44" cy="48" rx="12" ry="7" fill="#F5D769" transform="rotate(-30 44 48)"/><ellipse cx="50" cy="43" rx="12" ry="7" fill="#FFE599" transform="rotate(-10 50 43)"/><ellipse cx="50" cy="36" rx="12" ry="7" fill="#F5D769" transform="rotate(10 50 36)"/><polygon points="14,22 10,4 22,18" fill="#F5D769"/><polygon points="50,22 54,4 42,18" fill="#F5D769"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F5D769"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff5cc"/><circle cx="25" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="41" cy="30.5" r="2.5" fill="#7C3AED"/></svg>`;
+  A.griffin=`<svg viewBox="0 0 64 64"><path d="M32,33 Q18,23 6,25 Q14,31 32,35Z" fill="#8B5E3C"/><path d="M32,33 Q46,23 58,25 Q50,31 32,35Z" fill="#8B5E3C"/><ellipse cx="32" cy="41" rx="18" ry="12" fill="#C49A6C"/><circle cx="32" cy="25" r="14" fill="#8B5E3C"/><circle cx="32" cy="21" r="10" fill="white"/><polygon points="32,23 41,19 32,28" fill="#FFB000"/><circle cx="36" cy="19" r="2.8" fill="#FFD700"/><circle cx="36.5" cy="19" r="1.9" fill="#1a1a2e"/></svg>`;
+  A.kirin=`<svg viewBox="0 0 64 64"><line x1="20" y1="18" x2="12" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="4" r="3" fill="#FFD700"/><line x1="44" y1="18" x2="52" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="4" r="3" fill="#FFD700"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#3acca0"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><circle cx="24.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="40.5" cy="30.5" r="2.5" fill="#1a1a2e"/></svg>`;
+  A.phoenix=`<svg viewBox="0 0 64 64"><ellipse cx="11" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(-25 11 29)"/><ellipse cx="53" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(25 53 29)"/><ellipse cx="32" cy="35" rx="16" ry="14" fill="#E63946"/><circle cx="32" cy="20" r="11" fill="#E63946"/><polygon points="32,10 28,4 32,8 36,4" fill="#FFD700"/><polygon points="30,20 40,18 30,25" fill="#FFD700"/><circle cx="35" cy="19" r="3" fill="#FFD700"/><circle cx="35.5" cy="19" r="2" fill="#1a1a2e"/></svg>`;
+  A.dragon=`<svg viewBox="0 0 64 64"><polygon points="22,16 18,3 24,14" fill="#FFD700"/><polygon points="42,16 46,3 40,14" fill="#FFD700"/><ellipse cx="32" cy="39" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="27" rx="18" ry="14" fill="#2aab8a"/><ellipse cx="22" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="42" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="22" cy="24" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="42" cy="24" rx="2" ry="4" fill="#1a1a2e"/></svg>`;
+  A.raijuu=`<svg viewBox="0 0 64 64"><polygon points="18,20 14,5 26,18" fill="#e0e0e0"/><polygon points="46,20 50,5 38,18" fill="#e0e0e0"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#e0e0e0"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="white"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><circle cx="24.5" cy="30.5" r="2.5" fill="white"/><circle cx="40.5" cy="30.5" r="2.5" fill="white"/><circle cx="24" cy="30.5" r="1.5" fill="#1a1a2e"/><circle cx="40" cy="30.5" r="1.5" fill="#1a1a2e"/><polyline points="18,35 20,38 18,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/><polyline points="46,35 44,38 46,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
+  return A;
+})();
 
-      // ノイズ生成
-      const bufferSize = audioCtx.sampleRate * 0.1;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      noise.buffer = buffer;
+/* ── Shuriken SVG ─────────────────────────────────────────────────────── */
+var SHURIKEN_SVG =
+  '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">' +
+    '<g transform="rotate(22.5 20 20)">' +
+      '<polygon points="20,2 23,17 38,20 23,23 20,38 17,23 2,20 17,17" fill="#9E9E9E" stroke="#1a1a2e" stroke-width="1.5" stroke-linejoin="round"/>' +
+      '<polygon points="20,2 23,17 38,20 23,23 20,38 17,23 2,20 17,17" fill="none" stroke="#FFD54F" stroke-width="0.8" stroke-linejoin="round"/>' +
+      '<circle cx="20" cy="20" r="4" fill="#FFD54F" stroke="#1a1a2e" stroke-width="1"/>' +
+      '<circle cx="20" cy="20" r="2" fill="#9E9E9E"/>' +
+    '</g>' +
+  '</svg>';
 
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
-      filter.frequency.exponentialRampToValueAtTime(5000, audioCtx.currentTime + 0.1);
+/* =========================================================================
+ * VOCABULARY DATA
+ * ========================================================================= */
+var WEAK1_VOCAB = [
+  {en:'towel',     jp:'タオル',         audio:'towel'},
+  {en:'soap',      jp:'せっけん',       audio:'soap'},
+  {en:'airplane',  jp:'ひこうき',       audio:'airplane'},
+  {en:'train',     jp:'でんしゃ',       audio:'train'},
+  {en:'plate',     jp:'おさら',         audio:'plate'},
+  {en:'pants',     jp:'ズボン',         audio:'pants'},
+  {en:'two',       jp:'２',             audio:'two'},
+];
 
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(audioCtx.destination);
+var WEAK2_VOCAB = [
+  {en:'mirror',    jp:'かがみ',         audio:'mirror'},
+  {en:'hairbrush', jp:'ヘアブラシ',     audio:'hairbrush'},
+  {en:'three',     jp:'さん・３',       audio:'three'},
+  {en:'dish',      jp:'あさい皿',       audio:'dish'},
+  {en:'five',      jp:'ご・５',         audio:'five'},
+  {en:'knife',     jp:'ナイフ',         audio:'knife'},
+  {en:'helicopter',jp:'ヘリコプター',   audio:'helicopter'},
+  {en:'skirt',     jp:'スカート',       audio:'skirt'},
+  {en:'ten',       jp:'じゅう・１０',   audio:'ten'},
+  {en:'nine',      jp:'く・９',         audio:'nine'},
+  {en:'four',      jp:'し・４',         audio:'four'},
+  {en:'sweater',   jp:'セーター',       audio:'sweater'},
+];
 
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      noise.start();
-    }
+/* Daily: same 38 words as Word Ninja Vol.1 */
+var ALL_WORDS_KEYS = ['one','two','three','four','five','six','seven','eight','nine','ten',
+  'pants','skirt','sweater','T-shirt','handkerchief','cap','toothbrush','soap','towel',
+  'hairbrush','mirror','knife','fork','chopsticks','cup','glass','plate','dish','bowl',
+  'car','bus','motorcycle','bicycle','tricycle','train','airplane','helicopter'];
 
-    function playHitSound(correct) { // 「サクッ/ザクッ」
-      const freq = correct ? 800 : 200;
-      const gain = audioCtx.createGain();
-      const osc = audioCtx.createOscillator();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.1);
+/* Japanese translations for daily mode display */
+var WORD_JP = {
+  one:'いち・１', two:'に・２', three:'さん・３', four:'し・４', five:'ご・５',
+  six:'ろく・６', seven:'しち・７', eight:'はち・８', nine:'く・９', ten:'じゅう・１０',
+  pants:'ズボン', skirt:'スカート', sweater:'セーター', 'T-shirt':'Tシャツ',
+  handkerchief:'ハンカチ', cap:'ぼうし', toothbrush:'はぶらし', soap:'せっけん',
+  towel:'タオル', hairbrush:'ヘアブラシ', mirror:'かがみ', knife:'ナイフ',
+  fork:'フォーク', chopsticks:'はし', cup:'カップ', glass:'グラス', plate:'おさら',
+  dish:'あさい皿', bowl:'どんぶり', car:'くるま', bus:'バス', motorcycle:'バイク',
+  bicycle:'じてんしゃ', tricycle:'さんりんしゃ', train:'でんしゃ',
+  airplane:'ひこうき', helicopter:'ヘリコプター',
+};
 
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+function makeVocabEntry(key) {
+  return { en: key, jp: WORD_JP[key] || key, audio: key };
+}
+var DAILY_VOCAB = ALL_WORDS_KEYS.map(makeVocabEntry);
 
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
-    }
+/* =========================================================================
+ * NINJACORE BOOT
+ * ========================================================================= */
+window.getNinjaCatalogs = function() { return SS.getCatalogs(); };
 
-    function bootGame(mode) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      currentVocabSet = mode === 'weak' ? WEAK_POINT_VOCAB : DAILY_VOCAB;
-      document.getElementById('start-screen').style.display = 'none';
-      gameActive = true;
-      switchTarget();
-      spawnLoop();
-      timerLoop();
-      requestAnimationFrame(gameLoop);
-    }
+Ninja.configure({
+  gameId:          'shuriken-slinger',
+  gameLabel:       'Shuriken Slinger',
+  xpMultiplier:    0.5,   /* word-ninja相当: eigo-ninjaの50% */
+  slowMs:          8000,  /* 8秒以上かかった場合はslowに記録 */
+  imagePathPrefix: '',    /* ninja-core.jsのデフォルトに合わせる */
+});
+Ninja.boot();
 
-    function switchTarget() {
-      if (!gameActive) return;
-      currentTarget = currentVocabSet[Math.floor(Math.random() * currentVocabSet.length)];
-      document.getElementById('prompt-word').textContent = currentTarget.jp;
-      
-      // 単語読み上げ
-      const ut = new SpeechSynthesisUtterance(currentTarget.en);
-      ut.lang = 'en-US';
-      speechSynthesis.speak(ut);
+/* =========================================================================
+ * AUDIO SYSTEM
+ * =========================================================================
+ * iOS Safari / Chrome 共通の安全な音声再生方法:
+ *   単語音声: fetch → Blob → URL.createObjectURL → new Audio() → .play()
+ *   SFX:      AudioContext (Web Audio API) — oscillator/noise合成
+ * AudioContextは必ずユーザーのタッチ/クリック後にresume()する。
+ * ========================================================================= */
 
-      setTimeout(() => { if (gameActive) switchTarget(); }, WORD_STAY_DURATION);
-    }
+/* ── AudioContext (SFX専用) ────────────────────────────────────────────── */
+var _sfxCtx = null;
 
-    function spawnLoop() {
-      if (!gameActive || !currentTarget) { setTimeout(spawnLoop, 500); return; }
+function _getSfxCtx() {
+  /* iOS: AudioContextは最初のユーザージェスチャー後に生成/resume */
+  if (!_sfxCtx) {
+    try {
+      _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { return null; }
+  }
+  return _sfxCtx;
+}
 
-      const item = document.createElement('div');
-      item.className = 'falling-item';
-      const isCorrect = Math.random() > 0.4;
-      const wordObj = isCorrect ? currentTarget : currentVocabSet[Math.floor(Math.random() * currentVocabSet.length)];
+function _unlockSfxCtx() {
+  /* ユーザージェスチャー後に必ず呼ぶ — iOS Safariの自動停止解除 */
+  try {
+    var ctx = _getSfxCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  } catch(e) {}
+}
 
-      item.textContent = wordObj.en;
-      item.style.left = (Math.random() * 60 + 5) + "%";
-      item.style.top = "-100px";
-      document.getElementById('stage').appendChild(item);
+/* ── SFX: 手裏剣を投げる「シュッ」 ─────────────────────────────────────── */
+function sfxThrow() {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var sr = ctx.sampleRate;
+    var dur = 0.11;
+    var buf = ctx.createBuffer(1, Math.floor(sr * dur), sr);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+    var src = ctx.createBufferSource(); src.buffer = buf;
+    var filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(900, ctx.currentTime);
+    filt.frequency.exponentialRampToValueAtTime(7000, ctx.currentTime + dur);
+    filt.Q.value = 0.7;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.32, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    src.connect(filt); filt.connect(g); g.connect(ctx.destination);
+    src.start();
+  } catch(e) {}
+}
 
-      const data = {
-        el: item, y: -100, word: wordObj.en,
-        correct: (wordObj.en === currentTarget.en),
-        speed: 0.8 + Math.random() * 0.7
-      };
+/* ── SFX: 命中「ザクッ」(correct) ──────────────────────────────────────── */
+function sfxHitCorrect() {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    /* ノイズ成分 */
+    var sr = ctx.sampleRate, len = Math.floor(sr * 0.07);
+    var buf = ctx.createBuffer(1, len, sr);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+    var ns = ctx.createBufferSource(); ns.buffer = buf;
+    var nf = ctx.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 2800;
+    var ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.38, now); ng.gain.exponentialRampToValueAtTime(0.001, now+0.07);
+    ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination); ns.start(now);
+    /* トーン成分 */
+    var osc = ctx.createOscillator(); osc.type = 'triangle';
+    osc.frequency.setValueAtTime(640, now);
+    osc.frequency.exponentialRampToValueAtTime(180, now+0.1);
+    var og = ctx.createGain();
+    og.gain.setValueAtTime(0.25, now); og.gain.exponentialRampToValueAtTime(0.001, now+0.1);
+    osc.connect(og); og.connect(ctx.destination);
+    osc.start(now); osc.stop(now+0.1);
+  } catch(e) {}
+}
 
-      item.addEventListener('touchstart', (e) => { e.preventDefault(); throwShuriken(e.touches[0], data); });
-      item.addEventListener('mousedown', (e) => throwShuriken(e, data));
+/* ── SFX: はずれ「ドスッ」(wrong) ──────────────────────────────────────── */
+function sfxHitWrong() {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator(); osc.type = 'square';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now+0.14);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.28, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.14);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now+0.14);
+  } catch(e) {}
+}
 
-      activeItems.push(data);
-      setTimeout(spawnLoop, 2000);
-    }
+/* ── SFX: カウントダウン「ピッ」 ────────────────────────────────────────── */
+function sfxCountdown(n) {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    var freq = n === 1 ? 900 : n === 2 ? 700 : 560;
+    var osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = freq;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.38, now+0.025);
+    g.gain.linearRampToValueAtTime(0,   now+0.2);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now+0.22);
+  } catch(e) {}
+}
 
-    function throwShuriken(e, data) {
-      if (!gameActive) return;
+/* ── SFX: ターゲット切り替え「シュウッ」 ──────────────────────────────── */
+function sfxSwitch() {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    /* 下降+上昇スウィープ */
+    var o1 = ctx.createOscillator(); o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(480, now);
+    o1.frequency.exponentialRampToValueAtTime(200, now+0.1);
+    var o2 = ctx.createOscillator(); o2.type = 'sawtooth';
+    o2.frequency.setValueAtTime(200, now+0.1);
+    o2.frequency.exponentialRampToValueAtTime(720, now+0.22);
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.28, now);
+    g.gain.linearRampToValueAtTime(0.0, now+0.26);
+    o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+    o1.start(now); o1.stop(now+0.12);
+    o2.start(now+0.1); o2.stop(now+0.26);
+  } catch(e) {}
+}
 
-      const stage = document.getElementById('stage');
-      const rect = stage.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+/* ── 単語音声: fetch → Blob → URL.createObjectURL → new Audio() ─────────
+ * iOS Safari / Chrome で最も安定した方式。
+ * AudioContext.decodeAudioData は iOS で壊れていることがあるため使用しない。
+ * Web Speech API は発音品質が不安定なため使用しない。
+ * ─────────────────────────────────────────────────────────────────────── */
+var _wBlobs = {};    /* key → blobURL or '' (failed) */
+var _wProms = {};    /* key → Promise */
 
-      // 音とアクション
-      playThrowSound();
-      const ninja = document.getElementById('ninja-char');
-      ninja.classList.add('throwing');
-      setTimeout(() => ninja.classList.remove('throwing'), 150);
+function preloadWord(audioKey) {
+  if (!audioKey) return Promise.resolve(null);
+  if (audioKey in _wBlobs) return Promise.resolve(_wBlobs[audioKey] || null);
+  if (_wProms[audioKey])   return _wProms[audioKey];
+  _wProms[audioKey] = fetch('audio/' + audioKey + '.mp3')
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.blob();
+    })
+    .then(function(blob) {
+      _wBlobs[audioKey] = URL.createObjectURL(blob);
+      return _wBlobs[audioKey];
+    })
+    .catch(function(err) {
+      console.warn('[Shuriken] audio load failed:', audioKey, err);
+      _wBlobs[audioKey] = '';
+      return null;
+    });
+  return _wProms[audioKey];
+}
 
-      // 星（手裏剣）作成
-      const star = document.createElement('div');
-      star.className = 'shuriken';
-      star.innerHTML = `<svg viewBox="0 0 100 100"><path d="M50 0 L61 35 L98 35 L68 57 L79 91 L50 70 L21 91 L32 57 L2 35 L39 35 Z" fill="#FFD700" stroke="#FF69B4" stroke-width="5"/></svg>`;
-      star.style.left = "50%";
-      star.style.top = "90%";
-      star.style.transform = "translate(-50%, -50%)";
-      stage.appendChild(star);
+/* Audio要素を一つ使い回す (iOS: 同時再生は最大1チャンネルが安全) */
+var _wordAudioEl = null;
+var _wordRetryTimer = null;
 
-      requestAnimationFrame(() => {
-        star.style.left = clickX + "px";
-        star.style.top = clickY + "px";
-        star.style.transform = "translate(-50%, -50%) rotate(360deg)";
-        
-        setTimeout(() => {
-          star.remove();
-          handleHit(clickX, clickY, data);
-        }, 200);
+function _getWordEl() {
+  if (!_wordAudioEl) { _wordAudioEl = new Audio(); _wordAudioEl.preload = 'auto'; }
+  return _wordAudioEl;
+}
+
+function playWordAudio(audioKey, onFail) {
+  /* ── 再生前に AudioContext を unlock (iOS Safari対策) ── */
+  _unlockSfxCtx();
+  if (!audioKey) { if (onFail) onFail(); return; }
+  var url = _wBlobs[audioKey];
+  if (url === undefined) {
+    /* まだロードしていない場合はロードしてから再生 */
+    preloadWord(audioKey).then(function(u) {
+      if (u) _doPlay(u, audioKey, onFail); else if (onFail) onFail();
+    });
+    return;
+  }
+  if (!url) { if (onFail) onFail(); return; }
+  _doPlay(url, audioKey, onFail);
+}
+
+function _doPlay(url, key, onFail) {
+  if (_wordRetryTimer) { clearTimeout(_wordRetryTimer); _wordRetryTimer = null; }
+  var el = _getWordEl();
+  try {
+    el.pause();
+    el.src = url;
+    el.load();
+    var p = el.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function(e) {
+        if (e.name === 'NotAllowedError') {
+          /* iOS: ユーザージェスチャーが必要 → UIでボタン強調 */
+          if (onFail) onFail('NotAllowed');
+        } else {
+          /* その他のエラー: 350ms後に1回リトライ */
+          _wordRetryTimer = setTimeout(function() { _doPlay(url, key, onFail); }, 350);
+        }
       });
     }
+  } catch(e) { if (onFail) onFail(); }
+}
 
-    function handleHit(x, y, data) {
-      if (!data.el.parentNode) return;
-      
-      playHitSound(data.correct);
-      Ninja.recordAnswer({word: data.word}, data.correct, 2000);
+/* =========================================================================
+ * GAME STATE
+ * ========================================================================= */
+var SS = (function() {
 
-      const effect = document.createElement('div');
-      effect.className = 'hit-effect';
-      effect.innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="${data.correct ? '#FFD700' : '#FF69B4'}" stroke-width="10" stroke-dasharray="20 10"/></svg>`;
-      effect.style.left = x + "px";
-      effect.style.top = y + "px";
-      document.getElementById('stage').appendChild(effect);
-      setTimeout(() => effect.remove(), 300);
+  /* ── constants ─────────────────────────────────────────────────────── */
+  var GAME_DURATION    = 90;   /* 秒 */
+  var TARGET_INTERVAL  = 10;   /* 秒ごとにターゲット切り替え */
+  var SPAWN_INTERVAL_MS = 2200; /* 初期スポーン間隔 (ms) */
+  var MIN_SPAWN_MS      = 700;  /* 最小スポーン間隔 */
+  var BASE_SPEED        = 55;   /* px/sec — 5歳向け: ゆっくり */
+  var MAX_SPEED         = 130;  /* px/sec — 終盤の最大速度 */
 
-      if (data.correct) {
-        score += 10;
-        data.el.style.backgroundColor = "var(--gold)";
+  /* ── state ──────────────────────────────────────────────────────────── */
+  var mode      = 'weak1';
+  var vocabSet  = [];
+  var distSet   = [];    /* distractors用 (modeによって異なる) */
+
+  var score         = 0;
+  var combo         = 0;
+  var maxCombo      = 0;
+  var timeLeft      = GAME_DURATION;
+  var targetTimer   = TARGET_INTERVAL;
+  var gameActive    = false;
+
+  var currentTarget = null;
+  var activeItems   = [];    /* { el, y, speed, vocab, hit } */
+
+  /* timers / rAF */
+  var _tickInterval  = null;
+  var _spawnTimeout  = null;
+  var _rafId         = null;
+  var _lastTs        = 0;
+  var _elapsed       = 0;   /* ゲーム開始からの経過秒数 */
+
+  /* countdown tracking */
+  var _cdFired = { 3:false, 2:false, 1:false };
+
+  /* results */
+  var _answersCorrect = 0;
+  var _answersWrong   = 0;
+  var _totalXp        = 0;
+  var _sessionStart   = 0;
+
+  /* ── catalog for Analysis Scroll ───────────────────────────────────── */
+  function getCatalogs() {
+    return [
+      { namespace:'shuriken-weak1', label:'WK1', entries: WEAK1_VOCAB.map(function(v){ return { word:v.en }; }) },
+      { namespace:'shuriken-weak2', label:'WK2', entries: WEAK2_VOCAB.map(function(v){ return { word:v.en }; }) },
+      { namespace:'shuriken-daily', label:'SHU', entries: DAILY_VOCAB.map(function(v){ return { word:v.en }; }) },
+    ];
+  }
+
+  /* ── DOM helpers ────────────────────────────────────────────────────── */
+  function qs(id) { return document.getElementById(id); }
+
+  function showScreen(id) {
+    ['home-screen','result-screen'].forEach(function(s) {
+      var el = qs(s);
+      if (el) el.style.display = (s === id) ? 'flex' : 'none';
+    });
+  }
+
+  /* ── Status card ────────────────────────────────────────────────────── */
+  function renderStatusCard(wrapId) {
+    var wrap = qs(wrapId);
+    if (wrap && typeof NinjaUI !== 'undefined') {
+      wrap.innerHTML = NinjaUI.statusBadgeHTML();
+    }
+  }
+
+  /* ── Familiar chip ──────────────────────────────────────────────────── */
+  function updateFamiliarChip() {
+    var chip = qs('familiar-chip');
+    if (!chip) return;
+    var fid = Ninja.familiar.selected;
+    if (!fid || !window.FAMILIAR_SVGS || !window.FAMILIAR_SVGS[fid]) {
+      chip.classList.add('hidden'); return;
+    }
+    chip.classList.remove('hidden');
+    chip.innerHTML = window.FAMILIAR_SVGS[fid];
+  }
+
+  /* ── Home screen ────────────────────────────────────────────────────── */
+  function goHome() {
+    stopGame();
+    showScreen('home-screen');
+    renderStatusCard('status-card-wrap');
+    updateFamiliarChip();
+    /* 名前未登録ならモーダル表示 */
+    if (typeof NinjaUI !== 'undefined') {
+      NinjaUI.maybePromptName && NinjaUI.maybePromptName();
+      NinjaUI.maybePromptStarter && NinjaUI.maybePromptStarter();
+      NinjaUI.maybePromptFamiliarStarter && NinjaUI.maybePromptFamiliarStarter();
+    }
+  }
+
+  /* ── Start game ─────────────────────────────────────────────────────── */
+  function startGame(m) {
+    mode = m || 'weak1';
+    _unlockSfxCtx();  /* iOS: ユーザーのタップでAudioContext解放 */
+
+    /* vocab selection */
+    if (mode === 'weak1') {
+      vocabSet = WEAK1_VOCAB.slice();
+      distSet  = WEAK1_VOCAB.slice();
+    } else if (mode === 'weak2') {
+      vocabSet = WEAK2_VOCAB.slice();
+      distSet  = WEAK2_VOCAB.slice();
+    } else {
+      /* daily: weakWordsを優先する加重サンプリング */
+      vocabSet = DAILY_VOCAB.slice();
+      distSet  = DAILY_VOCAB.slice();
+    }
+
+    /* state reset */
+    score           = 0;
+    combo           = 0;
+    maxCombo        = 0;
+    timeLeft        = GAME_DURATION;
+    targetTimer     = TARGET_INTERVAL;
+    gameActive      = true;
+    activeItems     = [];
+    _elapsed        = 0;
+    _lastTs         = 0;
+    _answersCorrect = 0;
+    _answersWrong   = 0;
+    _totalXp        = 0;
+    _sessionStart   = Date.now();
+    _cdFired        = { 3:false, 2:false, 1:false };
+
+    /* hide screens */
+    showScreen(null);
+
+    /* NinjaCore session */
+    Ninja.setTrainingMode('Shuriken');
+    Ninja.setTrainingGame('Shuriken');
+
+    /* preload vocabSet audio */
+    vocabSet.forEach(function(v) { preloadWord(v.audio); });
+
+    /* UI init */
+    updateHUD();
+    pickNewTarget();
+
+    /* start loops */
+    _tickInterval = setInterval(onSecondTick, 1000);
+    scheduleSpawn();
+    _rafId = requestAnimationFrame(gameLoop);
+  }
+
+  /* ── Stop game (cleanup) ────────────────────────────────────────────── */
+  function stopGame() {
+    gameActive = false;
+    if (_tickInterval) { clearInterval(_tickInterval); _tickInterval = null; }
+    if (_spawnTimeout) { clearTimeout(_spawnTimeout);  _spawnTimeout = null; }
+    if (_rafId)        { cancelAnimationFrame(_rafId); _rafId = null; }
+    /* remove all falling words */
+    activeItems.forEach(function(item) { try { item.el.remove(); } catch(e){} });
+    activeItems = [];
+    /* hide countdown */
+    var cf = qs('countdown-flash');
+    if (cf) { cf.textContent = ''; cf.classList.remove('show'); }
+  }
+
+  /* ── Tick (1秒ごと) ────────────────────────────────────────────────── */
+  function onSecondTick() {
+    if (!gameActive) return;
+
+    timeLeft--;
+    targetTimer--;
+
+    /* カウントダウン警告 (3-2-1秒前) */
+    if (targetTimer <= 3 && targetTimer > 0 && !_cdFired[targetTimer]) {
+      _cdFired[targetTimer] = true;
+      sfxCountdown(targetTimer);
+      showCountdownFlash(targetTimer);
+    }
+
+    /* ターゲット切り替え */
+    if (targetTimer <= 0) {
+      sfxSwitch();
+      pickNewTarget();
+      targetTimer = TARGET_INTERVAL;
+      _cdFired = { 3:false, 2:false, 1:false };
+    }
+
+    /* スイッチバー更新 */
+    var fill = qs('target-switch-fill');
+    if (fill) fill.style.width = Math.max(0, (targetTimer / TARGET_INTERVAL) * 100) + '%';
+
+    updateHUD();
+
+    if (timeLeft <= 0) endGame();
+  }
+
+  /* ── Pick new target ────────────────────────────────────────────────── */
+  function pickNewTarget() {
+    var pool = vocabSet.filter(function(v) {
+      return !currentTarget || v.en !== currentTarget.en;
+    });
+    if (!pool.length) pool = vocabSet;
+
+    /* daily mode: 弱点単語を優先 */
+    if (mode === 'daily' && pool.length > 1) {
+      var ns = 'shuriken-daily';
+      var weighted = pool.map(function(v) {
+        var w = Ninja.getWord({ word: v.en }, ns);
+        var score = 1 + (w.wrong || 0) * 2 + (w.lastWrong ? 4 : 0) - (w.correct || 0) * 0.3;
+        return { v: v, w: Math.max(0.5, score) };
+      });
+      var total = weighted.reduce(function(s, x) { return s + x.w; }, 0);
+      var r = Math.random() * total;
+      for (var i = 0; i < weighted.length; i++) {
+        r -= weighted[i].w;
+        if (r <= 0) { currentTarget = weighted[i].v; break; }
+      }
+      if (!currentTarget) currentTarget = weighted[0].v;
+    } else {
+      currentTarget = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    /* update target box */
+    var jpEl = qs('target-jp');
+    var enEl = qs('target-en');
+    if (jpEl) jpEl.textContent = currentTarget.jp;
+    if (enEl) enEl.textContent = currentTarget.en;
+
+    /* reset switch bar */
+    var fill = qs('target-switch-fill');
+    if (fill) fill.style.width = '100%';
+
+    /* 音声再生 */
+    playTargetAudio();
+  }
+
+  /* ── Play current target audio ──────────────────────────────────────── */
+  function playTargetAudio() {
+    if (!currentTarget) return;
+    var btn = qs('btn-listen');
+    if (btn) { btn.classList.add('playing'); btn.classList.remove('fail'); }
+    playWordAudio(currentTarget.audio, function(reason) {
+      if (btn) {
+        btn.classList.remove('playing');
+        if (reason === 'NotAllowed') {
+          btn.classList.add('fail');
+          /* 音声が出ないままゲーム進行しない: LISTENボタンを強調 */
+          btn.textContent = '🔊 TAP TO PLAY';
+        }
+      }
+    });
+    /* playing classを音声長さ分だけ維持 */
+    setTimeout(function() {
+      if (btn) btn.classList.remove('playing');
+    }, 2500);
+  }
+
+  /* ── Countdown flash animation ──────────────────────────────────────── */
+  function showCountdownFlash(n) {
+    var el = qs('countdown-flash');
+    if (!el) return;
+    el.textContent = n;
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); el.textContent = ''; }, 420);
+  }
+
+  /* ── HUD update ─────────────────────────────────────────────────────── */
+  function updateHUD() {
+    var scoreEl = qs('ui-score');
+    var timerEl = qs('ui-timer');
+    var comboEl = qs('ui-combo');
+    if (scoreEl) scoreEl.textContent = 'SCORE: ' + score;
+    if (timerEl) {
+      timerEl.textContent = timeLeft + 's';
+      if (timeLeft <= 10) timerEl.classList.add('urgent');
+      else timerEl.classList.remove('urgent');
+    }
+    if (comboEl) {
+      if (combo >= 2) {
+        comboEl.textContent = 'COMBO ×' + combo;
+        comboEl.classList.remove('hidden');
       } else {
-        score = Math.max(0, score - 5);
-        data.el.style.backgroundColor = "var(--crimson)";
-        data.el.style.color = "#fff";
+        comboEl.classList.add('hidden');
       }
-      
-      document.getElementById('ui-score').textContent = `SCORE: ${score}`;
-      data.el.style.opacity = "0";
-      setTimeout(() => { if(data.el.parentNode) data.el.remove(); }, 150);
+    }
+  }
+
+  /* ── Spawn word wave ────────────────────────────────────────────────── */
+  function scheduleSpawn() {
+    if (!gameActive) return;
+    spawnWave();
+    var interval = Math.max(MIN_SPAWN_MS, SPAWN_INTERVAL_MS - _elapsed * 12);
+    _spawnTimeout = setTimeout(scheduleSpawn, interval);
+  }
+
+  function spawnWave() {
+    if (!gameActive || !currentTarget) return;
+    var stage = qs('stage');
+    if (!stage) return;
+    var sw = stage.clientWidth || 360;
+
+    /* wave size: 1〜3語 (経過時間で増加, 最大3語を超えないよう制限) */
+    var waveSize = 1 + Math.floor(_elapsed / 25);
+    if (waveSize > 3) waveSize = 3;
+
+    /* 必ずターゲットを1つ含む */
+    var toSpawn = [];
+    toSpawn.push({ vocab: currentTarget, isTarget: true });
+
+    /* 残りはdistractor */
+    for (var i = 1; i < waveSize; i++) {
+      var dist = getDistractor();
+      if (dist) toSpawn.push({ vocab: dist, isTarget: false });
     }
 
-    function gameLoop() {
-      if (!gameActive) return;
-      for (let i = activeItems.length - 1; i >= 0; i--) {
-        const item = activeItems[i];
-        item.y += item.speed;
-        item.el.style.transform = `translateY(${item.y}px)`;
-        if (item.y > 800) { item.el.remove(); activeItems.splice(i, 1); }
+    /* ランダム順で並べる */
+    shuffle(toSpawn);
+
+    /* X位置が重ならないよう間隔を計算 */
+    var minGap = 120;
+    var margin = 24;
+    var maxX = sw - 140 - margin;
+    var usedX = [];
+
+    toSpawn.forEach(function(item) {
+      var x = pickX(margin, maxX, usedX, minGap);
+      usedX.push(x);
+      spawnWord(item.vocab, item.isTarget, x, stage);
+    });
+  }
+
+  function pickX(min, max, used, gap) {
+    var attempts = 0, x;
+    do {
+      x = min + Math.random() * (max - min);
+      var ok = true;
+      for (var i = 0; i < used.length; i++) {
+        if (Math.abs(used[i] - x) < gap) { ok = false; break; }
       }
-      requestAnimationFrame(gameLoop);
+      if (ok || attempts > 20) break;
+      attempts++;
+    } while(true);
+    return x;
+  }
+
+  function getDistractor() {
+    if (!distSet || distSet.length <= 1) return null;
+    var pool = distSet.filter(function(v) {
+      return v.en !== (currentTarget && currentTarget.en);
+    });
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ── Spawn single word ──────────────────────────────────────────────── */
+  function spawnWord(vocab, isTarget, x, stage) {
+    var el = document.createElement('div');
+    el.className = 'falling-word';
+    el.textContent = vocab.en;
+    el.style.left = Math.round(x) + 'px';
+    el.style.top  = '-70px';
+
+    /* 速度: 経過時間で緩やかに増加 */
+    var speed = BASE_SPEED + (_elapsed / GAME_DURATION) * (MAX_SPEED - BASE_SPEED);
+    /* 弱点単語は少し遅め (5歳向け) */
+    if (isTarget) speed *= 0.88;
+
+    var item = {
+      el:       el,
+      y:        -70,
+      speed:    speed,
+      vocab:    vocab,
+      isTarget: isTarget,
+      hit:      false,
+      spawnedAt: Date.now(),
+    };
+
+    /* タッチ/クリックハンドラ */
+    function onTap(e) {
+      e.preventDefault(); e.stopPropagation();
+      if (!gameActive || item.hit) return;
+      /* タップ座標を stage 相対で取得 */
+      var rect = stage.getBoundingClientRect();
+      var cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      var cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      throwShurikenAt(cx, cy, item, stage);
+    }
+    el.addEventListener('touchstart', onTap, { passive: false });
+    el.addEventListener('mousedown',  onTap);
+
+    stage.appendChild(el);
+    activeItems.push(item);
+  }
+
+  /* ── Game loop (requestAnimationFrame) ──────────────────────────────── */
+  function gameLoop(ts) {
+    if (!gameActive) return;
+    if (!_lastTs) _lastTs = ts;
+    var dt = Math.min((ts - _lastTs) / 1000, 0.05); /* 最大50ms/frame */
+    _lastTs = ts;
+    _elapsed += dt;
+
+    var stage = qs('stage');
+    var stageH = stage ? (stage.clientHeight || 600) : 600;
+
+    for (var i = activeItems.length - 1; i >= 0; i--) {
+      var item = activeItems[i];
+      if (item.hit) continue;
+      item.y += item.speed * dt;
+      item.el.style.top = Math.round(item.y) + 'px';
+      /* 画面外に落ちたら削除 */
+      if (item.y > stageH + 60) {
+        item.el.remove();
+        activeItems.splice(i, 1);
+      }
+    }
+    _rafId = requestAnimationFrame(gameLoop);
+  }
+
+  /* ── Throw shuriken ─────────────────────────────────────────────────── */
+  function throwShurikenAt(tapX, tapY, item, stage) {
+    _unlockSfxCtx();
+    sfxThrow();
+
+    /* 忍者アニメーション */
+    var ninja = qs('ninja-char');
+    if (ninja) {
+      ninja.classList.add('throwing');
+      setTimeout(function() { ninja.classList.remove('throwing'); }, 160);
     }
 
-    function timerLoop() {
-      if (!gameActive) return;
-      timeLeft--;
-      document.getElementById('ui-timer').textContent = `${timeLeft}s`;
-      if (timeLeft <= 0) endGame();
-      else setTimeout(timerLoop, 1000);
+    /* 忍者の中心座標 (stage相対) */
+    var stageH = stage.clientHeight || 600;
+    var stageW = stage.clientWidth  || 360;
+    var fromX  = stageW / 2;
+    var fromY  = stageH - 40;
+
+    /* 手裏剣を生成して飛ばす */
+    var star = document.createElement('div');
+    star.className = 'shuriken-proj';
+    star.innerHTML = SHURIKEN_SVG;
+    star.style.left      = fromX + 'px';
+    star.style.top       = fromY + 'px';
+    star.style.transform = 'translate(-50%,-50%) rotate(0deg)';
+    stage.appendChild(star);
+
+    /* CSS transitionで移動 */
+    var dur = 0.16; /* 秒 */
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        star.style.transition = 'left '+dur+'s ease-in, top '+dur+'s ease-in, transform '+dur+'s linear';
+        star.style.left      = tapX + 'px';
+        star.style.top       = tapY + 'px';
+        star.style.transform = 'translate(-50%,-50%) rotate(720deg)';
+      });
+    });
+
+    setTimeout(function() {
+      star.remove();
+      onHit(tapX, tapY, item, stage);
+    }, Math.round(dur * 1000) + 30);
+  }
+
+  /* ── Handle hit ─────────────────────────────────────────────────────── */
+  function onHit(x, y, item, stage) {
+    if (!item.el.parentNode) return;
+    item.hit = true;
+
+    var isCorrect = item.isTarget;
+    var timeMs    = Date.now() - item.spawnedAt;
+    var ns        = mode === 'weak1' ? 'shuriken-weak1'
+                  : mode === 'weak2' ? 'shuriken-weak2'
+                  : 'shuriken-daily';
+
+    /* NinjaCore記録 */
+    Ninja.recordAnswer({ word: item.vocab.en }, isCorrect, timeMs, ns);
+
+    /* hit ring effect */
+    var ring = document.createElement('div');
+    ring.className = 'hit-ring' + (isCorrect ? '' : ' wrong');
+    ring.style.left = x + 'px';
+    ring.style.top  = y + 'px';
+    stage.appendChild(ring);
+    setTimeout(function() { ring.remove(); }, 360);
+
+    if (isCorrect) {
+      sfxHitCorrect();
+      /* combo */
+      combo++;
+      if (combo > maxCombo) maxCombo = combo;
+      /* score */
+      var pts = 10 + Math.floor(combo / 2) * 2;
+      score  += pts;
+      _answersCorrect++;
+      /* XP per hit */
+      var xpRaw = 8 + Math.floor(combo / 3);
+      var gained = Ninja.addExp(xpRaw);
+      _totalXp  += xpRaw;
+      /* アニメーション: 正解色 → 消える */
+      item.el.classList.add('hit-correct');
+      setTimeout(function() { try { item.el.remove(); } catch(e){} }, 320);
+      /* combo pop */
+      if (combo >= 2) spawnFloatText(x, y - 24, '×'+combo+' COMBO!', 'float-combo', stage);
+      /* xp burst */
+      spawnFloatText(x, y + 10, '+'+xpRaw+' XP', 'float-xp', stage);
+    } else {
+      sfxHitWrong();
+      combo = 0;
+      score = Math.max(0, score - 3);
+      _answersWrong++;
+      item.el.classList.add('hit-wrong');
+      /* 弾んだ後にhit-wrongクラスを外して落下再開 */
+      setTimeout(function() {
+        if (item.el.parentNode) {
+          item.el.classList.remove('hit-wrong');
+          item.hit = false; /* 再び落下 */
+        }
+      }, 410);
     }
 
-    function endGame() {
-      gameActive = false;
-      Ninja.addExp(Math.floor(score / 2));
-      document.getElementById('result-screen').style.display = 'flex';
-      document.getElementById('final-score').textContent = score;
+    updateHUD();
+  }
+
+  /* ── Float text (combo / xp burst) ─────────────────────────────────── */
+  function spawnFloatText(x, y, text, className, stage) {
+    var el = document.createElement('div');
+    el.className = 'float-text ' + (className || '');
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    stage.appendChild(el);
+    setTimeout(function() { el.remove(); }, 750);
+  }
+
+  /* ── End game ───────────────────────────────────────────────────────── */
+  function endGame() {
+    stopGame();
+    Ninja.touchTrained();
+
+    /* result stats */
+    qs('final-score').textContent = score;
+    qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
+
+    var stats = qs('result-stats');
+    if (stats) {
+      var lv = Ninja.progress.level;
+      stats.innerHTML = [
+        row('正解 Correct',   _answersCorrect),
+        row('ミス Miss',      _answersWrong),
+        row('最大コンボ',     maxCombo + '×'),
+        row('レベル Level',   'Lv ' + lv),
+      ].join('');
     }
-  </script>
+
+    renderStatusCard('result-status-wrap');
+    showScreen('result-screen');
+  }
+
+  function row(label, val) {
+    return '<div class="result-row"><span>' + label + '</span>'
+         + '<span class="result-val">' + val + '</span></div>';
+  }
+
+  /* ── Utility: shuffle ───────────────────────────────────────────────── */
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  /* ── Public API ─────────────────────────────────────────────────────── */
+  return {
+    startGame:       startGame,
+    goHome:          goHome,
+    getCatalogs:     getCatalogs,
+    playTargetAudio: playTargetAudio,  /* LISTENボタン用 */
+    get lastMode()   { return mode; },
+  };
+
+})();
+
+/* =========================================================================
+ * BUTTON WIRING & GLOBAL EVENT HANDLERS
+ * ========================================================================= */
+
+/* ── HOME button ─────────────────────────────────────────────────────── */
+document.getElementById('btn-home').addEventListener('click', function() {
+  _unlockSfxCtx();
+  SS.goHome();
+});
+
+/* ── LISTEN button ───────────────────────────────────────────────────── */
+document.getElementById('btn-listen').addEventListener('click', function() {
+  _unlockSfxCtx();
+  var btn = this;
+  btn.textContent = '🔊 LISTEN';
+  btn.classList.remove('fail');
+  SS.playTargetAudio();
+});
+
+/* ── First gesture: unlock AudioContext ──────────────────────────────── */
+document.addEventListener('touchstart', _unlockSfxCtx, { passive: true });
+document.addEventListener('mousedown',  _unlockSfxCtx, { passive: true });
+
+/* ── Visibility change: iOS Safariでバックグラウンド時に音声停止 ──────── */
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && _wordAudioEl) {
+    try { _wordAudioEl.pause(); } catch(e) {}
+  }
+});
+
+/* =========================================================================
+ * BOOT: ホーム画面を表示
+ * ========================================================================= */
+window.addEventListener('DOMContentLoaded', function() {
+  SS.goHome();
+});
+</script>
 </body>
 </html>
