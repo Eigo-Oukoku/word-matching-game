@@ -21,13 +21,13 @@
   /* ── Responsive scaling: tablet portrait ≥640px, tablet landscape / desktop ≥900px ── */
   @media (min-width: 640px) {
     #game-root { max-width: 640px; padding: 14px 22px; }
-    .choice-btn { font-size: clamp(32px, 2.6vw, 42px) !important; min-height: 92px !important; padding: 16px 12px !important; }
+    .choice-btn { font-size: clamp(28px, 2.6vw, 42px) !important; min-height: 92px !important; padding: 16px 12px !important; }
     .game-title { font-size: clamp(52px, 9vw, 72px) !important; }
   }
   @media (min-width: 900px) {
     #game-root { max-width: 820px; padding: 18px 28px; }
     .choices-grid { gap: 16px !important; }
-    .choice-btn { font-size: clamp(34px, 2.2vw, 46px) !important; min-height: 100px !important; padding: 18px 14px !important; }
+    .choice-btn { font-size: clamp(30px, 2.2vw, 46px) !important; min-height: 100px !important; padding: 18px 14px !important; }
     .level-box { gap: 14px !important; }
     .level-btn { font-size: 19px !important; padding: 18px 8px !important; }
     .game-title { font-size: clamp(60px, 7vw, 80px) !important; }
@@ -155,7 +155,7 @@
   .listen-btn { margin-top: 5px; font-size: 14px; background: #E0F4FF !important; border: 2px solid #7CC3F0; border-radius: 999px; padding: 8px 25px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 0 #7CC3F0; color: #0077B6 !important; }
 
   .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 15px 0; }
-  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(20px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
+  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(16px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
   .choice-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #dee2e6; }
   .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
   .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
@@ -163,8 +163,8 @@
   /* Adaptive layout classes for flexibility (6+ choices = dense, 8+ = denser) */
   .choices-grid.dense  { gap: 8px;  margin: 8px 0; }
   .choices-grid.denser { gap: 6px;  margin: 5px 0; }
-  .choices-grid.dense  .choice-btn { min-height: 64px; padding: 10px 6px; font-size: clamp(27px, 3.8vw, 36px); box-shadow: 0 4px 0 #dee2e6; }
-  .choices-grid.denser .choice-btn { min-height: 56px; padding: 8px 6px;  font-size: clamp(26px, 3.5vw, 34px); box-shadow: 0 3px 0 #dee2e6; border-radius: 14px; }
+  .choices-grid.dense  .choice-btn { min-height: 64px; padding: 10px 6px; font-size: clamp(23px, 3.8vw, 36px); box-shadow: 0 4px 0 #dee2e6; }
+  .choices-grid.denser .choice-btn { min-height: 56px; padding: 8px 6px;  font-size: clamp(22px, 3.5vw, 34px); box-shadow: 0 3px 0 #dee2e6; border-radius: 14px; }
   .top-bar.compact-bar { margin-bottom: 5px; }
   .target-section.compact-target { margin-bottom: 5px; }
   .target-section.compact-target .word-card { padding: 6px 10px; }
