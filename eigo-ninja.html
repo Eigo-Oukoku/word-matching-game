@@ -1383,6 +1383,281 @@ NinjaUI._refreshFamiliarPicker = function(starterMode) {
   `;
 };
 
+// ───────────────────────────────────────────────────────────────────────────
+// NINJA UI EXTENSIONS — Alias Picker & Color Picker
+// ───────────────────────────────────────────────────────────────────────────
+// These functions were missing from the eigo-ninja NinjaUI facade but are
+// referenced by HTML onclick handlers in status cards and profile sections.
+// They implement the Alias selection modal and Text/Theme color customization.
+
+// Helper: HTML escape utility
+function _ninjaHtmlEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[c]);
+}
+
+// Helper: displayAlias — strip punctuation from alias for display
+function _ninjaDisplayAlias(s) {
+  return String(s == null ? '' : s).replace(/[!?.,]/g, '').trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ALIAS PICKER MODAL
+// ─────────────────────────────────────────────────────────────────────────
+
+NinjaUI.openAliasPicker = function() {
+  const p = progress;
+  const aliases = Array.isArray(p.unlockedAliases) ? p.unlockedAliases : [];
+  const current = p.selectedAlias || '';
+  const themeId = p.statusTheme || 'dark';
+  const theme = NINJA_STATUS_THEMES[themeId] || NINJA_STATUS_THEMES['dark'];
+
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.style.zIndex = '10010';
+  ov.onclick = e => { if (e.target === ov) NinjaUI._closeAliasOverlay(ov); };
+  
+  const box = document.createElement('div');
+  box.className = 'modal-box';
+  box.id = 'ninja-alias-picker';
+  box.onclick = e => e.stopPropagation();
+  
+  const rows = aliases.map(a => {
+    const active = a === current;
+    return `<button onclick="NinjaUI._selectAlias('${a.replace(/'/g,"\\'")}')" `
+      + `style="width:100%;text-align:left;padding:11px 14px;border-radius:12px;border:2px solid `
+      + `${active ? theme.accent : 'rgba(255,255,255,0.15)'};`
+      + `background:${active ? 'rgba(255,255,255,0.15)' : 'transparent'};`
+      + `color:#fff;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:7px;`
+      + `display:flex;justify-content:space-between;align-items:center;">`
+      + `<span>${_ninjaHtmlEsc(_ninjaDisplayAlias(a))}</span>`
+      + `${active ? '<span style="font-size:11px;opacity:0.8;">✓ equipped</span>' : ''}`
+      + `</button>`;
+  }).join('');
+
+  box.innerHTML = `
+    <button class="modal-top-close" onclick="NinjaUI._closeAliasOverlay()" aria-label="Close">✕</button>
+    <div style="font-family:'Bangers',cursive;font-size:26px;color:#fff;letter-spacing:1px;text-align:center;margin-bottom:2px;">Alias</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:700;margin-bottom:12px;text-align:center;">称号を選んでカードに表示 / Choose your title</div>
+    <div style="background:${theme.bg};border-radius:14px;padding:10px 8px 6px;margin-bottom:4px;">
+      ${rows}
+      <button onclick="NinjaUI._selectAlias('')" style="width:100%;padding:9px 14px;border-radius:12px;border:2px solid rgba(255,255,255,0.25);background:transparent;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;cursor:pointer;margin-bottom:4px;">— 表示しない / None —</button>
+    </div>
+    <button class="modal-bottom-btn" onclick="NinjaUI._closeAliasOverlay()" style="margin-top:8px;">✕ 閉じる / Close</button>
+  `;
+  
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+};
+
+NinjaUI._selectAlias = function(alias) {
+  if (typeof setSelectedAlias === 'function') setSelectedAlias(alias);
+  // Refresh home status card
+  const card = document.getElementById('ninja-status-card');
+  if (card && card.parentElement) {
+    card.parentElement.innerHTML = ninjaStatusCardHTML();
+  }
+  // Refresh hub preview if visible
+  const hubCard = document.getElementById('ninja-hub-preview-card');
+  if (hubCard && hubCard.parentElement) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _ninjaHubHeaderHTML();
+    const newCard = tmp.firstChild;
+    if (newCard) {
+      newCard.id = 'ninja-hub-preview-card';
+      hubCard.parentElement.replaceChild(newCard, hubCard);
+    }
+  }
+  if (typeof onNinjaProgressChanged === 'function') onNinjaProgressChanged();
+};
+
+NinjaUI._closeAliasOverlay = function() {
+  const ov = document.querySelector('.overlay #ninja-alias-picker')?.closest('.overlay');
+  if (ov) ov.remove();
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// COLOR PICKER MODAL — Text Colors & Theme
+// ─────────────────────────────────────────────────────────────────────────
+
+const _TEXT_PALETTE = ['#FFFFFF','#FFD54F','#FFA726','#FF8A65','#F48FB1','#CE93D8','#90CAF9','#80DEEA','#A5D6A7','#FFCC80'];
+const _TEXT_ELEMENTS = [
+  { key:'name',        label:'🥷 名前 / Name',            def:'#ffffff' },
+  { key:'alias',       label:'通り名 / Alias',            def:null },
+  { key:'xpBar',       label:'⚡ 経験値バー / XP Bar',     def:null },
+  { key:'complete',    label:'✅ 完遂 / Complete',         def:'#6EE7B7' },
+  { key:'interrupted', label:'⚠️ 中断 / Interrupted',     def:'#FBBF24' },
+];
+
+NinjaUI.openTextColorPicker = function() {
+  const p = progress;
+  const tc = (p.textColors && typeof p.textColors === 'object') ? p.textColors : {};
+  const themeId = p.statusTheme || 'dark';
+  const accent = (NINJA_STATUS_THEMES[themeId] || NINJA_STATUS_THEMES['dark']).accent || '#FFD54F';
+
+  // Build theme dots
+  const themeIds   = ['dark','blue','purple','pink','sakura','ocean','forest','gold','thunder'];
+  const themeNames = { dark:'Dark',blue:'Blue',purple:'Purple',pink:'Pink',sakura:'Sakura',ocean:'Ocean',forest:'Forest',gold:'Gold',thunder:'Thunder' };
+  const dots = themeIds.map(id => {
+    const t = NINJA_STATUS_THEMES[id] || {};
+    const active = id === themeId;
+    return `<button data-theme-dot="${id}" onclick="NinjaUI.setTheme('${id}')" title="${themeNames[id]||id}" `
+      + `style="width:26px;height:26px;border-radius:50%;border:${active ? '3px solid #fff' : '2px solid rgba(255,255,255,0.25)'};`
+      + `background:${t.dot || '#333'};cursor:pointer;padding:0;flex-shrink:0;`
+      + `box-shadow:${active ? '0 0 0 2px rgba(255,255,255,0.5),0 2px 6px rgba(0,0,0,0.5)' : '0 1px 4px rgba(0,0,0,0.35)'};`
+      + `transform:${active ? 'scale(1.2)' : 'scale(1)'};transition:transform 0.15s;"></button>`;
+  }).join('');
+
+  // Build text color rows
+  const colorRows = _TEXT_ELEMENTS.map(el => {
+    const current = (tc && tc[el.key]) || el.def || accent;
+    const swatches = _TEXT_PALETTE.map(c => {
+      const active = current === c || (!tc[el.key] && c === (el.def || accent));
+      return `<button onclick="NinjaUI._setTextColorLive('${el.key}','${c}')" `
+        + `title="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};`
+        + `border:${active ? '3px solid #333' : '2px solid rgba(0,0,0,0.15)'};`
+        + `cursor:pointer;padding:0;flex-shrink:0;`
+        + `box-shadow:${active ? '0 0 0 2px #fff,0 2px 6px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.2)'};`
+        + `transform:${active ? 'scale(1.2)' : 'scale(1)'};transition:transform 0.15s;">`
+        + `${active ? '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333;font-weight:900;text-shadow:0 1px 2px rgba(255,255,255,0.8);">✓</span>' : ''}</button>`;
+    }).join('');
+    const reset = `<button onclick="NinjaUI._setTextColorLive('${el.key}','')" `
+      + `style="font-size:11px;font-weight:800;color:#555;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.12);`
+      + `border-radius:8px;padding:3px 8px;cursor:pointer;white-space:nowrap;">↺ Reset</button>`;
+    return `<div style="margin-bottom:14px;"><div style="font-size:12px;font-weight:800;color:#333;margin-bottom:6px;">${el.label}</div>`
+      + `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="ninja-tc-row-${el.key}">${swatches}${reset}</div></div>`;
+  }).join('');
+
+  const previewCard = ninjaStatusCardHTML()
+    .replace(' id="ninja-status-card"', '')
+    .replace(' onclick="NinjaUI.openProfile()"', '')
+    .replace('cursor:pointer;', 'cursor:default;');
+
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.style.zIndex = '10010';
+  ov.onclick = e => { if (e.target === ov) NinjaUI._closeColorOverlay(ov); };
+
+  const box = document.createElement('div');
+  box.className = 'modal-box';
+  box.id = 'ninja-color-picker';
+  box.onclick = e => e.stopPropagation();
+  box.innerHTML = `
+    <button class="modal-top-close" onclick="NinjaUI._closeColorOverlay()" aria-label="Close">✕</button>
+    <div style="font-size:17px;font-weight:900;text-align:center;margin-bottom:12px;">🎨 色の変更 / Colors</div>
+    <div id="ninja-color-picker-preview" style="pointer-events:none;margin-bottom:16px;border-radius:14px;overflow:hidden;">${previewCard}</div>
+    <div style="margin-bottom:16px;background:rgba(255,255,255,0.07);border-radius:14px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#bbb;margin-bottom:8px;">🎨 カードの色 / Card Color</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${dots}</div>
+    </div>
+    <div style="font-size:11px;font-weight:800;letter-spacing:1px;color:#555;margin-bottom:10px;">🖌️ 文字の色 / Text Colors</div>
+    <div id="ninja-tc-sections">${colorRows}</div>
+    <button class="modal-bottom-btn" onclick="NinjaUI._closeColorOverlay()" style="margin-top:12px;">✕ 閉じる / Close</button>
+  `;
+
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+};
+
+NinjaUI.setTheme = function(id) {
+  if (typeof setStatusTheme === 'function') setStatusTheme(id);
+  // Refresh status card
+  const card = document.getElementById('ninja-status-card');
+  if (card && card.parentElement) {
+    card.parentElement.innerHTML = ninjaStatusCardHTML();
+  }
+  // Refresh hub card
+  const hubCard = document.getElementById('ninja-hub-preview-card');
+  if (hubCard && hubCard.parentElement) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _ninjaHubHeaderHTML();
+    const newCard = tmp.firstChild;
+    if (newCard) {
+      newCard.id = 'ninja-hub-preview-card';
+      hubCard.parentElement.replaceChild(newCard, hubCard);
+    }
+  }
+  // Update dots
+  document.querySelectorAll('[data-theme-dot]').forEach(btn => {
+    const dId = btn.getAttribute('data-theme-dot');
+    const active = dId === id;
+    btn.style.border = active ? '3px solid #fff' : '2px solid rgba(255,255,255,0.25)';
+    btn.style.boxShadow = active ? '0 0 0 2px rgba(255,255,255,0.5),0 2px 6px rgba(0,0,0,0.5)' : '0 1px 4px rgba(0,0,0,0.35)';
+    btn.style.transform = active ? 'scale(1.2)' : 'scale(1)';
+  });
+  // Update preview
+  const previewDiv = document.getElementById('ninja-color-picker-preview');
+  if (previewDiv) {
+    previewDiv.innerHTML = ninjaStatusCardHTML()
+      .replace(' id="ninja-status-card"', '')
+      .replace(' onclick="NinjaUI.openProfile()"', '')
+      .replace('cursor:pointer;', 'cursor:default;');
+  }
+  if (typeof onNinjaProgressChanged === 'function') onNinjaProgressChanged();
+};
+
+NinjaUI._setTextColorLive = function(element, color) {
+  if (typeof setTextColor === 'function') setTextColor(element, color);
+  // Refresh status card
+  const card = document.getElementById('ninja-status-card');
+  if (card && card.parentElement) {
+    card.parentElement.innerHTML = ninjaStatusCardHTML();
+  }
+  // Refresh hub card
+  const hubCard = document.getElementById('ninja-hub-preview-card');
+  if (hubCard && hubCard.parentElement) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _ninjaHubHeaderHTML();
+    const newCard = tmp.firstChild;
+    if (newCard) {
+      newCard.id = 'ninja-hub-preview-card';
+      hubCard.parentElement.replaceChild(newCard, hubCard);
+    }
+  }
+  // Rebuild color swatch rows
+  const p = progress;
+  const tc = (p.textColors && typeof p.textColors === 'object') ? p.textColors : {};
+  const themeId = p.statusTheme || 'dark';
+  const accent = (NINJA_STATUS_THEMES[themeId] || NINJA_STATUS_THEMES['dark']).accent || '#FFD54F';
+  
+  const colorRows = _TEXT_ELEMENTS.map(el => {
+    const current = (tc && tc[el.key]) || el.def || accent;
+    const swatches = _TEXT_PALETTE.map(c => {
+      const active = current === c || (!tc[el.key] && c === (el.def || accent));
+      return `<button onclick="NinjaUI._setTextColorLive('${el.key}','${c}')" `
+        + `title="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};`
+        + `border:${active ? '3px solid #333' : '2px solid rgba(0,0,0,0.15)'};`
+        + `cursor:pointer;padding:0;flex-shrink:0;`
+        + `box-shadow:${active ? '0 0 0 2px #fff,0 2px 6px rgba(0,0,0,0.4)' : '0 1px 3px rgba(0,0,0,0.2)'};`
+        + `transform:${active ? 'scale(1.2)' : 'scale(1)'};transition:transform 0.15s;">`
+        + `${active ? '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333;font-weight:900;text-shadow:0 1px 2px rgba(255,255,255,0.8);">✓</span>' : ''}</button>`;
+    }).join('');
+    const reset = `<button onclick="NinjaUI._setTextColorLive('${el.key}','')" `
+      + `style="font-size:11px;font-weight:800;color:#555;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.12);`
+      + `border-radius:8px;padding:3px 8px;cursor:pointer;white-space:nowrap;">↺ Reset</button>`;
+    return `<div style="margin-bottom:14px;"><div style="font-size:12px;font-weight:800;color:#333;margin-bottom:6px;">${el.label}</div>`
+      + `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;" id="ninja-tc-row-${el.key}">${swatches}${reset}</div></div>`;
+  }).join('');
+
+  const sect = document.getElementById('ninja-tc-sections');
+  if (sect) sect.innerHTML = colorRows;
+  
+  const previewDiv = document.getElementById('ninja-color-picker-preview');
+  if (previewDiv) {
+    previewDiv.innerHTML = ninjaStatusCardHTML()
+      .replace(' id="ninja-status-card"', '')
+      .replace(' onclick="NinjaUI.openProfile()"', '')
+      .replace('cursor:pointer;', 'cursor:default;');
+  }
+  if (typeof onNinjaProgressChanged === 'function') onNinjaProgressChanged();
+};
+
+NinjaUI._closeColorOverlay = function() {
+  const ov = document.querySelector('.overlay #ninja-color-picker')?.closest('.overlay');
+  if (ov) ov.remove();
+};
+
 // getFamiliarSvg — returns selected Familiar's SVG, or empty string if none chosen.
 function getFamiliarSvg() {
   try {
@@ -4444,7 +4719,7 @@ function renderResults() {
         : `<button class="action-btn ab-retry" onclick="startQuiz(${state.mode})" style="margin-top:24px;">🔄 もう一度 (Try Again)</button>`
       }
       <button class="action-btn ab-primary" onclick="renderModeSelect()">🎯 Change Mode</button>
-      <button class="action-btn ab-menu" onclick="renderHome()">🏠 Top Menu</button>
+      <button class="action-btn ab-menu" onclick="progress.sessionPending = false; ninjaSaveLocal(); renderHome();">🏠 Top Menu</button>
     </div>
   `;
 }
