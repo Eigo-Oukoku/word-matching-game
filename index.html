@@ -21,13 +21,13 @@
   /* ── Responsive scaling: tablet portrait ≥640px, tablet landscape / desktop ≥900px ── */
   @media (min-width: 640px) {
     #game-root { max-width: 640px; padding: 14px 22px; }
-    .choice-btn { font-size: clamp(20px, 2.6vw, 26px) !important; min-height: 70px !important; padding: 16px 12px !important; }
+    .choice-btn { font-size: clamp(36px, 2.6vw, 42px) !important; min-height: 92px !important; padding: 16px 12px !important; }
     .game-title { font-size: clamp(52px, 9vw, 72px) !important; }
   }
   @media (min-width: 900px) {
     #game-root { max-width: 820px; padding: 18px 28px; }
     .choices-grid { gap: 16px !important; }
-    .choice-btn { font-size: clamp(22px, 2.2vw, 30px) !important; min-height: 80px !important; padding: 18px 14px !important; }
+    .choice-btn { font-size: clamp(38px, 2.2vw, 46px) !important; min-height: 100px !important; padding: 18px 14px !important; }
     .level-box { gap: 14px !important; }
     .level-btn { font-size: 19px !important; padding: 18px 8px !important; }
     .game-title { font-size: clamp(60px, 7vw, 80px) !important; }
@@ -155,10 +155,22 @@
   .listen-btn { margin-top: 5px; font-size: 14px; background: #E0F4FF !important; border: 2px solid #7CC3F0; border-radius: 999px; padding: 8px 25px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 0 #7CC3F0; color: #0077B6 !important; }
 
   .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 15px 0; }
-  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(18px, 4.5vw, 24px); background: #ffffff !important; color: #212529 !important; min-height: 60px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
+  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(24px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
   .choice-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #dee2e6; }
   .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
   .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
+
+  /* Adaptive layout classes for flexibility (6+ choices = dense, 8+ = denser) */
+  .choices-grid.dense  { gap: 8px;  margin: 8px 0; }
+  .choices-grid.denser { gap: 6px;  margin: 5px 0; }
+  .choices-grid.dense  .choice-btn { min-height: 64px; padding: 10px 6px; font-size: clamp(31px, 3.8vw, 36px); box-shadow: 0 4px 0 #dee2e6; }
+  .choices-grid.denser .choice-btn { min-height: 56px; padding: 8px 6px;  font-size: clamp(30px, 3.5vw, 34px); box-shadow: 0 3px 0 #dee2e6; border-radius: 14px; }
+  .top-bar.compact-bar { margin-bottom: 5px; }
+  .target-section.compact-target { margin-bottom: 5px; }
+  .target-section.compact-target .word-card { padding: 6px 10px; }
+  .target-section.compact-target .image-frame { width: 76px; height: 76px; margin-bottom: 5px; }
+  .target-section.compact-target .word-img    { width: 68px; height: 68px; }
+
 
   .footer-area { width: 100%; padding-top: 15px; margin-top: 5px; display: flex; flex-direction: column; align-items: center; border-top: 2px solid #f8f9fa; }
   .mascot-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
@@ -590,7 +602,16 @@ function initGame(count, ninja, phantom, speedster) {
   window.scrollTo(0, 0);
   state.choiceCount = count; state.isNinja = ninja; state.isPhantom = phantom;
   state.isSpeedster = speedster; state.isGameOver = false;
-  state.words = shuffle(ALL_WORDS).slice(0, 10);
+  // Use SRS to prioritize weak words from Analysis Scroll
+  var weak = [];
+  try {
+    weak = Ninja.weakWords(window.getNinjaCatalogs(), 10).map(w => w.entry.word);
+  } catch(e) {}
+  if (weak.length < 10) {
+    var remaining = ALL_WORDS.filter(w => !weak.includes(w));
+    weak = weak.concat(shuffle(remaining).slice(0, 10 - weak.length));
+  }
+  state.words = shuffle(weak).slice(0, 10);
   state.round = 0; state.score = 0; state.lives = 3;
   state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
   state.streak = 0; state.sessionBonusXp = 0;
@@ -657,8 +678,20 @@ function nextRound() {
   // Pre-load the NEXT word's audio + image while the player sees this question
   var _nextKey = state.words[state.round + 1] ? getFileKey(state.words[state.round + 1]) : null;
   if (_nextKey) { _preloadAudio(_nextKey); _preloadImage(_nextKey); }
-  const wrongs = shuffle(ALL_WORDS.filter(w => w !== state.current)).slice(0, state.choiceCount - 1);
-  state.choices = shuffle([state.current, ...wrongs]);
+  // Prioritize weak words for distractors too
+  var allWrongs = ALL_WORDS.filter(w => w !== state.current);
+  var wrongs = [];
+  try {
+    var weakOptions = Ninja.weakWords(window.getNinjaCatalogs(), state.choiceCount - 1).map(w => w.entry.word).filter(w => w !== state.current);
+    wrongs = weakOptions.slice(0, state.choiceCount - 1);
+  } catch(e) {}
+  if (wrongs.length < state.choiceCount - 1) {
+    var used = new Set([state.current, ...wrongs]);
+    var random = shuffle(allWrongs.filter(w => !used.has(w))).slice(0, state.choiceCount - 1 - wrongs.length);
+    wrongs = wrongs.concat(random);
+  }
+  const wrongs_final = shuffle(wrongs);
+  state.choices = shuffle([state.current, ...wrongs_final]);
   render();
   if (!state.isPhantom || state.isSpeedster) {
     setTimeout(() => { if (!state.isGameOver) speak(state.current); }, 300);
@@ -753,6 +786,12 @@ function render() {
   const showListen = !state.isNinja && !(state.isPhantom && !state.isSpeedster);
   const scoreText = state.isSpeedster ? `⭐ ${state.score} words` : `⭐ ${state.score} | ${state.round + 1}/10`;
   const footerMsg = state.isSpeedster ? (excited ? 'Hurry!!' : 'Quick! Tap it!') : 'Go for it!';
+  // Adaptive layout: apply compression for many choices
+  const someChoices = state.choiceCount >= 6;  // 6+ choices = dense
+  const manyChoices = state.choiceCount >= 8;  // 8+ choices = denser
+  const gridClass = manyChoices ? 'choices-grid denser' : someChoices ? 'choices-grid dense' : 'choices-grid';
+  const topBarClass = someChoices ? 'top-bar compact-bar' : 'top-bar';
+  const targetClass = someChoices ? 'target-section compact-target' : 'target-section';
   const famHintRow = NinjaUI.familiarHintRowHTML({
     hintAction: 'useHint()',
     hintShown:  false,
@@ -760,7 +799,7 @@ function render() {
     lives:      state.isSpeedster ? null : state.lives,
   });
   document.getElementById('game-area').innerHTML = `
-    <div class="top-bar">
+    <div class="${topBarClass}">
       <button class="menu-btn" onclick="renderWelcome()">🏠 Menu</button>
       <div class="top-bar-mid">
         ${getMuteHTML()}
@@ -768,7 +807,7 @@ function render() {
       <div class="score-pill">${scoreText}</div>
     </div>
     ${timerHTML}
-    <div class="target-section">
+    <div class="${targetClass}">
       <div class="${cardClass}">${cardHTML}</div>
       ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')">🔊 Listen</button>` : ''}
     </div>
@@ -777,7 +816,7 @@ function render() {
          appears right below the question — eigo-ninja parity. -->
     <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
     ${famHintRow}
-    <div class="choices-grid">
+    <div class="${gridClass}">
       ${state.choices.map((w, i) => `<button class="choice-btn" id="btn-${i}" onclick="handleChoice('${w}', ${i})">${w}</button>`).join('')}
     </div>
     ${getFooterHTML(footerMsg, excited)}`;
