@@ -250,7 +250,7 @@
      </div>
      <div id="blitz-jp-card">
        <div id="blitz-stage-badge"></div>
-       <div id="blitz-jp-label">Read &amp; Type in English</div>
+       <div id="blitz-jp-label">Translate to English</div>
        <div id="blitz-jp-text"></div>
        <button class="listen-btn" id="blitz-listen-btn" onclick="blitzListen()">🔊 Listen</button>
      </div>
@@ -968,7 +968,30 @@ function startBlitzTimer() {
 function blitzNextSentence() {
   if(G.round>=G.sentences.length){
     const pool=G.stageId==='M' ? ALL_SENTENCES : SENTENCES[G.stageId];
-    G.sentences=[...G.sentences,...shuffle([...pool]).slice(0,10)];
+    // Use SRS to prioritize weak sentences
+    var weakIdentifiers = [];
+    try {
+      var weakEntries = Ninja.weakWords(window.getNinjaCatalogs(), 10);
+      weakIdentifiers = weakEntries.map(w => w.entry.word);
+    } catch(e) {}
+    
+    // Map identifiers back to full sentence objects
+    var weak = [];
+    for (var i = 0; i < weakIdentifiers.length; i++) {
+      var id = weakIdentifiers[i];
+      var sentence = pool.find(s => (s.audio || s.en) === id);
+      if (sentence && !G.sentences.some(gs => (gs.audio || gs.en) === id)) {
+        weak.push(sentence);
+      }
+    }
+    
+    // Fill remaining slots with random sentences
+    if (weak.length < 10) {
+      var usedSet = new Set([...G.sentences, ...weak].map(s => s.audio || s.en));
+      var remaining = pool.filter(s => !usedSet.has(s.audio || s.en));
+      weak = weak.concat(shuffle(remaining).slice(0, 10 - weak.length));
+    }
+    G.sentences = [...G.sentences, ...shuffle(weak).slice(0, 10)];
   }
   G.currentSentence=G.sentences[G.round];
   G.attemptedWrongThisRound=false;  // reset per-sentence wrong tracker (Type Blitz)
@@ -1088,7 +1111,28 @@ function startGame(level) {
   const _modeLabel = level==='speedster' ? 'Speedmaster' : level==='blitz' ? 'Type Blitz' : 'Sentence Ninja (' + level + ')';
   try { Ninja.setTrainingGame('Sent-N'); Ninja.setTrainingMode(_modeLabel); } catch(e) {}
   const pool=G.stageId==='M' ? ALL_SENTENCES : SENTENCES[G.stageId];
-  G.sentences=shuffle([...pool]).slice(0,ROUNDS_PER_GAME);
+  // Use SRS to prioritize weak sentences from Analysis Scroll
+  var weakIdentifiers = [];
+  try {
+    var weakEntries = Ninja.weakWords(window.getNinjaCatalogs(), ROUNDS_PER_GAME);
+    weakIdentifiers = weakEntries.map(w => w.entry.word);  // Get audio/en identifiers
+  } catch(e) {}
+  
+  // Map identifiers back to full sentence objects from pool
+  var weak = [];
+  for (var i = 0; i < weakIdentifiers.length; i++) {
+    var id = weakIdentifiers[i];
+    var sentence = pool.find(s => (s.audio || s.en) === id);
+    if (sentence) weak.push(sentence);
+  }
+  
+  // Fill remaining slots with random sentences from pool
+  if (weak.length < ROUNDS_PER_GAME) {
+    var weakSet = new Set(weak.map(s => s.audio || s.en));
+    var remaining = pool.filter(s => !weakSet.has(s.audio || s.en));
+    weak = weak.concat(shuffle(remaining).slice(0, ROUNDS_PER_GAME - weak.length));
+  }
+  G.sentences = shuffle(weak).slice(0, ROUNDS_PER_GAME);
 
   if(level==='speedster'){
     G.speedsterTimeLeft=SPEEDSTER_SECS;
@@ -1165,7 +1209,30 @@ function nextRound() {
   if(!isSpeedster && G.lives<=0){ renderEnd(); return; }
   if(isSpeedster && G.round>=G.sentences.length){
     const pool=G.stageId==='M' ? ALL_SENTENCES : SENTENCES[G.stageId];
-    G.sentences=[...G.sentences,...shuffle([...pool]).slice(0,10)];
+    // Use SRS to prioritize weak sentences
+    var weakIdentifiers = [];
+    try {
+      var weakEntries = Ninja.weakWords(window.getNinjaCatalogs(), 10);
+      weakIdentifiers = weakEntries.map(w => w.entry.word);
+    } catch(e) {}
+    
+    // Map identifiers back to full sentence objects
+    var weak = [];
+    for (var i = 0; i < weakIdentifiers.length; i++) {
+      var id = weakIdentifiers[i];
+      var sentence = pool.find(s => (s.audio || s.en) === id);
+      if (sentence && !G.sentences.some(gs => (gs.audio || gs.en) === id)) {
+        weak.push(sentence);
+      }
+    }
+    
+    // Fill remaining slots with random sentences
+    if (weak.length < 10) {
+      var usedSet = new Set([...G.sentences, ...weak].map(s => s.audio || s.en));
+      var remaining = pool.filter(s => !usedSet.has(s.audio || s.en));
+      weak = weak.concat(shuffle(remaining).slice(0, 10 - weak.length));
+    }
+    G.sentences = [...G.sentences, ...shuffle(weak).slice(0, 10)];
   }
 
   pickMascot(G.avatar);
