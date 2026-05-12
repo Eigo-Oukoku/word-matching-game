@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="google" content="notranslate">
+  <meta name="color-scheme" content="light">
+  <title>Word Ninja Vol. 1 - ELKえいご王国</title>
+  <!-- Match eigo-ninja's typography: Bangers (display/hero) + Nunito (UI). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: light; }
+  html, body { background-color: #ffffff !important; color: #2b2d42 !important; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body, html { min-height: 100%; overflow-x: hidden; }
+  #game-root { display: flex; flex-direction: column; align-items: center; max-width: 450px; margin: 0 auto; padding: 10px 15px; }
+  #game-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  /* ── Responsive scaling: tablet portrait ≥640px, tablet landscape / desktop ≥900px ── */
+  @media (min-width: 640px) {
+    #game-root { max-width: 640px; padding: 14px 22px; }
+    .choice-btn { font-size: clamp(28px, 2.6vw, 42px) !important; min-height: 92px !important; padding: 16px 12px !important; }
+    .game-title { font-size: clamp(52px, 9vw, 72px) !important; }
+  }
+  @media (min-width: 900px) {
+    #game-root { max-width: 820px; padding: 18px 28px; }
+    .choices-grid { gap: 16px !important; }
+    .choice-btn { font-size: clamp(30px, 2.2vw, 46px) !important; min-height: 100px !important; padding: 18px 14px !important; }
+    .level-box { gap: 14px !important; }
+    .level-btn { font-size: 19px !important; padding: 18px 8px !important; }
+    .game-title { font-size: clamp(60px, 7vw, 80px) !important; }
+  }
+  /* Landscape tablet: prioritize horizontal space — wider grid columns for 6/8/10 choices */
+  @media (min-width: 768px) and (orientation: landscape) {
+    #game-root { max-width: 880px; }
+  }
+  /* Compact layout for phone landscape (short viewport) */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .home-header { padding: 6px 0 8px !important; }
+    .game-title  { font-size: clamp(28px, 7vh, 38px) !important; }
+    .level-btn   { padding: 10px 5px !important; font-size: clamp(12px, 3vw, 15px) !important; }
+    .level-btn .sub { font-size: 11px !important; }
+    #game-root   { padding: 6px 12px !important; }
+  }
+
+  @keyframes mascotBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  @keyframes bubblePop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes timerPulse { from { opacity: 1; } to { opacity: 0.45; } }
+
+  .start-screen { text-align: center; width: 100%; padding: 10px 0; }
+  .welcome-title { font-size: 40px; font-weight: bold; color: #2b2d42 !important; margin-bottom: 5px; }
+  .vol-tag { font-size: 20px; color: #E63946 !important; font-weight: bold; margin-bottom: 15px; display: block; }
+  /* Eigo-ninja-style hero title — Bangers 64px, with the second word in red.
+     The universal `* { font-family: ... }` selector at the top of this
+     file overrides inherited fonts, so we MUST repeat the font-family
+     on every inner element. */
+  .home-header { text-align: center; padding: 12px 0 14px; }
+  .game-title { font-family: 'Bangers', cursive; font-size: clamp(36px, 10vw, 52px); letter-spacing: 3px; line-height: 1; color: #2b2d42; text-shadow: 4px 4px 0 rgba(0,0,0,0.08); }
+  .game-title span { font-family: 'Bangers', cursive; color: #E63946; }
+  .game-title .vol-mini { display:block; font-family:'Bangers',cursive; font-size:24px; letter-spacing:2px; color:#E63946; margin-top:4px; }
+
+  .level-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  .level-btn {
+    font-size: clamp(13px, 3.8vw, 17px); font-weight: bold; color: #ffffff !important;
+    border: none; border-radius: 15px; padding: 14px 5px; cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.1s; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  .level-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+  .level-btn .sub { font-size: 12px; font-weight: normal; opacity: 0.88; line-height: 1.3; }
+
+  .btn-easy     { background: #2DD368 !important; }
+  .btn-normal   { background: #FFB000 !important; }
+  .btn-hard     { background: #E63946 !important; }
+  .btn-vhard    { background: #8E44AD !important; }
+  .btn-ninja    { background: #2b2d42 !important; }
+  .btn-phantom  { background: #3d5a80 !important; }
+  .btn-speedster {
+    background: linear-gradient(135deg, #FF6B00, #E63946) !important;
+    grid-column: span 2; overflow: hidden; box-shadow: 0 4px 0 #a52000 !important;
+  }
+  .btn-speedster::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(255,255,255,0.08) 6px, rgba(255,255,255,0.08) 12px);
+    pointer-events: none;
+  }
+
+  .util-btn-row { display: flex; gap: 10px; width: 100%; margin-top: 10px; }
+  .util-btn {
+    flex: 1; font-size: 14px; font-weight: bold; border: 2px solid #dee2e6;
+    border-radius: 12px; padding: 11px 6px; cursor: pointer;
+    background: #f8f9fa !important; color: #2b2d42 !important;
+    box-shadow: 0 3px 0 #dee2e6; transition: 0.1s;
+  }
+  .util-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #dee2e6; }
+  .util-btn.links-btn { background: #E0F4FF !important; border-color: #7CC3F0; color: #064E8A !important; box-shadow: 0 3px 0 #7CC3F0; }
+
+  .how-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .how-box {
+    background: white; border-radius: 20px; padding: 20px 18px;
+    max-width: 400px; width: 100%; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+  }
+  .how-title { font-size: 22px; font-weight: bold; color: #E63946; margin-bottom: 12px; text-align: center; }
+  .how-intro { font-size: 13px; color: #444; margin-bottom: 14px; line-height: 1.6; }
+  .how-item { margin-bottom: 10px; }
+  .how-item-title { font-size: 14px; font-weight: bold; color: #2b2d42; margin-bottom: 2px; }
+  .how-item-desc  { font-size: 12px; color: #555; line-height: 1.5; padding-left: 6px; border-left: 3px solid #F5C842; }
+  .how-close { display: block; width: 100%; margin-top: 18px; padding: 12px; font-size: 16px; font-weight: bold; background: #E63946 !important; color: white !important; border: none; border-radius: 12px; cursor: pointer; }
+
+  .links-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .links-box { background: white; border-radius: 20px; padding: 20px 18px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  .links-title { font-size: 20px; font-weight: bold; color: #064E8A; margin-bottom: 14px; text-align: center; }
+  .game-link-btn {
+    display: block; width: 100%; padding: 14px 12px; margin-bottom: 10px;
+    font-size: 15px; font-weight: bold; text-align: center; text-decoration: none;
+    border-radius: 14px; border: none; cursor: pointer;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: 0.1s; color: white !important;
+  }
+  .game-link-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .link-wn2   { background: #3d5a80 !important; }
+  .link-spell { background: #2DD368 !important; }
+  .links-close { display: block; width: 100%; margin-top: 6px; padding: 11px; font-size: 15px; font-weight: bold; background: #f1f3f5 !important; color: #495057 !important; border: 1px solid #dee2e6; border-radius: 12px; cursor: pointer; }
+
+  .top-bar { width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; gap:6px; }
+  .top-bar-mid { display:flex; align-items:center; gap:5px; flex-shrink:0; }
+  .menu-btn { font-size: 15px; font-weight: bold; background: #e9ecef !important; color: #495057 !important; border: 1px solid #ced4da; border-radius: 8px; padding: 6px 12px; cursor: pointer; white-space:nowrap; }
+  .score-pill { font-size:14px; font-weight:bold; background:#FFF3B0 !important; color:#9B5E00 !important; border-radius:999px; padding:4px 12px; border:2px solid #F5C842; white-space:nowrap; }
+
+  .timer-wrap { width: 100%; margin-bottom: 8px; }
+  .timer-label { font-size: 14px; font-weight: bold; color: #E63946; text-align: center; margin-bottom: 3px; }
+  .timer-track { width: 100%; height: 13px; background: #f1f3f5; border-radius: 999px; border: 2px solid #dee2e6; overflow: hidden; }
+  .timer-bar { height: 100%; border-radius: 999px; transition: width 1s linear, background 0.6s linear; }
+  .timer-bar.green  { background: #2DD368; }
+  .timer-bar.yellow { background: #FFB000; }
+  .timer-bar.red    { background: #E63946; animation: timerPulse 0.5s ease infinite alternate; }
+
+  .target-section { text-align:center; margin-bottom: 12px; width: 100%; }
+  .word-card { background:#FFF0F0 !important; border:2px dashed #F4A9A8; border-radius:20px; padding:10px; display:inline-block; width: 100%; max-width: 320px; }
+  .card-ninja-hidden { background: #2b2d42 !important; border-color: #1a1b26 !important; }
+  .card-speedster { background: #FFF4EC !important; border-color: #FFAA80 !important; border-style: solid !important; }
+  .image-frame { width: 100px; height: 100px; background: white !important; border-radius: 15px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #ffebeb; flex-shrink: 0; }
+  .word-img { width: 90px; height: 90px; object-fit: contain; }
+  .target-word { font-size:24px; font-weight:bold; color:#E63946 !important; display: block; min-height: 28px; }
+  .listen-btn { margin-top: 5px; font-size: 14px; background: #E0F4FF !important; border: 2px solid #7CC3F0; border-radius: 999px; padding: 8px 25px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 0 #7CC3F0; color: #0077B6 !important; }
+
+  .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 15px 0; }
+  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(16px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
+  .choice-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #dee2e6; }
+  .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
+  .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
+
+  /* Adaptive layout classes for flexibility (6+ choices = dense, 8+ = denser) */
+  .choices-grid.dense  { gap: 8px;  margin: 8px 0; }
+  .choices-grid.denser { gap: 6px;  margin: 5px 0; }
+  .choices-grid.dense  .choice-btn { min-height: 64px; padding: 10px 6px; font-size: clamp(23px, 3.8vw, 36px); box-shadow: 0 4px 0 #dee2e6; }
+  .choices-grid.denser .choice-btn { min-height: 56px; padding: 8px 6px;  font-size: clamp(22px, 3.5vw, 34px); box-shadow: 0 3px 0 #dee2e6; border-radius: 14px; }
+  .top-bar.compact-bar { margin-bottom: 5px; }
+  .target-section.compact-target { margin-bottom: 5px; }
+  .target-section.compact-target .word-card { padding: 6px 10px; }
+  .target-section.compact-target .image-frame { width: 76px; height: 76px; margin-bottom: 5px; }
+  .target-section.compact-target .word-img    { width: 68px; height: 68px; }
+
+
+  .footer-area { width: 100%; padding-top: 15px; margin-top: 5px; display: flex; flex-direction: column; align-items: center; border-top: 2px solid #f8f9fa; }
+  .mascot-row { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
+  .footer-mascot-svg { width: 56px; height: 56px; margin-right: 8px; animation: mascotBounce 2s infinite ease-in-out; }
+  .mascot-excited { animation-duration: 0.4s !important; }
+  .mascot-bubble { background: #f8f9fa !important; padding: 6px 15px; border-radius: 12px; font-size: 15px; font-weight: bold; color: #343a40 !important; border: 1px solid #dee2e6; animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .brand-footer { font-weight: bold; color: #6A5ACD !important; font-size: 24px; letter-spacing: 1px; }
+  /* ── Mute button (inline in top-bar / util row) ─────── */
+  .mute-btn { background:white; border:2px solid #dee2e6; border-radius:50%; width:32px; height:32px; font-size:15px; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; transition:0.15s; padding:0; flex-shrink:0; }
+  .mute-btn:active { transform:scale(0.9); }
+  .mute-btn.muted  { background:#FFE5E7; border-color:#E63946; }
+</style>
+</head>
+<body>
+<div id="game-root"><div id="game-area"></div></div>
+
+<!-- How to Play Overlay -->
+<div class="how-overlay" id="how-overlay" style="display:none;" onclick="if(event.target===this)closeHow()">
+  <div class="how-box">
+    <div class="how-title">🥷 忍びの心得 — Word Ninja</div>
+    <p class="how-intro">Choose your level and aim to become an English Ninja! Select the correct English word from the choices shown. 自分に合ったレベルを選んで英語忍者を目指すことができます!</p>
+    <div class="how-item">
+      <div class="how-item-title">🟢 Easy <span style="font-weight:normal;color:#555;">— Choose from 4 options</span></div>
+      <div class="how-item-desc">Pick the correct English word from 4 choices.(4つの選択肢から正しい英単語を選びます。)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🟡 Normal <span style="font-weight:normal;color:#555;">— Choose from 6 options</span></div>
+      <div class="how-item-desc">Pick the correct word from 6 choices.(6つの選択肢から選びます。)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🔴 Hard <span style="font-weight:normal;color:#555;">— Choose from 8 options</span></div>
+      <div class="how-item-desc">Pick the correct word from 8 choices.(8つの選択肢から選びます。)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🟣 Very Hard <span style="font-weight:normal;color:#555;">— Choose from 10 options</span></div>
+      <div class="how-item-desc">10 choices appear — can you find the right one?!(10個もの選択肢が登場します!)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🥷 Ninja Mode <span style="font-weight:normal;color:#555;">— Listen only</span></div>
+      <div class="how-item-desc">Use only the audio to find the correct word. No text shown!(「音」だけを頼りに、正しい単語を当てます。)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">👻 Phantom Mode <span style="font-weight:normal;color:#555;">— Picture only</span></div>
+      <div class="how-item-desc">Look at the illustration only and find the correct word.(イラストだけを見て、正しい単語を当てます。)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">⚡ Speedster Mode <span style="font-weight:normal;color:#555;">— 20 second challenge</span></div>
+      <div class="how-item-desc">How many words can you get right in 20 seconds?(20秒間で何単語正解できるかな?)</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">⭐ XP per Question — モードごとの経験値</div>
+      <div class="how-item-desc">Easy: 7 &nbsp;/ Normal: 10 &nbsp;/ Hard: 14 &nbsp;/ Very Hard: 17<br>
+      Ninja &amp; Phantom: 21 &nbsp;/ Speedster: 3 + rank bonus (+5/+10/+20)<br>
+      ※ Streak and first-time bonuses are added automatically.<br>
+      連続正解・初正解ボーナスXPが自動で加算されます。</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">📊 Status Card — ステータスカード</div>
+      <div class="how-item-desc"><b>Lv.</b> — Earn XP to level up (up to Lv. 1000!).<br>
+      経験値を貯めてレベルアップ！最大Lv.1000まで成長。<br>
+      <b>ACC</b> — Accuracy: correct-answer rate across all attempts.<br>
+      正答率。これまでの全解答に対する正解の割合。<br>
+      <b>Streak 🔥</b> — Consecutive correct answers = bonus XP!<br>
+      連続正解数。長いほどボーナスXPが加算されます。</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">📜 Shadow Clone Scroll — 分身の書</div>
+      <div class="how-item-desc">Save all ninja data (level, name, design) as an encrypted code.<br>
+      Works across every game in the Ninja series.<br>
+      レベル・名前・キャラデザインを暗号化して保存・復元。<br>
+      シリーズ全ゲームで同じ忍者データを引き継げます。</div>
+    </div>
+    <div class="how-item">
+      <div class="how-item-title">🎯 Analysis Scroll — 分析の巻物</div>
+      <div class="how-item-desc">Records words you answered wrong or slowly for focused review.<br>
+      <b>ACC</b> = Accuracy (正答率) &nbsp;·&nbsp; <b>SRS</b> = Review weight / 復習の重み<br>
+      間違えた・時間がかかった単語を記録し、出題頻度を自動調整。<br>
+      Copy / CSVエクスポートにも対応しています。</div>
+    </div>
+        <button class="how-close" onclick="closeHow()">Got it! Let's play 🎉</button>
+  </div>
+</div>
+
+<!-- Other Games Overlay -->
+<div class="links-overlay" id="links-overlay" style="display:none;" onclick="if(event.target===this)closeLinks()">
+  <div class="links-box">
+    <div class="links-title">🎮 Other Games</div>
+    <!-- ↓↓ リンクをここに入れてください ↓↓ -->
+    <a class="game-link-btn link-wn2" href="https://eigo-oukoku.github.io/Eigo-Ninja/game2">🥷 Word Ninja Vol. 2</a>
+    <a class="game-link-btn link-spell" href="https://eigo-oukoku.github.io/Eigo-Ninja/spelling-ninja">✍️ Spelling Ninja</a>
+    <a class="game-link-btn link-sn" href="https://eigo-oukoku.github.io/Eigo-Ninja/sentence-ninja" style="background:#FF8FA3 !important;">💬 Sentence Ninja</a>
+    <a class="game-link-btn link-en" href="https://eigo-oukoku.github.io/Eigo-Ninja/eigo-ninja" style="background:#6A5ACD !important;">📚 Eigo-Ninja (Vocab Quiz)</a>
+    <!-- ↑↑ リンクをここに入れてください ↑↑ -->
+    <button class="links-close" onclick="closeLinks()">Close</button>
+  </div>
+</div>
+
+<!-- Ninja shared progression modules (cross-game character + scroll system).
+     ninja-core.js  : data manager, scroll codec (NINJA1.* — backward compatible
+                      with eigo-ninja's Shadow Clone Scroll), XP/level math,
+                      Analysis Scroll memory, character-maker assets.
+     ninja-ui.js    : profile chip, design picker, Analysis Scroll modal,
+                      Shadow Clone Scroll modal, name-lock modal. -->
+<script src="ninja-core.js"></script>
+<script src="ninja-ui.js"></script>
+<script>
+// ── Configure Ninja for THIS game ──
+// xpMultiplier 0.5 = Word Ninja gets 50% of eigo-ninja's per-correct XP.
+// storageKey is per-game; the shared key (ninja_shared_word_memory_v1) is
+// what carries level/exp between games.
+Ninja.configure({
+  gameId:          'word-ninja-v1',
+  storageKey:      'word_ninja_v1_progress_v1',
+  xpMultiplier:    0.5,
+  slowMs:          8000,           // multi-choice → 8 s = "thinking too long"
+  imagePathPrefix: 'images/',
+  gameLabel:       'Word Ninja Vol.1',
+});
+Ninja.boot();
+// Refresh the home screen whenever the user changes their name / loads a
+// scroll / picks a new design — keeps the profile chip in sync.
+window.onNinjaProgressChanged = function () { try { renderWelcome(); } catch (e) {} };
+
+function openHow()   { document.getElementById('how-overlay').style.display='flex'; }
+function closeHow()  { document.getElementById('how-overlay').style.display='none'; }
+function openLinks() { document.getElementById('links-overlay').style.display='flex'; }
+function closeLinks(){ document.getElementById('links-overlay').style.display='none'; }
+
+// ── Click sound for menu/level/mode/link interactions ─────────────────
+// ── Mute ──────────────────────────────────────────────────────────────
+let _muted = localStorage.getItem('ninja_muted') === '1';
+function toggleMute() {
+  _muted = !_muted;
+  localStorage.setItem('ninja_muted', _muted ? '1' : '0');
+  document.querySelectorAll('.mute-btn').forEach(function(btn) {
+    btn.textContent = _muted ? '🔇' : '🔊'; btn.classList.toggle('muted', _muted);
+  });
+}
+function getMuteHTML() {
+  return `<button class="mute-btn${_muted?' muted':''}" onclick="toggleMute()" aria-label="Toggle sound">${_muted?'🔇':'🔊'}</button>`;
+}
+
+// ── WebAudio SFX Engine + HTMLAudio フォールバック ────────────────────────
+// WebAudio: iOS Safari/Chrome 向け遅延ゼロ再生
+// HTMLAudio fallback: WebAudio バッファ未ロード時 / fetch ブロック時の保険
+var _sfxCtx = null;
+var _sfxBufs = {};
+var _sfxFallback = {};
+function _getSfxCtx() {
+  if (!_sfxCtx) _sfxCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _sfxCtx;
+}
+function _decodeAB(ctx, ab) {
+  return new Promise(function(resolve, reject) { ctx.decodeAudioData(ab, resolve, reject); });
+}
+(function() {
+  var SE = ['clickysound','correctsound','wrongsound','hintsound'];
+  SE.forEach(function(name) {
+    var fa = new Audio('audio/' + name + '.mp3');
+    fa.preload = 'auto';
+    _sfxFallback[name] = fa;
+  });
+  var ctx = _getSfxCtx();
+  SE.forEach(function(name) {
+    fetch('audio/' + name + '.mp3')
+      .then(function(r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function(ab) { return _decodeAB(ctx, ab); })
+      .then(function(buf) { _sfxBufs[name] = buf; })
+      .catch(function() {});
+  });
+})();
+function _playSfx(name) {
+  if (_muted) return;
+  var ctx = _sfxCtx, buf = _sfxBufs[name];
+  if (ctx && buf) {
+    function _doPlay() {
+      try {
+        var src = ctx.createBufferSource();
+        src.buffer = buf; src.connect(ctx.destination); src.start(0);
+      } catch(e) {}
+    }
+    if (ctx.state === 'running') { _doPlay(); }
+    else { ctx.resume().then(_doPlay).catch(function(){}); }
+  } else {
+    var fa = _sfxFallback[name];
+    if (!fa) return;
+    try { fa.currentTime = 0; fa.play().catch(function(){}); } catch(e) {}
+  }
+}
+
+// ── Word audio (Promise-based blob URL cache + new Audio) ─────────────────
+const _wordBlobUrls = {};
+const _wordLoadProm = {};
+function _preloadAudio(key) {
+  if (!key) return Promise.resolve(null);
+  if (key in _wordBlobUrls) return Promise.resolve(_wordBlobUrls[key] || null);
+  if (_wordLoadProm[key]) return _wordLoadProm[key];
+  _wordLoadProm[key] = fetch('audio/' + key + '.mp3')
+    .then(function(r) { if (!r.ok) throw 0; return r.blob(); })
+    .then(function(blob) { _wordBlobUrls[key] = URL.createObjectURL(blob); return _wordBlobUrls[key]; })
+    .catch(function() { _wordBlobUrls[key] = ''; return null; });
+  return _wordLoadProm[key];
+}
+const _imageCache = {};
+function _preloadImage(key) {
+  if (!key || _imageCache[key]) return;
+  const img = new Image();
+  img.src = `images/${key}.png`;
+  _imageCache[key] = img;
+}
+
+function playClick() { _playSfx('clickysound'); }
+document.addEventListener('click', function(ev){
+  const sel = '.level-btn, .util-btn, .menu-btn, .game-link-btn, .links-close, .how-close';
+  if (ev.target.closest(sel)) playClick();
+}, true);
+
+const ANIMALS = {
+  fox: `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="10,28 4,8 20,20" fill="#E8601C"/><polygon points="12,26 7,12 19,21" fill="#F7C59F"/><polygon points="54,28 60,8 44,20" fill="#E8601C"/><polygon points="52,26 57,12 45,21" fill="#F7C59F"/><ellipse cx="32" cy="34" rx="20" ry="18" fill="#E8601C"/><ellipse cx="32" cy="38" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="40" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="25" cy="30" r="2" fill="#222"/><circle cx="41" cy="30" r="2" fill="#222"/><circle cx="25.8" cy="29.2" r="0.7" fill="white"/><circle cx="41.8" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="37" rx="3" ry="2" fill="#222"/><path d="M29 40 Q32 43 35 40" stroke="#222" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/><ellipse cx="44" cy="36" rx="4" ry="2.5" fill="#F4956A" opacity="0.5"/></svg>`,
+  bear: `<svg viewBox="0 0 64 64" width="56" height="56"><circle cx="16" cy="20" r="8" fill="#8B5E3C"/><circle cx="48" cy="20" r="8" fill="#8B5E3C"/><circle cx="16" cy="20" r="5" fill="#C49A6C"/><circle cx="48" cy="20" r="5" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="40" rx="14" ry="12" fill="#C49A6C"/><ellipse cx="23" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="41" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="24" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="42" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="24.8" cy="30.2" r="0.8" fill="white"/><circle cx="42.8" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="39" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M28.5 43 Q32 46.5 35.5 43" stroke="#5C3317" stroke-width="1.4" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/><ellipse cx="44" cy="37" rx="4.5" ry="2.5" fill="#E07A8A" opacity="0.45"/></svg>`,
+  bunny: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="22" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="42" cy="14" rx="5" ry="12" fill="#F2C9D8"/><ellipse cx="22" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="42" cy="14" rx="3" ry="9" fill="#F7A8BF"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F2C9D8"/><ellipse cx="32" cy="40" rx="13" ry="10" fill="white"/><ellipse cx="24" cy="31" rx="3.8" ry="4.2" fill="white"/><ellipse cx="40" cy="31" rx="3.8" ry="4.2" fill="white"/><circle cx="24.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="40.5" cy="31" r="2.3" fill="#5B3A8A"/><circle cx="25.2" cy="30.2" r="0.7" fill="white"/><circle cx="41.2" cy="30.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="2.5" ry="1.8" fill="#F08CA0"/><path d="M29 41 Q32 44 35 41" stroke="#C06070" stroke-width="1.2" fill="none" stroke-linecap="round"/><ellipse cx="21" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/><ellipse cx="43" cy="37" rx="4" ry="2.2" fill="#F7A8BF" opacity="0.6"/></svg>`
+};
+
+// ── Familiar SVGs (all 18 familiars + 3 existing ANIMALS aliases) ─────────
+// Stored as window.FAMILIAR_SVGS so NinjaUI's _famOverlayHTML / _famCardSvg
+// can access them via global.FAMILIAR_SVGS. viewBox="0 0 64 64" throughout.
+const FAMILIAR_SVGS = {
+  // ── daily (always available) ─────────────────────────────────────────
+  fox:     ANIMALS.fox,
+  bear:    ANIMALS.bear,
+  bunny:   ANIMALS.bunny,
+  dog:     `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="8" ry="11" fill="#C49A6C" transform="rotate(15 46 20)"/><ellipse cx="18" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(-15 18 20)"/><ellipse cx="46" cy="20" rx="5" ry="8" fill="#E8C99A" transform="rotate(15 46 20)"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#E8C99A"/><ellipse cx="25" cy="31" rx="4" ry="4" fill="white"/><ellipse cx="39" cy="31" rx="4" ry="4" fill="white"/><circle cx="25.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="39.5" cy="31" r="2.5" fill="#3a1800"/><circle cx="26.2" cy="30.2" r="0.8" fill="white"/><circle cx="40.2" cy="30.2" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 42 Q32 45.5 35 42" stroke="#5C3317" stroke-width="1.3" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/><ellipse cx="44" cy="37" rx="4" ry="2.5" fill="#E07A8A" opacity="0.4"/></svg>`,
+  cat:     `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="15,18 22,5 29,20" fill="#888"/><polygon points="49,18 42,5 35,20" fill="#888"/><polygon points="17,17 22,9 27,18" fill="#FFC0CB"/><polygon points="47,17 42,9 37,18" fill="#FFC0CB"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#888"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#ccc"/><ellipse cx="24" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="40" cy="30" rx="5" ry="5" fill="#90EE90"/><ellipse cx="24" cy="30" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="40" cy="30" rx="2" ry="4" fill="#1a1a2e"/><circle cx="24.5" cy="29" r="0.8" fill="white"/><circle cx="40.5" cy="29" r="0.8" fill="white"/><polygon points="32,37 30,39.5 34,39.5" fill="#FF9999"/><path d="M29 40.5 Q32 43 35 40.5" stroke="#777" stroke-width="1" fill="none"/><line x1="13" y1="38" x2="26" y2="39" stroke="#666" stroke-width="0.8"/><line x1="13" y1="40.5" x2="26" y2="40.5" stroke="#666" stroke-width="0.8"/><line x1="38" y1="39" x2="51" y2="38" stroke="#666" stroke-width="0.8"/><line x1="38" y1="40.5" x2="51" y2="40.5" stroke="#666" stroke-width="0.8"/></svg>`,
+  squirrel:`<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="47" cy="22" rx="13" ry="19" fill="#C87941"/><ellipse cx="45" cy="23" rx="9" ry="14" fill="#E8A86A"/><ellipse cx="20" cy="14" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="35" cy="12" rx="5" ry="7" fill="#8B5E3C"/><ellipse cx="20" cy="14" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="35" cy="12" rx="3" ry="5" fill="#F7C59F"/><ellipse cx="26" cy="37" rx="16" ry="18" fill="#8B5E3C"/><ellipse cx="26" cy="41" rx="10" ry="11" fill="#F7C59F"/><ellipse cx="20" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="32" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="21" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="33" cy="31" r="2.5" fill="#1a1a2e"/><circle cx="21.7" cy="30.2" r="0.7" fill="white"/><circle cx="33.7" cy="30.2" r="0.7" fill="white"/><ellipse cx="26" cy="40" rx="2.5" ry="1.8" fill="#8B4513"/></svg>`,
+  raccoon: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="18" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="46" cy="17" rx="7" ry="8" fill="#888"/><ellipse cx="18" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="46" cy="17" rx="4" ry="5" fill="#fff"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#999"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff"/><ellipse cx="23" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="41" cy="30" rx="6.5" ry="5.5" fill="#333" opacity="0.8"/><ellipse cx="23" cy="30" rx="4" ry="4" fill="white"/><ellipse cx="41" cy="30" rx="4" ry="4" fill="white"/><circle cx="23.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="41.5" cy="30" r="2.5" fill="#1a1a2e"/><circle cx="24.2" cy="29.2" r="0.7" fill="white"/><circle cx="42.2" cy="29.2" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#333"/><path d="M29 41 Q32 44 35 41" stroke="#555" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  deer:    `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="20" x2="12" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="12" y1="5" x2="8" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="5" x2="17" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="44" y1="20" x2="52" y2="5" stroke="#8B5E3C" stroke-width="3" stroke-linecap="round"/><line x1="52" y1="5" x2="56" y2="12" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><line x1="52" y1="5" x2="47" y2="11" stroke="#8B5E3C" stroke-width="2" stroke-linecap="round"/><ellipse cx="17" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="47" cy="22" rx="6" ry="9" fill="#C49A6C"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#C49A6C"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#F7C59F"/><ellipse cx="24" cy="31" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="31" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="41" cy="31.5" r="2.8" fill="#3a1800"/><circle cx="25.8" cy="30.5" r="0.8" fill="white"/><circle cx="41.8" cy="30.5" r="0.8" fill="white"/><ellipse cx="32" cy="38.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/><ellipse cx="45" cy="37" rx="4" ry="2.5" fill="#FFC0CB" opacity="0.5"/></svg>`,
+  // ── japanese (Lv 4/8/16) ─────────────────────────────────────────────
+  tanuki:  `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="9" rx="10" ry="6" fill="#4CAF50" transform="rotate(-12 32 9)"/><line x1="32" y1="13" x2="32" y2="19" stroke="#388E3C" stroke-width="1.5"/><circle cx="16" cy="20" r="7" fill="#8B5E3C"/><circle cx="48" cy="20" r="7" fill="#8B5E3C"/><ellipse cx="32" cy="39" rx="22" ry="20" fill="#8B5E3C"/><ellipse cx="32" cy="43" rx="16" ry="12" fill="#F7C59F"/><ellipse cx="23" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="41" cy="30" rx="5" ry="4.5" fill="#333" opacity="0.85"/><ellipse cx="23" cy="30" rx="3.5" ry="3.5" fill="white"/><ellipse cx="41" cy="30" rx="3.5" ry="3.5" fill="white"/><circle cx="23.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="41.5" cy="30.5" r="2" fill="#1a1a2e"/><circle cx="24.2" cy="29.8" r="0.6" fill="white"/><circle cx="42.2" cy="29.8" r="0.6" fill="white"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#5C3317"/><path d="M29 41 Q32 44.5 35 41" stroke="#5C3317" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`,
+  crane:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="39" rx="18" ry="16" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="24" rx="6" ry="12" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="14" rx="8" ry="8" fill="white" stroke="#ddd" stroke-width="0.5"/><ellipse cx="32" cy="10" rx="5" ry="3" fill="#E63946"/><polygon points="32,12 41,14 32,17" fill="#e8a000"/><circle cx="35" cy="14" r="2.5" fill="white" stroke="#ddd" stroke-width="0.5"/><circle cx="35.5" cy="14" r="1.5" fill="#1a1a2e"/><circle cx="36" cy="13.5" r="0.5" fill="white"/><ellipse cx="16" cy="41" rx="10" ry="6" fill="#444" transform="rotate(-20 16 41)"/><ellipse cx="48" cy="41" rx="10" ry="6" fill="#444" transform="rotate(20 48 41)"/><line x1="28" y1="55" x2="24" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="55" x2="40" y2="62" stroke="#E8A000" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  eagle:   `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="10" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(-15 10 33)"/><ellipse cx="54" cy="33" rx="13" ry="8" fill="#8B5E3C" transform="rotate(15 54 33)"/><ellipse cx="32" cy="39" rx="14" ry="15" fill="#8B5E3C"/><circle cx="32" cy="21" r="11" fill="white"/><polygon points="32,23 42,21 32,26" fill="#FFB000"/><circle cx="37" cy="20" r="3" fill="#FFB000"/><circle cx="37.5" cy="20" r="2" fill="#1a1a2e"/><circle cx="38" cy="19.5" r="0.6" fill="white"/><ellipse cx="32" cy="53" rx="8" ry="5" fill="white"/></svg>`,
+  // ── fantasy (Lv 32/64/128/256) ──────────────────────────────────────
+  dragon:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="22,16 18,3 24,14" fill="#FFD700"/><polygon points="42,16 46,3 40,14" fill="#FFD700"/><ellipse cx="32" cy="39" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="27" rx="18" ry="14" fill="#2aab8a"/><ellipse cx="32" cy="35" rx="10" ry="7" fill="#3acca0"/><ellipse cx="22" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="42" cy="24" rx="5" ry="5" fill="#FFD700"/><ellipse cx="22" cy="24" rx="2" ry="4" fill="#1a1a2e"/><ellipse cx="42" cy="24" rx="2" ry="4" fill="#1a1a2e"/><circle cx="22.5" cy="23" r="0.7" fill="white"/><circle cx="42.5" cy="23" r="0.7" fill="white"/><circle cx="29" cy="35" r="1.5" fill="#1a7a5e"/><circle cx="35" cy="35" r="1.5" fill="#1a7a5e"/><line x1="11" y1="33" x2="26" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/><line x1="53" y1="33" x2="38" y2="36" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  phoenix: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="32" cy="51" rx="10" ry="11" fill="#FF6B00" opacity="0.7"/><ellipse cx="20" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="44" cy="49" rx="7" ry="9" fill="#FF8C00" opacity="0.6"/><ellipse cx="11" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(-25 11 29)"/><ellipse cx="53" cy="29" rx="14" ry="8" fill="#FF8C00" transform="rotate(25 53 29)"/><ellipse cx="9" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(-25 9 27)"/><ellipse cx="55" cy="27" rx="10" ry="5" fill="#FFD700" opacity="0.8" transform="rotate(25 55 27)"/><ellipse cx="32" cy="35" rx="16" ry="14" fill="#E63946"/><circle cx="32" cy="20" r="11" fill="#E63946"/><polygon points="32,10 28,4 32,8 36,4" fill="#FFD700"/><polygon points="30,20 40,18 30,25" fill="#FFD700"/><circle cx="35" cy="19" r="3" fill="#FFD700"/><circle cx="35.5" cy="19" r="2" fill="#1a1a2e"/><circle cx="36" cy="18.5" r="0.6" fill="white"/></svg>`,
+  griffin: `<svg viewBox="0 0 64 64" width="56" height="56"><!-- wings --><path d="M32,33 Q18,23 6,25 Q14,31 32,35Z" fill="#8B5E3C"/><path d="M32,33 Q46,23 58,25 Q50,31 32,35Z" fill="#8B5E3C"/><path d="M32,33 Q18,21 4,21 Q12,29 32,35Z" fill="#A0724A" opacity="0.7"/><path d="M32,33 Q46,21 60,21 Q52,29 32,35Z" fill="#A0724A" opacity="0.7"/><!-- rear lion legs (behind body) --><path d="M19,49 Q16,54 17,61" stroke="#B8895E" stroke-width="5.5" stroke-linecap="round" fill="none"/><ellipse cx="17" cy="61" rx="5" ry="2.5" fill="#9A6E3A"/><path d="M26,50 Q23,55 24,61" stroke="#C49A6C" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="24" cy="61" rx="5" ry="2.5" fill="#A07840"/><!-- lion body --><ellipse cx="32" cy="41" rx="18" ry="12" fill="#C49A6C"/><!-- eagle front talons --><line x1="38" y1="52" x2="36" y2="61" stroke="#6B4226" stroke-width="3.5" stroke-linecap="round"/><line x1="36" y1="61" x2="32" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="61" x2="36" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="36" y1="61" x2="40" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="44" y1="51" x2="43" y2="61" stroke="#6B4226" stroke-width="3.5" stroke-linecap="round"/><line x1="43" y1="61" x2="39" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="43" y1="61" x2="43" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><line x1="43" y1="61" x2="47" y2="63" stroke="#6B4226" stroke-width="2.5" stroke-linecap="round"/><!-- eagle head --><circle cx="32" cy="25" r="14" fill="#8B5E3C"/><circle cx="32" cy="21" r="10" fill="white"/><polygon points="32,23 41,19 32,28" fill="#FFB000"/><circle cx="36" cy="19" r="2.8" fill="#FFD700"/><circle cx="36.5" cy="19" r="1.9" fill="#1a1a2e"/><circle cx="37" cy="18.5" r="0.55" fill="white"/></svg>`,
+  unicorn: `<svg viewBox="0 0 64 64" width="56" height="56"><defs><linearGradient id="ugh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF6B6B"/><stop offset="50%" stop-color="#FFD700"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs><ellipse cx="32" cy="40" rx="18" ry="16" fill="#F8F8FF"/><ellipse cx="32" cy="25" rx="9" ry="13" fill="#F8F8FF"/><ellipse cx="32" cy="16" rx="12" ry="10" fill="#F8F8FF"/><polygon points="32,4 28,18 36,18" fill="url(#ugh)"/><ellipse cx="22" cy="20" rx="6" ry="11" fill="#F48FB1" opacity="0.8"/><ellipse cx="20" cy="22" rx="4" ry="9" fill="#A78BFA" opacity="0.7"/><ellipse cx="37" cy="16" rx="4" ry="4" fill="#A78BFA"/><circle cx="37.5" cy="16" r="2.5" fill="#1a1a2e"/><circle cx="38.2" cy="15.3" r="0.8" fill="white"/><ellipse cx="42" cy="20" rx="6" ry="4" fill="#F8F8FF"/><ellipse cx="40" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><ellipse cx="44" cy="21" rx="1.5" ry="1" fill="#F4A0C0"/><circle cx="10" cy="12" r="1.5" fill="#FFD700" opacity="0.8"/><circle cx="54" cy="20" r="1.5" fill="#FF6B6B" opacity="0.8"/></svg>`,
+  // ── mythic (Lv 50/100/150) ────────────────────────────────────────────
+  kitsune: `<svg viewBox="0 0 64 64" width="56" height="56"><ellipse cx="44" cy="48" rx="12" ry="7" fill="#F5D769" transform="rotate(-30 44 48)"/><ellipse cx="50" cy="43" rx="12" ry="7" fill="#FFE599" transform="rotate(-10 50 43)"/><ellipse cx="50" cy="36" rx="12" ry="7" fill="#F5D769" transform="rotate(10 50 36)"/><polygon points="14,22 10,4 22,18" fill="#F5D769"/><polygon points="50,22 54,4 42,18" fill="#F5D769"/><polygon points="15,21 11,8 21,18" fill="#fff5cc"/><polygon points="49,21 53,8 43,18" fill="#fff5cc"/><ellipse cx="32" cy="36" rx="20" ry="19" fill="#F5D769"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#fff5cc"/><ellipse cx="24" cy="30" rx="4" ry="4.5" fill="white"/><ellipse cx="40" cy="30" rx="4" ry="4.5" fill="white"/><circle cx="25" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="41" cy="30.5" r="2.5" fill="#7C3AED"/><circle cx="25.7" cy="29.7" r="0.7" fill="white"/><circle cx="41.7" cy="29.7" r="0.7" fill="white"/><ellipse cx="32" cy="37.5" rx="3" ry="2" fill="#8B5E3C"/><ellipse cx="19" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/><ellipse cx="45" cy="36" rx="4" ry="2" fill="#A78BFA" opacity="0.5"/></svg>`,
+  kirin:   `<svg viewBox="0 0 64 64" width="56" height="56"><line x1="20" y1="18" x2="12" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="4" r="3" fill="#FFD700"/><line x1="12" y1="4" x2="8" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="10" r="2" fill="#FFD700"/><line x1="44" y1="18" x2="52" y2="4" stroke="#2aab8a" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="4" r="3" fill="#FFD700"/><line x1="52" y1="4" x2="56" y2="10" stroke="#2aab8a" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="10" r="2" fill="#FFD700"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#1a7a5e"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="#3acca0"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#FFD700"/><circle cx="24.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="40.5" cy="30.5" r="2.5" fill="#1a1a2e"/><circle cx="25.2" cy="29.8" r="0.7" fill="white"/><circle cx="41.2" cy="29.8" r="0.7" fill="white"/><ellipse cx="32" cy="38" rx="3" ry="2" fill="#0d5e48"/><ellipse cx="32" cy="36" rx="21" ry="19" fill="none" stroke="#FFD700" stroke-width="1" opacity="0.6"/></svg>`,
+  raijuu:  `<svg viewBox="0 0 64 64" width="56" height="56"><polygon points="32,2 28,12 20,8 26,16 16,14 24,20 16,22 26,24 18,30 28,28 24,36 32,30 40,36 36,28 46,30 38,22 48,20 40,16 50,14 42,8 38,12" fill="#FFD700" opacity="0.25"/><polygon points="18,20 14,5 26,18" fill="#e0e0e0"/><polygon points="46,20 50,5 38,18" fill="#e0e0e0"/><polygon points="19,19 16,9 25,18" fill="#FFD700" opacity="0.6"/><polygon points="45,19 48,9 39,18" fill="#FFD700" opacity="0.6"/><ellipse cx="32" cy="36" rx="20" ry="18" fill="#e0e0e0"/><ellipse cx="32" cy="40" rx="13" ry="11" fill="white"/><ellipse cx="24" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><ellipse cx="40" cy="30" rx="4.5" ry="4.5" fill="#00BFFF"/><circle cx="24.5" cy="30.5" r="2.5" fill="white"/><circle cx="40.5" cy="30.5" r="2.5" fill="white"/><circle cx="24" cy="30.5" r="1.5" fill="#1a1a2e"/><circle cx="40" cy="30.5" r="1.5" fill="#1a1a2e"/><ellipse cx="32" cy="38" rx="3.5" ry="2.5" fill="#666"/><path d="M29 41 Q32 44 35 41" stroke="#888" stroke-width="1.2" fill="none" stroke-linecap="round"/><polyline points="18,35 20,38 18,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/><polyline points="46,35 44,38 46,41" stroke="#FFD700" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+};
+window.FAMILIAR_SVGS = FAMILIAR_SVGS;
+
+const ALL_WORDS = ["four","five","nine","ten","pants","handkerchief","cap","towel","hairbrush","mirror","knife","fork","glass","plate","dish","train","helicopter"];
+
+const SPEEDSTER_SECONDS = 20;
+
+let state = {
+  round: 0, score: 0, lives: 3, words: [], current: null, choices: [],
+  choiceCount: 4, isNinja: false, isPhantom: false, revealed: false,
+  isGameOver: false, avatar: 'fox',
+  isSpeedster: false, speedsterTimeLeft: SPEEDSTER_SECONDS, speedsterInterval: null,
+  // ── Analysis Scroll bookkeeping (added per Ninja master spec) ──
+  // mistakes:  words the user got wrong this session
+  // unanswered: Speedster only — words that were on screen when time ran out
+  //             AND the user didn't pick anything ("attempted but timed out").
+  // currentStartedAt: ms timestamp when state.current was shown (for SRS slow-tracking).
+  // streak:    consecutive correct-answer count this session (resets on wrong)
+  //            — feeds into Ninja.calculateAnswerExp for the streak bonus.
+  // sessionBonusXp: total per-question bonus XP earned this session
+  //                 (firstTime / recovered / streak). Surfaced on results.
+  mistakes: [], unanswered: [], currentStartedAt: 0,
+  streak: 0, sessionBonusXp: 0,
+  // ── Per-round wrong-attempt flag ──
+  // Word Ninja keeps the same word on screen until the player clicks the
+  // correct option. If the player clicks a wrong option first and then
+  // the right one in THE SAME question, that should NOT count as a
+  // 弱点突破 / "recovered" (the user spec: only count recovery when the
+  // word reappears in a LATER round and is then answered correctly).
+  // We flip this to true on the first wrong click of the round, and on
+  // the eventual correct click we suppress flags.recovered if it was on.
+  attemptedWrongThisRound: false,
+};
+// Catalog feed used by NinjaUI's Analysis Scroll. Each ALL_WORDS entry is
+// just a string here, so we wrap into {word, jp:''} on the fly.
+window.getNinjaCatalogs = function () {
+  return [{
+    namespace: 'word-ninja-v1',
+    label:     'WN1',
+    entries:   ALL_WORDS.map(function (w) { return { word: w }; }),
+  }];
+};
+
+function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
+function playSfx(f) { _playSfx(f); }
+var _wordAudio = new Audio();
+_wordAudio.preload = 'auto';
+function _playUrl(url, retry) {
+  if (!url) return;
+  _wordAudio.pause();
+  _wordAudio.src = url;
+  _wordAudio.load();
+  var p = _wordAudio.play();
+  if (p) p.catch(function(e) {
+    if (!retry && e.name !== 'NotAllowedError') {
+      setTimeout(function() { _playUrl(url, true); }, 300);
+    }
+  });
+}
+function speak(w) {
+  if (_muted || !w) return;
+  var key = getFileKey(w);
+  _preloadAudio(key).then(function(url) {
+    _playUrl(url || ('audio/' + key + '.mp3'), false);
+  });
+}
+// ── iOS Dual Audio Unlock (WebAudio + HTMLAudio) ──────────────────────────
+(function() {
+  function _unlockAll() {
+    var ctx = _getSfxCtx();
+    if (ctx.state !== 'running') {
+      ctx.resume().then(function() {
+        var b = ctx.createBuffer(1, 1, 22050); var s = ctx.createBufferSource();
+        s.buffer = b; s.connect(ctx.destination); s.start(0);
+      }).catch(function(){});
+    }
+    var a = new Audio('audio/clickysound.mp3'); a.muted = true;
+    var p = a.play(); if (p) p.then(function() { a.pause(); }).catch(function(){});
+  }
+  document.addEventListener('touchstart', _unlockAll, { once: true, capture: true });
+  document.addEventListener('click',      _unlockAll, { once: true, capture: true });
+})();
+function shuffle(a) { return [...a].sort(() => Math.random() - 0.5); }
+
+function pickRandomMascot() {
+  const keys = Object.keys(ANIMALS);
+  state.avatar = keys[Math.floor(Math.random() * keys.length)];
+}
+
+// getFamiliarSvg — returns the selected Familiar's SVG if available,
+// falling back to the random ANIMALS pick set by pickRandomMascot().
+function getFamiliarSvg() {
+  try {
+    const famId = Ninja.familiar && Ninja.familiar.selected;
+    if (famId && FAMILIAR_SVGS[famId]) return FAMILIAR_SVGS[famId];
+  } catch (e) {}
+  return ANIMALS[state.avatar] || ANIMALS.fox;
+}
+
+// getHeartsHTML — renders full (❤️) and half (💛) hearts for 0.5-step lives.
+function getHeartsHTML(lives) {
+  const full = Math.floor(Math.max(0, lives));
+  const half = (lives - Math.floor(lives)) >= 0.5;
+  return '❤️'.repeat(full) + (half ? '💛' : '');
+}
+
+// useHint — Familiar tap during gameplay: costs 0.5 heart, eliminates one wrong choice.
+//   Works in all modes including Speedster.
+function useHint() {
+  if (state.isGameOver || state.revealed) return;
+  if (state.lives < 0.5) { NinjaUI.showToast('❤️ ライフが足りません'); return; }
+  _playSfx('hintsound');
+  state.lives -= 0.5;
+  // Eliminate one random wrong choice button
+  const wrongIdxs = state.choices.reduce((acc, w, i) => {
+    if (w !== state.current) acc.push(i); return acc;
+  }, []);
+  if (wrongIdxs.length) {
+    const i = wrongIdxs[Math.floor(Math.random() * wrongIdxs.length)];
+    const btn = document.getElementById('btn-' + i);
+    if (btn && !btn.classList.contains('wrong')) {
+      btn.style.opacity = '0.3';
+      btn.style.pointerEvents = 'none';
+    }
+  }
+  // Re-render familiar hint row with updated hearts (speedster has no lives display)
+  const row = document.querySelector('.ninja-fam-hint-row');
+  if (row) {
+    row.outerHTML = NinjaUI.familiarHintRowHTML({
+      hintAction: 'useHint()',
+      hintShown:  false,
+      hintText:   '',
+      lives:      state.isSpeedster ? null : state.lives,
+    });
+  }
+  NinjaUI.showToast('🐾 ヒント！ (−0.5♥)');
+}
+
+// getFooterHTML — mascot removed; Familiar lives in the animated status card chip.
+// hintable param kept for call-site compatibility (hint button is inline now).
+function getFooterHTML(message, excited = false, hintable = false) {
+  return `<div class="footer-area"><div class="brand-footer">ELKえいご王国</div></div>`;
+}
+
+function renderWelcome() {
+  state.isGameOver = false;
+  if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
+  pickRandomMascot();
+  // Phone-friendly home screen: hero title (eigo-ninja style) on top,
+  // status card immediately below (tap → profile hub).
+  document.getElementById('game-area').innerHTML = `
+    <div class="start-screen">
+      <div class="home-header">
+        <div class="game-title">Word-<span>Ninja</span><span class="vol-mini">Vol. 1</span></div>
+      </div>
+      <div style="margin: 4px 0 14px;">${NinjaUI.statusBadgeHTML()}</div>
+      <div class="level-box">
+        <button class="level-btn btn-easy"      onclick="initGame(4,false,false,false)">Easy<span class="sub">Choose from 4 options</span></button>
+        <button class="level-btn btn-normal"    onclick="initGame(6,false,false,false)">Normal<span class="sub">Choose from 6 options</span></button>
+        <button class="level-btn btn-hard"      onclick="initGame(8,false,false,false)">Hard<span class="sub">Choose from 8 options</span></button>
+        <button class="level-btn btn-vhard"     onclick="initGame(10,false,false,false)">Very Hard<span class="sub">Choose from 10 options</span></button>
+        <button class="level-btn btn-ninja"     onclick="initGame(10,true,false,false)">🥷 Ninja Mode<span class="sub">Listen &amp; choose</span></button>
+        <button class="level-btn btn-phantom"   onclick="initGame(10,false,true,false)">👻 Phantom Mode<span class="sub">Picture only</span></button>
+        <button class="level-btn btn-speedster" onclick="initGame(4,false,false,true)">⚡ Speedster Mode<span class="sub">20 second challenge!</span></button>
+      </div>
+      <div class="util-btn-row">
+        <button class="util-btn" onclick="openHow()">🥷 忍びの心得</button>
+        <button class="util-btn links-btn" onclick="openLinks()">🎮 Other Games</button>
+        ${getMuteHTML()}
+      </div>
+    </div>
+    ${getFooterHTML("Tap a level!")}`;
+  // Re-arm Other Games handoff every time the home re-renders (the link
+  // nodes are inside a static overlay in markup, but rebinding is cheap
+  // and idempotent thanks to NinjaUI.armOnLinks's capture-phase listener).
+  NinjaUI.armOnLinks('a.game-link-btn');
+}
+
+function initGame(count, ninja, phantom, speedster) {
+  window.scrollTo(0, 0);
+  state.choiceCount = count; state.isNinja = ninja; state.isPhantom = phantom;
+  state.isSpeedster = speedster; state.isGameOver = false;
+  // Use SRS to prioritize weak words from Analysis Scroll
+  var weak = [];
+  try {
+    weak = Ninja.weakWords(window.getNinjaCatalogs(), 10).map(w => w.entry.word);
+  } catch(e) {}
+  if (weak.length < 10) {
+    var remaining = ALL_WORDS.filter(w => !weak.includes(w));
+    weak = weak.concat(shuffle(remaining).slice(0, 10 - weak.length));
+  }
+  state.words = shuffle(weak).slice(0, 10);
+  state.round = 0; state.score = 0; state.lives = 3;
+  state.mistakes = []; state.unanswered = []; state.currentStartedAt = 0;
+  state.streak = 0; state.sessionBonusXp = 0;
+  // Training record
+  try {
+    Ninja.setTrainingGame('Word-N Vol.1');
+    var _mn = speedster ? '⚡ Speedster' : phantom ? '👻 Phantom' : ninja ? '🥷 Ninja'
+            : count <= 2 ? '😊 Easy' : count === 3 ? '👊 Normal' : count === 4 ? '💪 Hard' : '🏆 Very Hard';
+    Ninja.setTrainingMode(_mn);
+  } catch(e) {}
+  // Pre-load audio + image for first two words immediately
+  [0, 1].forEach(function(i) {
+    var k = state.words[i] ? getFileKey(state.words[i]) : null;
+    if (k) { _preloadAudio(k); _preloadImage(k); }
+  });
+  if (speedster) { state.speedsterTimeLeft = SPEEDSTER_SECONDS; startSpeedsterTimer(); }
+  else { if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; } }
+  nextRound();
+}
+
+function startSpeedsterTimer() {
+  if (state.speedsterInterval) clearInterval(state.speedsterInterval);
+  state.speedsterInterval = setInterval(() => {
+    state.speedsterTimeLeft--;
+    updateSpeedsterBar();
+    if (state.speedsterTimeLeft <= 0) {
+      clearInterval(state.speedsterInterval); state.speedsterInterval = null;
+      // ── Type-Blitz-style time-up bookkeeping for the CURRENT word ──
+      // Mirrors the eigo-ninja Type Blitz spec: when the timer hits 0 with
+      // a word still on screen and the user hasn't picked anything yet,
+      // count it as "unanswered" → surface on the result screen AND feed
+      // it into Analysis Scroll as a missed word so the SRS will resurface
+      // it. We dedupe so the same word never logs twice.
+      if (state.current && !state.revealed) {
+        if (!state.unanswered.includes(state.current)) state.unanswered.push(state.current);
+        try { Ninja.recordAnswer({ word: state.current }, false, SPEEDSTER_SECONDS * 1000); } catch (e) {}
+      }
+      state.isGameOver = true; renderSpeedsterEnd();
+    }
+  }, 1000);
+}
+
+function updateSpeedsterBar() {
+  const bar = document.getElementById('speedster-bar');
+  const label = document.getElementById('speedster-label');
+  if (!bar || !label) return;
+  const pct = Math.max(0, (state.speedsterTimeLeft / SPEEDSTER_SECONDS) * 100);
+  bar.style.width = pct + '%';
+  label.textContent = `⏱ ${state.speedsterTimeLeft}s`;
+  bar.className = 'timer-bar ' + (pct > 50 ? 'green' : pct > 25 ? 'yellow' : 'red');
+  const mascot = document.querySelector('.footer-mascot-svg');
+  if (mascot) { if (state.speedsterTimeLeft <= 8) mascot.classList.add('mascot-excited'); else mascot.classList.remove('mascot-excited'); }
+}
+
+function nextRound() {
+  if (state.isGameOver) return;
+  if (!state.isSpeedster && (state.round >= 10 || state.lives <= 0)) { renderEnd(); return; }
+  if (state.isSpeedster && state.round >= state.words.length) { state.words = [...state.words, ...shuffle(ALL_WORDS).slice(0, 10)]; }
+  pickRandomMascot();
+  state.current = state.words[state.round];
+  state.revealed = false;
+  state.attemptedWrongThisRound = false; // reset per-round wrong-then-right tracker
+  state.currentStartedAt = Date.now(); // for SRS slow-tracking via Ninja.recordAnswer
+  // Pre-load the NEXT word's audio + image while the player sees this question
+  var _nextKey = state.words[state.round + 1] ? getFileKey(state.words[state.round + 1]) : null;
+  if (_nextKey) { _preloadAudio(_nextKey); _preloadImage(_nextKey); }
+  // Prioritize weak words for distractors too
+  var allWrongs = ALL_WORDS.filter(w => w !== state.current);
+  var wrongs = [];
+  try {
+    var weakOptions = Ninja.weakWords(window.getNinjaCatalogs(), state.choiceCount - 1).map(w => w.entry.word).filter(w => w !== state.current);
+    wrongs = weakOptions.slice(0, state.choiceCount - 1);
+  } catch(e) {}
+  if (wrongs.length < state.choiceCount - 1) {
+    var used = new Set([state.current, ...wrongs]);
+    var random = shuffle(allWrongs.filter(w => !used.has(w))).slice(0, state.choiceCount - 1 - wrongs.length);
+    wrongs = wrongs.concat(random);
+  }
+  const wrongs_final = shuffle(wrongs);
+  state.choices = shuffle([state.current, ...wrongs_final]);
+  render();
+  if (!state.isPhantom || state.isSpeedster) {
+    setTimeout(() => { if (!state.isGameOver) speak(state.current); }, 300);
+  } else if (state.isNinja) {
+    setTimeout(() => { if (!state.isGameOver) speak(state.current); }, 300);
+  }
+}
+
+function handleChoice(word, idx) {
+  if (state.revealed || state.isGameOver) return;
+  const btn = document.getElementById('btn-' + idx);
+  if (word === state.current) {
+    state.revealed = true; state.score++;
+    btn.classList.add('correct'); playSfx('correctsound');
+    // ── Analysis Scroll: log a correct hit (with elapsed ms for slow-detection) ──
+    let flags = { firstTimeCorrect: false, recovered: false };
+    try { flags = Ninja.recordAnswer({ word: state.current }, true,  Date.now() - state.currentStartedAt) || flags; } catch (e) {}
+    // ── Suppress same-question wrong-then-right "recovered" claim ──
+    // recordAnswer reports recovered=true if w.lastWrong was true at the
+    // moment of the correct click. But within the SAME question, that
+    // just means the player tried a wrong option first — not a real SRS
+    // recovery. Real recovery is only "missed in an earlier round →
+    // correct in a later round". So we override the flag here when the
+    // user already clicked wrong in this same round.
+    if (state.attemptedWrongThisRound) {
+      flags.recovered        = false;
+      flags.firstTimeCorrect = false; // also redundantly false; kept for clarity
+    }
+    // ── Per-question XP with eigo-ninja-style bonuses ──
+    // base 5, streak ×(1+0.05/streak), +2 firstTime, +3 recovered.
+    state.streak = (state.streak || 0) + 1;
+    try {
+      const rawXp = Ninja.calculateAnswerExp({
+        base: 5, isCorrect: true,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak - 1,  // streak bonus starts after the 1st correct
+      });
+      Ninja.addExp(rawXp);
+      state.sessionBonusXp += rawXp;
+      // Eigo-ninja-parity feedback toast: "+N XP · 弱点突破！+3" etc.
+      // Display the SCALED amount the player actually earned (raw × 0.5).
+      const scaled = Math.max(1, Math.round(rawXp * Ninja.profile.xpMultiplier));
+      NinjaUI.flashAnswerXp({
+        gainedXp:         scaled,
+        firstTimeCorrect: flags.firstTimeCorrect,
+        recovered:        flags.recovered,
+        streak:           state.streak,
+      });
+    } catch (e) {}
+    if (state.isPhantom || state.isSpeedster) { const tt = document.getElementById('target-text'); if (tt) tt.innerText = state.current; }
+    setTimeout(() => { state.round++; nextRound(); }, state.isSpeedster ? 600 : 1200);
+  } else {
+    if (btn.classList.contains('wrong')) return;
+    btn.classList.add('wrong'); playSfx('wrongsound');
+    // ── Analysis Scroll: log a miss against the *target* word (not the wrong pick) ──
+    if (!state.mistakes.includes(state.current)) state.mistakes.push(state.current);
+    state.attemptedWrongThisRound = true; // arm wrong-then-right suppression
+    try { Ninja.recordAnswer({ word: state.current }, false, Date.now() - state.currentStartedAt); } catch (e) {}
+    // Soft "💔 streak broken" feedback when a long run ends.
+    try { NinjaUI.flashStreakBreak(state.streak); } catch (e) {}
+    state.streak = 0;  // wrong answer breaks the streak
+    if (state.isSpeedster) {
+      state.speedsterTimeLeft = Math.max(0, state.speedsterTimeLeft - 2);
+      updateSpeedsterBar();
+      if (state.speedsterTimeLeft <= 0) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; state.isGameOver = true; setTimeout(() => renderSpeedsterEnd(), 700); }
+    } else {
+      state.lives--;
+      const _ldIdx = document.getElementById('lives-display');
+      if (_ldIdx) _ldIdx.innerHTML = getHeartsHTML(state.lives);
+      if (state.lives <= 0) { state.isGameOver = true; state.revealed = true; setTimeout(() => renderEnd(), 1200); }
+    }
+  }
+}
+
+function render() {
+  if (state.isGameOver) return;
+  let cardHTML = '', cardClass = 'word-card';
+  const fileKey = getFileKey(state.current);
+  if (state.isNinja && !state.revealed) {
+    cardClass += ' card-ninja-hidden';
+    cardHTML = `<div class="image-frame" style="background:transparent;border:none;animation:mascotBounce 2s infinite ease-in-out;">${getFamiliarSvg()}</div><span class="target-word" id="target-text" style="color:white;">Listen...</span><button class="listen-btn" onclick="speak('${state.current}')" style="margin-top:10px;">🔊 Listen Again</button>`;
+  } else {
+    const hideWord = (state.isPhantom || state.isSpeedster) && !state.revealed;
+    if (state.isSpeedster) cardClass += ' card-speedster';
+    cardHTML = `<div class="image-frame"><img src="images/${fileKey}.png" class="word-img" alt="${state.current}" onerror="this.style.display='none'"></div><span class="target-word" id="target-text">${hideWord ? '???' : state.current}</span>`;
+  }
+  const pct = Math.max(0, (state.speedsterTimeLeft / SPEEDSTER_SECONDS) * 100);
+  const barColor = pct > 50 ? 'green' : pct > 25 ? 'yellow' : 'red';
+  const excited = state.isSpeedster && state.speedsterTimeLeft <= 8;
+  const timerHTML = state.isSpeedster ? `<div class="timer-wrap"><div class="timer-label" id="speedster-label">⏱ ${state.speedsterTimeLeft}s</div><div class="timer-track"><div class="timer-bar ${barColor}" id="speedster-bar" style="width:${pct}%"></div></div></div>` : '';
+  const showListen = !state.isNinja && !(state.isPhantom && !state.isSpeedster);
+  const scoreText = state.isSpeedster ? `⭐ ${state.score} words` : `⭐ ${state.score} | ${state.round + 1}/10`;
+  const footerMsg = state.isSpeedster ? (excited ? 'Hurry!!' : 'Quick! Tap it!') : 'Go for it!';
+  // Adaptive layout: apply compression for many choices
+  const someChoices = state.choiceCount >= 6;  // 6+ choices = dense
+  const manyChoices = state.choiceCount >= 8;  // 8+ choices = denser
+  const gridClass = manyChoices ? 'choices-grid denser' : someChoices ? 'choices-grid dense' : 'choices-grid';
+  const topBarClass = someChoices ? 'top-bar compact-bar' : 'top-bar';
+  const targetClass = someChoices ? 'target-section compact-target' : 'target-section';
+  const famHintRow = NinjaUI.familiarHintRowHTML({
+    hintAction: 'useHint()',
+    hintShown:  false,
+    hintText:   '',
+    lives:      state.isSpeedster ? null : state.lives,
+  });
+  document.getElementById('game-area').innerHTML = `
+    <div class="${topBarClass}">
+      <button class="menu-btn" onclick="renderWelcome()">🏠 Menu</button>
+      <div class="top-bar-mid">
+        ${getMuteHTML()}
+      </div>
+      <div class="score-pill">${scoreText}</div>
+    </div>
+    ${timerHTML}
+    <div class="${targetClass}">
+      <div class="${cardClass}">${cardHTML}</div>
+      ${showListen ? `<button class="listen-btn" onclick="speak('${state.current}')">🔊 Listen</button>` : ''}
+    </div>
+    <!-- Inline XP-bonus feedback row (NinjaUI.flashAnswerXp targets this).
+         Sits between the question and the choices so the bonus message
+         appears right below the question — eigo-ninja parity. -->
+    <div id="ninja-xp-feedback" class="ninja-xp-feedback"></div>
+    ${famHintRow}
+    <div class="${gridClass}">
+      ${state.choices.map((w, i) => `<button class="choice-btn" id="btn-${i}" onclick="handleChoice('${w}', ${i})">${w}</button>`).join('')}
+    </div>
+    ${getFooterHTML(footerMsg, excited)}`;
+}
+
+function renderSpeedsterEnd() {
+  state.isGameOver = true;
+  if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
+  const n = state.score;
+  // Speedster aliases (Gemini-based): Lv.2 'Blitz Chaser', Lv.1 'Rising Speedster'
+  const rank = n >= 10 ? ['🥷','Blitz Chaser','Unbelievable speed!'] : n >= 7 ? ['🎉','Rising Speedster',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
+
+  // Per-question XP was awarded inside handleChoice (with streak +
+  // recovery bonuses).  Speedster gets a small completion bonus when
+  // the player crushes it (10+ words in 20s).
+  let gainedLv = 0;
+  try {
+    if (n >= 10) gainedLv = Ninja.addExp(6);
+    Ninja.touchTrained();
+  } catch (e) {}
+
+  // ── Type-Blitz-style review block (mistakes + unanswered words) ──
+  const mistakes   = (state.mistakes   || []).filter(w => w);
+  const unanswered = (state.unanswered || []).filter(w => w);
+  const makeCard = (w, tag, color, bg) => `
+    <div style="background:${bg};border:1.5px solid ${color};border-radius:10px;padding:8px 12px;margin-bottom:5px;display:flex;align-items:center;gap:8px;">
+      <img src="images/${getFileKey(w)}.png" alt="${w}" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
+      <div style="flex:1;font-weight:900;color:#2b2d42;">${w}</div>
+      <span style="font-size:10px;font-weight:800;color:${color};letter-spacing:0.5px;">${tag}</span>
+    </div>`;
+  const reviewHTML = (mistakes.length || unanswered.length) ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#555;letter-spacing:1px;margin-bottom:8px;">📋 Words to Review</div>
+      ${unanswered.length ? `<div style="font-size:11px;font-weight:800;color:#7C3AED;margin:6px 0 4px;">⏳ UNANSWERED (${unanswered.length}) — 時間切れで未挑戦</div>` : ''}
+      ${unanswered.map(w => makeCard(w, '⏳ Unanswered', '#7C3AED', '#F3E8FF')).join('')}
+      ${mistakes.length ? `<div style="font-size:11px;font-weight:800;color:#E63946;margin:8px 0 4px;">❌ MISTAKES (${mistakes.length})</div>` : ''}
+      ${mistakes.map(w => makeCard(w, '❌ Wrong', '#E63946', '#FFF5F5')).join('')}
+      <div style="margin-top:10px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="start-screen">
+      <div style="font-size:80px;">${rank[0]}</div>
+      <div class="welcome-title">Word Ninja</div>
+      <p style="font-size:14px;color:#888;margin:6px 0 4px;font-weight:bold;">⚡ Speedster Result</p>
+      <p style="font-size:36px;font-weight:bold;color:#E63946;margin:10px 0 4px;">${n}</p>
+      <p style="font-size:16px;color:#2b2d42;font-weight:bold;margin-bottom:6px;">word${n!==1?'s':''} in 20 seconds!</p>
+      <p style="font-size:18px;font-weight:bold;color:#555;margin-bottom:8px;">${rank[1]}</p>
+      <!-- Ninja XP / level pill -->
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
+      ${reviewHTML}
+      <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
+    </div>
+    ${getFooterHTML(rank[2])}`;
+}
+
+function renderEnd() {
+  state.isGameOver = true;
+  const emoji = state.lives > 0 ? '🎉' : '🥀';
+  const isPerfect = state.lives === 3 && state.score === 10;
+  // ── End-of-game XP (per-question XP was already awarded inside
+  //    handleChoice with streak / firstTime / recovered bonuses). Here
+  //    we add only the perfect-run completion bonus on top. ──
+  let gainedLv = 0;
+  let newAliasUnlockedEnd = '';
+  try {
+    if (isPerfect) gainedLv = Ninja.addExp(10);
+    if (state.lives > 0) Ninja.touchTrained(); // only mark complete when not failed by losing all lives
+    // Mode-specific aliases (Gemini-based)
+    let _rankTitle = '';
+    if (isPerfect) {
+      if (state.isPhantom) _rankTitle = 'Phantom Velocity';
+      else                 _rankTitle = 'Blitz Chaser';
+    } else if (state.score >= 7 && state.lives > 0) {
+      if (state.isPhantom) _rankTitle = 'Phantom Spark';
+      else                 _rankTitle = 'Rising Speedster';
+    }
+    if (_rankTitle && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_rankTitle)) newAliasUnlockedEnd = _rankTitle;
+  } catch (e) {}
+  const newAliasHTMLEnd = newAliasUnlockedEnd ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasUnlockedEnd}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
+  // ── Mistakes review (already wired into Analysis Scroll via handleChoice) ──
+  const mistakes = (state.mistakes || []).filter(w => w);
+  const reviewHTML = mistakes.length ? `
+    <div style="margin-top:14px;text-align:left;background:#fff;padding:12px;border-radius:14px;border:1px solid #eee;">
+      <div style="font-size:12px;font-weight:900;color:#E63946;margin-bottom:8px;letter-spacing:1px;">❌ MISTAKES (${mistakes.length})</div>
+      ${mistakes.map(w => `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff5f5;border-radius:8px;margin-bottom:4px;"><img src="images/${getFileKey(w)}.png" alt="${w}" style="width:28px;height:28px;object-fit:contain;" onerror="this.style.display='none'"><span style="font-weight:900;color:#2b2d42;">${w}</span></div>`).join('')}
+      <div style="margin-top:8px;font-size:11px;color:#888;font-weight:700;">これらの単語は Analysis Scroll に登録されました 🎯</div>
+    </div>` : '';
+  document.getElementById('game-area').innerHTML = `
+    <div class="start-screen">
+      <div style="font-size:80px;">${emoji}</div>
+      <div class="welcome-title">Word Ninja</div>
+      <p style="font-size:24px;margin:14px 0 6px;font-weight:bold;color:#2b2d42 !important;">Score: ${state.score} / 10</p>
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;border-radius:14px;padding:10px 16px;margin:8px auto 14px;display:inline-block;box-shadow:0 4px 0 #5B21B6;">
+        <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">${Ninja.profile.gameLabel} · 0.5×</div>
+        <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
+        <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
+      </div>
+      ${newAliasHTMLEnd}
+      ${reviewHTML}
+      <button class="level-btn btn-normal" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="util-btn" style="background:#F3E8FF;border-color:#A78BFA;color:#4C1D95;width:auto;" onclick="NinjaUI.openAnalysis()">🎯 Analysis Scroll</button>
+        <button class="util-btn" style="background:#E0F7FA;border-color:#4DD0E1;color:#006064;width:auto;" onclick="NinjaUI.openScroll()">📜 Save Scroll</button>
+      </div>
+    </div>
+    ${getFooterHTML(state.lives > 0 ? "You're a master!" : "Try again!")}`;
+}
+
+renderWelcome();
+// First-run / post-reset: prompt the design picker so the user picks a starter ninja.
+NinjaUI.maybePromptStarter(300);
+// After the design picker, prompt the Familiar starter picker if no familiar is selected.
+NinjaUI.maybePromptFamiliarStarter(600);
+</script>
+</body>
+</html>
