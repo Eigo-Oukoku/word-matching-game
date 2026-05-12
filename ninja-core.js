@@ -162,24 +162,36 @@
   };
 
   // ── Alias (title) unlock table — rank determines unlock eligibility ────────
-  var ALIAS_RANKS = {
-    // Tier 10 — elite (typing-heavy or 100Q challenge)
-    'Perfect Ninja! 🎊':  10,  // eigo-ninja 100Q Challenge perfect only
-    'Sentence Ninja!!':   10,  // Sentence Speedmaster ≥130 chars
-    'Blitz Ninja!!':      10,  // Sentence Type Blitz ≥160 chars
-    // Tier 9 — high achievement
-    'Blitz Master!':       9,  // Spelling Blitz ≥60 / Sentence Blitz ≥110
-    'Speed Master!':       9,  // Sentence Speedmaster ≥90
-    'Sentence Master!':    9,  // Sentence Ninja ≥90%
-    'Ninja Speedster!!':   9,  // Word Ninja Speedmaster ≥15 (was rank 10, raised threshold)
-    // Tier 8 — solid achievement
-    'Spelling Star!':      8,  // Spelling Blitz ≥45 / Speedmaster ≥35 / Spelling regular perfect
-    'Swift Ninja!':        8,  // Word Ninja Speedmaster ≥10 / Spelling Speedmaster ≥25
-    'Ninja Speedster!':    8,  // Spelling Speedmaster ≥35
-    // Tier 7 — entry-level alias
-    'Spelling Ninja!':     7,  // Spelling regular: perfect round
-    'Sharp Ninja!':        7,  // Word Ninja regular: perfect round
-  };
+    var ALIAS_RANKS = {
+      // ── Eigo Ninja special awards (actively issued) ──
+      'Perfect Ninja! 🎊': 25,  // 100Q Challenge: perfect score
+      'Blitz Master!':     22,  // Eigo Ninja Type Blitz: ≥65 chars
+      'Spelling Star!':     8,  // Eigo Ninja Type Blitz: ≥50 chars
+
+      // ──────────── CURRENT SYSTEM (Gemini-based) ────────────
+      // Word + Spelling Ninja basic word categories
+      'Rising Speedster':   3,
+      'Blitz Chaser':       8,
+      // Phantom Mode (Word + Spelling)
+      'Phantom Spark':      4,
+      'Phantom Velocity':   9,
+      // Ninja Sense (Spelling + Sentence)
+      'Insight Seeker':     5,
+      'Eureka Finder':     10,
+      // Sentence Ninja standard (stages, speedster, blitz)
+      'Shadow Tactician':   6,
+      'Elite Strategist':  11,
+      // Sentence Ninja Shadow Mode (if exists)
+      'Shadow Scout':       6,
+      'Shadow Vanguard':   11,
+      // Eigo Ninja grade ranks (one per grade — top-performance unlock)
+      'Skilled Ninja':     14,
+      'Elite Ninja':       16,
+      'Striker Ninja':     18,
+      'Master Ninja':      20,
+      // Reserved for future grades:
+      // 'Grandmaster Ninja': 25 (Grade 1)
+    };
 
   var design = {
     selected: null,   // id of the currently active design (null = no pick yet)

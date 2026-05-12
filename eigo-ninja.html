@@ -2370,11 +2370,10 @@ function ninjaLoadLocal() {
           }
         });
       }
-      // Adopt selectedAlias from shared if none set locally yet
-      if (s.selectedAlias && !progress.selectedAlias &&
-          progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
-        progress.selectedAlias = s.selectedAlias;
-      }
+      // Adopt selectedAlias from shared (always sync with other games)
+            if (s.selectedAlias && progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
+              progress.selectedAlias = s.selectedAlias;
+            }
       // adopt theme from shared key if local has none set yet
       if (s.statusTheme && NINJA_STATUS_THEMES[s.statusTheme] && progress.statusTheme === 'dark') {
         progress.statusTheme = s.statusTheme;
