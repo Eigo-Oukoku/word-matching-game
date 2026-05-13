@@ -769,6 +769,7 @@ let state = {
   // count as 弱点突破. Real recovery = wrong in an earlier round, then
   // correct later. Reset by nextRound() and blitzLoadNextWord().
   attemptedWrongThisRound:false,
+  nextTimeoutId:null,  // 自動進行のタイムアウト ID（Menu 押下時にキャンセルするため）
 };
 // Helper: log a successful word into Analysis Scroll AND award per-question
 // bonus XP (eigo-ninja parity: streak ×, +2 firstTime, +3 recovered).
@@ -1146,6 +1147,11 @@ function snBlitzToast(msg){
 }
 
 function blitzExit(){
+  // 自動進行のタイムアウトをキャンセル（Menu 画面への遷移が正しく保持されるようにする）
+  if (state.nextTimeoutId !== null) {
+    clearTimeout(state.nextTimeoutId);
+    state.nextTimeoutId = null;
+  }
   stopBlitzTimer();
   hideBlitzPanel();
   renderWelcome();
@@ -1469,7 +1475,8 @@ function tapLetter(letter,index){
             playSfx('correctsound');
             render();
             ninjaLogCorrect(state.currentWord, Date.now() - state.currentStartedAt);
-            setTimeout(()=>{ state.round++; nextRound(); }, 1200);
+            // 自動進行のタイムアウト ID を保存（Menu 押下時にキャンセルするため）
+            state.nextTimeoutId = setTimeout(()=>{ state.round++; nextRound(); }, 1200);
           } else {
             playSfx('wrongsound');
             recordMistake(state.currentWord);

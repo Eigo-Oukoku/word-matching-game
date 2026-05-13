@@ -540,6 +540,7 @@ let state = {
   // wrong of the round, reset by nextRound(). Used in handleChoice to
   // suppress flags.recovered on the eventual correct click.
   attemptedWrongThisRound: false,
+  nextTimeoutId: null,  // 自動進行のタイムアウト ID（Menu 押下時にキャンセルするため）
 };
 
 function getFileKey(w) { return w ? w.replace(/\s+/g, '_') : ''; }
@@ -586,6 +587,11 @@ function getFooterHTML(message, excited = false) {
 }
 
 function renderWelcome() {
+  // 自動進行のタイムアウトをキャンセル（Menu 画面への遷移が正しく保持されるようにする）
+  if (state.nextTimeoutId !== null) {
+    clearTimeout(state.nextTimeoutId);
+    state.nextTimeoutId = null;
+  }
   state.isGameOver = false;
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   pickRandomMascot();
@@ -758,7 +764,8 @@ function handleChoice(word, idx) {
       });
     } catch (e) {}
     if (state.isPhantom || state.isSpeedster) { const tt = document.getElementById('target-text'); if (tt) tt.innerText = state.current; }
-    setTimeout(() => {
+    // 自動進行のタイムアウト ID を保存（Menu 押下時にキャンセルするため）
+    state.nextTimeoutId = setTimeout(() => {
       if (state.isGameOver) return;
       // Guard against the race where the timer reached 0 during the delay
       if (state.isSpeedster && state.speedsterTimeLeft <= 0) {

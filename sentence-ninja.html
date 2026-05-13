@@ -343,6 +343,11 @@ window.getNinjaCatalogs = function () {
 };
 
 // ═══════════════════════════════════════════════
+// グローバル変数：自動進行のタイムアウト ID（Menu 押下時にキャンセルするため）
+// ═══════════════════════════════════════════════
+let sentenceNextTimeoutId = null;
+
+// ═══════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════
 const STAGES = [
@@ -918,6 +923,11 @@ function blitzUpdateTimerBar() {
 function blitzListen() { speakSentence(G.currentSentence && G.currentSentence.audio); }
 
 function blitzExit() {
+  // 自動進行のタイムアウトをキャンセル（Menu 画面への遷移が正しく保持されるようにする）
+  if (sentenceNextTimeoutId !== null) {
+    clearTimeout(sentenceNextTimeoutId);
+    sentenceNextTimeoutId = null;
+  }
   stopAllTimers();
   hideBlitzPanel();
   G.isGameOver=true;
@@ -1028,7 +1038,8 @@ function checkBlitz() {
     const scoreRow=document.getElementById('blitz-score-row');
     if(scoreRow) scoreRow.textContent=`⭐ ${G.score} chars`;
     G.round++;
-    setTimeout(()=>blitzNextSentence(),500);
+    // 自動進行のタイムアウト ID を保存（Menu 押下時にキャンセルするため）
+    sentenceNextTimeoutId = setTimeout(()=>blitzNextSentence(),500);
   } else {
     recordMistake();   // also writes to Analysis Scroll + blitzReview
     G.blitzLocked=true;
@@ -1036,7 +1047,8 @@ function checkBlitz() {
     inp.className='blitz-input wrong';
     if(fb) fb.innerHTML=`<span class="fb-wrong">❌ Keep trying!</span>`;
     G.round++;
-    setTimeout(()=>blitzNextSentence(),1600);
+    // 自動進行のタイムアウト ID を保存（Menu 押下時にキャンセルするため）
+    sentenceNextTimeoutId = setTimeout(()=>blitzNextSentence(),1600);
   }
 }
 

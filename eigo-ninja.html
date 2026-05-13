@@ -115,8 +115,11 @@
     .menu-btn { font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700; background: white; border: 2px solid var(--border); border-radius: 10px; padding: 5px 12px; cursor: pointer; color: #666; box-shadow: 0 2px 0 var(--border); white-space: nowrap; }
     .progress-pill { font-size: 14px; font-weight: 800; background: #FFF3B0; color: #9B5E00; border-radius: 999px; padding: 4px 12px; border: 2px solid var(--yellow); white-space: nowrap; }
 
-    .progress-track { width: 100%; height: 10px; background: #e8e5de; border-radius: 999px; margin-bottom: 12px; overflow: hidden; }
+    .progress-track { width: 100%; height: 10px; background: #e8e5de; border-radius: 999px; margin-bottom: 6px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; background: var(--green); transition: width 0.4s ease; }
+    .hearts-row { width: 100%; text-align: center; margin: 4px 0 8px; font-size: 20px; line-height: 1; min-height: 24px; letter-spacing: 2px; }
+    .hearts-row.shake { animation: heartShake 0.5s ease; }
+    @keyframes heartShake { 0%,100%{transform:translateX(0);} 15%{transform:translateX(-6px) rotate(-6deg);} 30%{transform:translateX(6px) rotate(6deg);} 45%{transform:translateX(-5px) rotate(-4deg);} 60%{transform:translateX(5px) rotate(4deg);} 75%{transform:translateX(-3px);} }
 
     .quiz-card { width: 100%; background: white; border: 2.5px solid var(--border); border-radius: 22px; padding: 28px 20px; text-align: center; font-size: clamp(20px, 5.5vw, 28px); font-weight: 700; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: var(--ink); box-shadow: 0 6px 0 var(--border); margin-bottom: 16px; line-height: 1.4; min-height: 100px; display: flex; align-items: center; justify-content: center; animation: popIn 0.25s ease; }
     .quiz-card.vocab-card  { border-color: #c8e6c9; background: #f1fff5; }
@@ -300,14 +303,24 @@
       <button class="kb-btn" onmousedown="event.preventDefault()" onclick="blitzCheckAnswer()">Go ➜</button>
     </div>
     <div class="kb-fb" id="blitz-fb"></div>
-    <button id="blitz-pass-btn" onclick="blitzPass()"
-      style="width:100%;padding:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
-             background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:12px;
-             cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
-      onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
-      onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
-      わからない / Pass ›
-    </button>
+    <div style="display:flex;gap:8px;width:100%;">
+      <button id="blitz-hint-btn" onclick="blitzUseHint()"
+        style="flex:0 0 auto;padding:9px 14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+               background:#FFFDE7;color:#7a5800;border:2px solid #FFD54F;border-radius:12px;
+               cursor:pointer;box-shadow:0 3px 0 #e6c200;transition:0.1s;white-space:nowrap;"
+        onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #e6c200'"
+        onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #e6c200'">
+        💡 −0.5♥
+      </button>
+      <button id="blitz-pass-btn" onclick="blitzPass()"
+        style="flex:1;padding:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+               background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:12px;
+               cursor:pointer;box-shadow:0 3px 0 #dee2e6;transition:0.1s;"
+        onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #dee2e6'"
+        onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #dee2e6'">
+        わからない / Pass ›
+      </button>
+    </div>
     <div id="blitz-hearts" style="text-align:center;font-size:22px;margin-top:2px;"></div>
   </div>
   <div id="game-area"></div>
@@ -1750,6 +1763,10 @@ function _eigoFamCheerHTML() {
 // Shared snippet: top-right × close button injected into every dynamic modal-box.
 const TOP_CLOSE = '<button class="modal-top-close" onclick="this.closest(\'.overlay\').remove()" aria-label="Close">✕</button>';
 
+// ─── LIVES SYSTEM ────────────────────────────────────────
+const QUIZ_MAX_LIVES      = 5;   // Regular modes (1–4): 20 questions, 5 lives
+const CHALLENGE_MAX_LIVES = 10;  // 100Q Challenge: 10 lives
+
 // ─── STATE ───────────────────────────────────────────────
 let state = {
   screen: 'home',
@@ -1762,6 +1779,7 @@ let state = {
   challengeModes: [],
   selectedChallengeModes: [],
   locked: false,
+  lives: QUIZ_MAX_LIVES,
   // ── Per-session progression bookkeeping ──
   streak: 0,
   sessionExp: 0,
@@ -1769,6 +1787,7 @@ let state = {
   questionStart: 0,     // timestamp when a question is shown
   recoveredFlags: [],   // mark words "recovered" if they were previously wrong
   firstTimeFlags: [],   // mark words first-ever-correct
+  nextQuestionTimeoutId: null,  // 自動進行のタイムアウト ID（Menu 押下時にキャンセルするため）
 };
 
 // ────────────────────────────────────────────────────────
@@ -4114,6 +4133,11 @@ function showToast(msg) {
 
 // ─── HOME SCREEN ─────────────────────────────────────────
 function renderHome() {
+  // 自動進行のタイムアウトをキャンセル（Menu 画面への遷移が正しく保持されるようにする）
+  if (state.nextQuestionTimeoutId !== null) {
+    clearTimeout(state.nextQuestionTimeoutId);
+    state.nextQuestionTimeoutId = null;
+  }
   state.screen = 'home';
   // Compute level / next-level progress
   const lvl   = progress.level;
@@ -4378,6 +4402,7 @@ function startQuiz(mode) {
   state.locked = false;
   state.challengeModes = [];
   _resetSessionProgress();
+  state.lives = QUIZ_MAX_LIVES;
   const all = wordStock[state.level] || [];
   state.sessionWords = ninjaWeightedSample(all, Math.min(20, all.length));
   renderQuestion();
@@ -4399,6 +4424,7 @@ function startChallenge() {
   state.mistakes = [];
   state.locked = false;
   _resetSessionProgress();
+  state.lives = CHALLENGE_MAX_LIVES;
   const all = wordStock[state.level] || [];
   const count = Math.min(100, all.length);
   state.sessionWords = ninjaWeightedSample(all, count);
@@ -4445,6 +4471,7 @@ function renderQuestion() {
   }
 
   const correctAns = current[field];
+  state.currentCorrectAns = correctAns;   // stored for showHint() to identify wrong buttons
   const options = generateOptions(correctAns, field);
   const total = state.sessionWords.length;
   const pct = (state.currentIndex / total) * 100;
@@ -4460,19 +4487,17 @@ function renderQuestion() {
     ? `<div class="cat-strip ${catClasses[effectiveMode]}">${modeEmoji[effectiveMode]} ${modeNames[effectiveMode]}</div>`
     : '';
 
-  // FIXED: hint shows full sentence Japanese meaning (exJP), falls back to word meaning (jp)
-  const hintText = current.exJP || current.jp;
-  // Familiar hint row — tappable chip for Fill-in-Blank (mode 2), cheer bubble otherwise.
-  const hasHintBtn = effectiveMode === 2;
-  const _fillHintPromptBubble = '<div style="display:inline-flex;align-items:center;gap:8px;">'
+  // Hint row — all modes get a tappable hint chip; label differs by mode
+  const hintSubLabel = effectiveMode === 2 ? '(日本語訳を見る)' : '(選択肢を1つ除外)';
+  const _hintPromptBubble = '<div style="display:inline-flex;align-items:center;gap:8px;">'
     + _eigoFamHintChipHTML('showHint()', false)
     + '<div style="background:#FFFDE7;border:1.5px solid #FFD54F;border-radius:12px;'
     + 'padding:5px 11px;font-size:12px;font-weight:800;color:#5a4000;max-width:150px;line-height:1.4;'
-    + 'border-bottom-left-radius:4px;text-align:center;">💡 タップでヒント！<br>'
-    + '<span style="font-size:11px;font-weight:700;">(日本語訳を見る)</span></div>'
+    + 'border-bottom-left-radius:4px;text-align:center;">💡 ヒント −0.5♥<br>'
+    + `<span style="font-size:11px;font-weight:700;">${hintSubLabel}</span></div>`
     + '</div>';
   const famHintRow = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
-    + (hasHintBtn ? _fillHintPromptBubble : _eigoFamCheerHTML())
+    + _hintPromptBubble
     + '</div>';
 
   // ── Middle-of-screen quiz layout ──
@@ -4494,6 +4519,7 @@ function renderQuestion() {
         <div class="progress-track">
           <div class="progress-fill" style="width:${pct}%"></div>
         </div>
+        <div class="hearts-row" id="hearts-display">${getEigoHeartsHTML()}</div>
         ${catStrip}
         <div class="quiz-card ${cardClass}">${qText}</div>
         ${famHintRow}
@@ -4512,19 +4538,67 @@ function renderQuestion() {
   `;
 }
 
+// ── Hearts display ────────────────────────────────────────
+function getEigoHeartsHTML(lives) {
+  if (lives === undefined) lives = state.lives;
+  const full = Math.floor(Math.max(0, lives));
+  const half = (lives - full) >= 0.5;
+  return '❤️'.repeat(full) + (half ? '💛' : '');
+}
+
 function showHint() {
   if (state.hintUsedThisRound) return;
-  state.hintUsedThisRound = true;  // triggers ×0.9 XP penalty for fill-in mode
+  state.hintUsedThisRound = true;
+
+  // ── Hint costs 0.5 heart (no game over from hint) ──
+  state.lives = Math.max(0, state.lives - 0.5);
+  const hd = document.getElementById('hearts-display');
+  if (hd) {
+    hd.innerHTML = getEigoHeartsHTML();
+    hd.classList.remove('shake');
+    void hd.offsetWidth;
+    hd.classList.add('shake');
+  }
+
   const current = state.sessionWords[state.currentIndex];
-  const hintText = current ? (current.exJP || current.jp || '') : '';
-  const row = document.querySelector('.ninja-fam-hint-row');
-  if (row) {
-    row.outerHTML = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
-      + _eigoFamHintChipHTML('', true)
-      + '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
-      + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
-      + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>'
-      + '</div>';
+  const effectiveMode = state.mode === 5 ? state.challengeModes[state.currentIndex] : state.mode;
+
+  if (effectiveMode === 2) {
+    // ── Fill-in-Blank: show Japanese meaning ──
+    const hintText = current ? (current.exJP || current.jp || '') : '';
+    const row = document.querySelector('.ninja-fam-hint-row');
+    if (row) {
+      row.outerHTML = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
+        + _eigoFamHintChipHTML('', true)
+        + '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
+        + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
+        + 'animation:popIn 0.2s ease;line-height:1.5;">💡 ' + hintText + '</div>'
+        + '</div>';
+    }
+  } else {
+    // ── Multiple choice (Vocab / Synonym / Definition): remove one wrong button ──
+    const allBtns = Array.from(document.querySelectorAll('.choice-btn'));
+    const wrongBtns = allBtns.filter(b =>
+      !b.classList.contains('correct') &&
+      !b.classList.contains('wrong') &&
+      !b.disabled &&
+      b.textContent.trim() !== (state.currentCorrectAns || '')
+    );
+    if (wrongBtns.length > 0) {
+      const pick = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+      pick.style.opacity = '0.2';
+      pick.style.pointerEvents = 'none';
+      pick.disabled = true;
+    }
+    const row = document.querySelector('.ninja-fam-hint-row');
+    if (row) {
+      row.outerHTML = '<div class="ninja-fam-hint-row" style="text-align:center;margin:6px 0 4px;min-height:62px;">'
+        + _eigoFamHintChipHTML('', true)
+        + '<div style="margin-top:6px;padding:6px 12px;background:#FFFDE7;border:2px solid #FFD54F;'
+        + 'border-radius:12px;font-size:13px;font-weight:800;color:#5a4000;text-align:center;'
+        + 'animation:popIn 0.2s ease;">💡 選択肢を1つ除外しました</div>'
+        + '</div>';
+    }
   }
 }
 
@@ -4583,11 +4657,98 @@ function checkAnswer(btn, selected, correct) {
     state.perAnswerExp[state.currentIndex] = 0;
     allBtns.forEach(b => { if (b.textContent.trim() === correct) b.classList.add('correct'); });
     playWrong();
+
+    // ── Life system: -1 per wrong answer ──
+    state.lives = Math.max(0, state.lives - 1);
+    const hd = document.getElementById('hearts-display');
+    if (hd) {
+      hd.innerHTML = getEigoHeartsHTML();
+      hd.classList.remove('shake');
+      void hd.offsetWidth;
+      hd.classList.add('shake');
+    }
+
     const msgs = ['Keep going! 💪', 'Almost! 🤗', 'Good try! 🌸'];
     if (fb) fb.innerHTML = `<span class="fb-bad">${msgs[Math.floor(Math.random()*msgs.length)]}</span>`;
+
+    if (state.lives <= 0) {
+      setTimeout(() => renderGameOver(), 900);
+      return;
+    }
   }
 
-  setTimeout(() => { state.currentIndex++; renderQuestion(); }, 900);
+  // 自動進行のタイムアウト ID を保存（Menu 押下時にキャンセルするため）
+  state.nextQuestionTimeoutId = setTimeout(() => { state.currentIndex++; renderQuestion(); }, 900);
+}
+
+// ─── GAME OVER ───────────────────────────────────────────
+function renderGameOver() {
+  const total    = state.sessionWords.length;
+  const answered = state.currentIndex;
+
+  // 100Q Challenge: commit deferred XP with early-exit penalty
+  let xpBlock = '';
+  if (state.mode === 5) {
+    const exitMul = answered >= 80 ? 1.00
+                  : answered >= 50 ? 0.95
+                  : answered >= 30 ? 0.85
+                  : answered >= 10 ? 0.70
+                  :                  0.50;
+    const finalXP = Math.max(0,
+      Math.round(state.challengeRawXP * exitMul * ninjaEigoLevelPenalty(progress.level)));
+    state.sessionExp = finalXP;
+    if (finalXP > 0) ninjaAddExp(finalXP);
+    const exitPct  = Math.round((exitMul - 1) * 100);
+    const exitSign = exitPct >= 0 ? '+' : '';
+    xpBlock = `
+      <div style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:white;border-radius:16px;
+                  padding:14px 18px;margin:12px 0 6px;box-shadow:0 4px 0 #5B21B6;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">EXP GAINED</div>
+            <div style="font-size:28px;font-weight:900;">+${finalXP.toLocaleString()} <span style="font-size:13px;opacity:0.85;">XP</span></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:1.5px;opacity:0.85;">忍者ランク</div>
+            <div style="font-family:'Bangers',cursive;font-size:24px;letter-spacing:1px;">Lv ${progress.level}</div>
+          </div>
+        </div>
+        <div style="margin-top:6px;font-size:12px;font-weight:800;color:#FF8A65;">
+          ⚠️ 早期終了ペナルティ ×${exitMul.toFixed(2)} ${exitSign}${exitPct}%
+        </div>
+      </div>`;
+  }
+
+  progress.totalSessions++;
+  ninjaTouchTrained();
+
+  const missedHTML = state.mistakes.length > 0 ? `
+    <div style="margin:12px 0;padding:12px 16px;background:#fff5f5;border-radius:12px;
+                border:2px solid #FFB3B3;text-align:left;font-size:13px;">
+      <div style="font-weight:800;color:#E63946;margin-bottom:6px;">❌ Missed Words</div>
+      ${state.mistakes.map(m =>
+        `<div style="margin:3px 0;">• <strong>${m.word}</strong> — ${m.jp}</div>`
+      ).join('')}
+    </div>` : '';
+
+  document.getElementById('game-area').innerHTML = `
+    <div class="result-screen" style="text-align:center;">
+      <div style="font-size:70px;margin-bottom:8px;">💔</div>
+      <div style="font-family:'Bangers',cursive;font-size:36px;letter-spacing:2px;color:#E63946;">Game Over!</div>
+      <p style="font-size:14px;color:#6c757d;margin:8px 0 4px;">
+        Question ${answered + 1} / ${total} — Lives ran out
+      </p>
+      <p style="font-size:22px;font-weight:800;margin:6px 0 10px;">⭐ ${state.score} correct</p>
+      ${xpBlock}
+      ${missedHTML}
+      ${state.mode === 5
+        ? `<button class="action-btn ab-challenge" onclick="renderChallengeSetup()" style="margin-top:16px;">🏆 もう一度チャレンジ</button>`
+        : `<button class="action-btn ab-retry" style="margin-top:16px;" onclick="startQuiz(${state.mode})">🔄 Try Again</button>`}
+      <button class="action-btn ab-primary" onclick="renderModeSelect()">🎯 Change Mode</button>
+      <button class="action-btn ab-menu"
+        onclick="progress.sessionPending = false; ninjaSaveLocal(); renderHome();">🏠 Top Menu</button>
+    </div>
+  `;
 }
 
 // ─── RESULTS ─────────────────────────────────────────────
@@ -4874,11 +5035,13 @@ function blitzLoadItem() {
   }
   if (fb) fb.innerHTML = '';
 
-  // Refresh score pill and hearts
-  const pill   = document.getElementById('blitz-score-pill');
-  const hearts = document.getElementById('blitz-hearts');
-  if (pill)   pill.textContent  = `⚡ ${blitz.charScore} chars`;
-  if (hearts) hearts.innerHTML  = blitzHeartsHTML();
+  // Refresh score pill, hearts, and hint button
+  const pill    = document.getElementById('blitz-score-pill');
+  const hearts  = document.getElementById('blitz-hearts');
+  const hintBtn = document.getElementById('blitz-hint-btn');
+  if (pill)    pill.textContent  = `⚡ ${blitz.charScore} chars`;
+  if (hearts)  hearts.innerHTML  = blitzHeartsHTML();
+  if (hintBtn) { hintBtn.disabled = false; hintBtn.style.opacity = '1'; hintBtn.style.cursor = 'pointer'; }
 }
 
 function blitzHeartsHTML() {
@@ -5105,6 +5268,46 @@ async function blitzCopyToClipboard() {
     </div>`;
   document.body.appendChild(overlay);
   setTimeout(() => { const ta = document.getElementById('blitz-copy-ta'); if(ta){ta.focus();ta.select();} }, 80);
+}
+
+// blitzUseHint — type the next character of the answer into the input (costs 0.5♥)
+function blitzUseHint() {
+  if (blitz.locked || !blitz.currentItem) return;
+  const inp = document.getElementById('blitz-input');
+  if (!inp) return;
+
+  const expected = blitz.currentItem.answer.toLowerCase();
+  const typed    = inp.value.toLowerCase();
+
+  // Already fully typed or more than expected
+  if (typed.length >= expected.length) return;
+
+  // Must match so far; if mismatch clear and restart from correct prefix
+  const nextChar = expected[typed.length];
+
+  // Deduct 0.5 heart
+  blitz.lives = Math.max(0, blitz.lives - 0.5);
+  const heartsEl = document.getElementById('blitz-hearts');
+  if (heartsEl) heartsEl.innerHTML = blitzHeartsHTML();
+
+  // Disable hint button after use (one hint per word)
+  const hintBtn = document.getElementById('blitz-hint-btn');
+  if (hintBtn) {
+    hintBtn.disabled = true;
+    hintBtn.style.opacity = '0.35';
+    hintBtn.style.cursor = 'default';
+  }
+
+  // Append next character into input and trigger input handler
+  inp.value = inp.value + nextChar;
+  blitz.startedTyping = true;
+  inp.className = 'kb-input ok';
+  inp.focus();
+
+  // If the hint completed the word, auto-submit
+  if (inp.value.toLowerCase() === expected) {
+    setTimeout(() => blitzCheckAnswer(), 300);
+  }
 }
 
 function blitzPass() {

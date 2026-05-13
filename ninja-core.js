@@ -465,6 +465,7 @@
       progress.words[k] = {
         correct: 0, wrong: 0, slow: 0,
         seen: false, lastWrong: false, lastSeenIndex: -999,
+        sessionStartWrong: 0,  // セッション開始時の wrong カウント（同セッション内で新たに間違えた問題の判定用）
       };
     }
     return progress.words[k];
@@ -488,6 +489,13 @@
     w.seen = true;
     progress.globalIndex++;
     w.lastSeenIndex = progress.globalIndex;
+
+    // セッション開始時に、各問題の sessionStartWrong を初期化
+    // （同セッション内で新たに間違えた問題を判定するため）
+    if (w.sessionStartWrong === undefined) {
+      w.sessionStartWrong = (w.wrong || 0);
+    }
+
     if (isCorrect) { w.correct++; w.lastWrong = false; }
     else           { w.wrong++;   w.lastWrong = true;  }
     var threshold = profile.slowMs || 10000;
@@ -526,7 +534,21 @@
   }
 
   function isMastered(w) {
-    return (w.correct || 0) >= MASTERY_THRESHOLD && !w.lastWrong;
+    // 適応的SRS難度調整：
+    // - 間違いなし → 3回正解で mastery
+    // - 間違いあり → 「間違い数の1/3（切り上げ、最低1回）」だけ正解で mastery
+    // 例：1-3回間違い → 1回正解で mastery、4-6回間違い → 2回正解で mastery
+    var wrongCount = (w.wrong || 0);
+    var correctCount = (w.correct || 0);
+
+    if (wrongCount === 0) {
+      // 間違いなし：3回正解で mastery（従来通り）
+      return correctCount >= MASTERY_THRESHOLD;
+    }
+
+    // 間違いあり：間違い数の1/3を切り上げ（最低1回）
+    var requiredCorrect = Math.max(1, Math.ceil(wrongCount / 3));
+    return correctCount >= requiredCorrect;
   }
 
   // ───────────────────────────────────────────────────────────────────────
@@ -1149,12 +1171,20 @@
       (cat.entries || []).forEach(function (entry) {
         var w = getWord(entry, cat.namespace);
         if (!w.seen)            return;
-        if (isMastered(w))      return;
+
+        // セッション内で「新たに間違えた問題」は mastery 判定を無視して Scroll に入る
+        // （同セッション内では除外されない仕様）
+        var newlyWrongThisSession = (w.wrong || 0) - (w.sessionStartWrong || 0);
+        var isNewlyWrongThisSession = newlyWrongThisSession > 0;
+
+        if (!isNewlyWrongThisSession && isMastered(w)) return;  // mastery なら除外（ただし新規 wrong は除外しない）
+
         var total = (w.correct || 0) + (w.wrong || 0);
         var acc   = total > 0 ? w.correct / total : 0;
         var need  = (w.wrong * 3) + (w.lastWrong ? 5 : 0) + (w.slow * 1.5) - (w.correct * 0.5);
-        // Include in Analysis Scroll if: has positive need, or has any wrong answers, or flagged as recently wrong
-        if (need > 0 || w.lastWrong || w.wrong > 0) {
+        // Include in Analysis Scroll if: has positive need, or has any wrong answers, or flagged as recently wrong,
+        // or newly wrong in this session
+        if (need > 0 || w.lastWrong || w.wrong > 0 || isNewlyWrongThisSession) {
           items.push({ entry: entry, label: cat.label || cat.namespace, w: w, need: need, acc: acc });
         }
       });
