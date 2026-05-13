@@ -1663,16 +1663,22 @@ function renderEnd() {
   stopAllTimers();
   const pct=Math.round((G.score/ROUNDS_PER_GAME)*100);
   let medal='🥉',msg='Keep practicing!';
-  // Mode-specific aliases (Gemini-based naming)
+  // Alias resolution: Ninja Sense uses accuracy; standard modes (Stages/Master) use pct threshold
   const _isSense = G.mode === 'sense';
   if(_isSense) {
-    if(pct>=90){medal='🏆';msg='Eureka Finder';}
-    else if(pct>=70){medal='🥇';msg='Insight Seeker';}
+    const _senseAlias = (typeof Ninja.getAliasRule === 'function')
+      ? (Ninja.getAliasRule('sentence-ninja', 'ninja-sense', { pct }) || '')
+      : (pct>=90?'Eureka Finder':pct>=70?'Insight Seeker':'');
+    if(pct>=90){medal='🏆';msg=_senseAlias||'Eureka Finder';}
+    else if(pct>=70){medal='🥇';msg=_senseAlias||'Insight Seeker';}
     else if(pct>=50){medal='🥈';msg='Good job!';}
   } else {
-    // Stages / standard sentence-building
-    if(pct>=90){medal='🏆';msg='Elite Strategist';}
-    else if(pct>=70){medal='🥇';msg='Shadow Tactician';}
+    // Stages / Master — unified new alias system
+    const _stdAlias = (typeof Ninja.getAliasRule === 'function')
+      ? (Ninja.getAliasRule('sentence-ninja', 'standard', { pct }) || '')
+      : (pct>=90?'Junior Strategist':pct>=70?'Tactical Novice':'');
+    if(pct>=90){medal='🏆';msg=_stdAlias||'Junior Strategist';}
+    else if(pct>=70){medal='🥇';msg=_stdAlias||'Tactical Novice';}
     else if(pct>=50){medal='🥈';msg='Good job!';}
   }
   // Per-question XP awarded inside ninjaSentenceLogCorrect.  Add the
@@ -1721,14 +1727,17 @@ function renderSpeedsterEnd() {
   G.isGameOver=true;
   stopAllTimers();
   const n=G.score;
-  // Speedster aliases (Gemini-based): Lv.2 'Elite Strategist', Lv.1 'Shadow Tactician'
-  const rank=n>=130?['🥷','Elite Strategist','Unbelievable speed!']
-            :n>=90?['🏆','Shadow Tactician',"You're lightning fast!"]
-            :n>=50?['🎉','Ninja in Training!','Keep it up!']
-            :n>=25 ?['⭐','Good effort!','Try again!']
+  // Speedster aliases: character-count thresholds via ALIAS_ACQUISITION_RULES
+  const _snSpAlias = (typeof Ninja.getAliasRule === 'function')
+    ? (Ninja.getAliasRule('sentence-ninja', 'speedster', { count: n }) || '')
+    : (n >= 130 ? 'Junior Strategist' : n >= 90 ? 'Tactical Novice' : '');
+  const rank=n>=130?['🥷',_snSpAlias||'Junior Strategist','Unbelievable speed!']
+            :n>=90? ['🏆',_snSpAlias||'Tactical Novice',"You're lightning fast!"]
+            :n>=50? ['🎉','Ninja in Training!','Keep it up!']
+            :n>=25? ['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
   // Per-sentence XP (2.5 XP/char) was awarded inside ninjaSentenceLogCorrect.
-  // Rank completion bonus: Elite Strategist ≥130 chars → +45 XP; Shadow Tactician ≥90 → +25 XP.
+  // Rank completion bonus: Junior Strategist ≥130 chars → +45 XP; Tactical Novice ≥90 → +25 XP.
   let gainedLv = 0;
   let speedsterBonus = 0;
   let newAliasSpeedster = '';
@@ -1737,7 +1746,7 @@ function renderSpeedsterEnd() {
     else if (n >=  90) speedsterBonus = 25;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
-    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rank[1])) newAliasSpeedster = rank[1];
+    if (_snSpAlias && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_snSpAlias)) newAliasSpeedster = _snSpAlias;
   } catch (e) {}
   const newAliasSpeedsterHTML = newAliasSpeedster ? `
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
@@ -1802,11 +1811,14 @@ function renderBlitzEnd() {
   stopAllTimers();
   hideBlitzPanel();
   const n=G.score;
-  // Type Blitz aliases (Gemini-based): Lv.2 'Elite Strategist', Lv.1 'Shadow Tactician'
-  const rank=n>=160?['🥷','Elite Strategist','Unbelievable speed!']
-            :n>=110?['🏆','Shadow Tactician',"You're lightning fast!"]
-            :n>=70?['🎉','Ninja in Training!','Keep it up!']
-            :n>=30 ?['⭐','Good effort!','Try again!']
+  // Type Blitz aliases: character-count thresholds via ALIAS_ACQUISITION_RULES
+  const _snBlitzAlias = (typeof Ninja.getAliasRule === 'function')
+    ? (Ninja.getAliasRule('sentence-ninja', 'blitz', { count: n }) || '')
+    : (n >= 160 ? 'Junior Strategist' : n >= 110 ? 'Tactical Novice' : '');
+  const rank=n>=160?['🥷',_snBlitzAlias||'Junior Strategist','Unbelievable speed!']
+            :n>=110?['🏆',_snBlitzAlias||'Tactical Novice',"You're lightning fast!"]
+            :n>=70? ['🎉','Ninja in Training!','Keep it up!']
+            :n>=30? ['⭐','Good effort!','Try again!']
             :       ['💪','Keep going!','You can do it!'];
   // Per-sentence XP (2.5 XP/char) was awarded inside ninjaSentenceLogCorrect.
   // Rank completion bonus: Blitz Ninja!! ≥160 chars → +45 XP; Blitz Master! ≥110 → +25 XP.
@@ -1818,7 +1830,7 @@ function renderBlitzEnd() {
     else if (n >= 110) blitzBonus = 25;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
-    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(rank[1])) newAliasBlitz = rank[1];
+    if (_snBlitzAlias && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_snBlitzAlias)) newAliasBlitz = _snBlitzAlias;
   } catch (e) {}
   const newAliasBlitzHTML = newAliasBlitz ? `
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">

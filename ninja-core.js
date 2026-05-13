@@ -168,8 +168,8 @@
       'Blitz Master!':     22,  // Eigo Ninja Type Blitz: ≥65 chars
       'Spelling Star!':     8,  // Eigo Ninja Type Blitz: ≥50 chars
 
-      // ──────────── CURRENT SYSTEM (Gemini-based) ────────────
-      // Word + Spelling Ninja basic word categories
+      // ──────────── LEGACY SYSTEM (kept for backward compat) ────────────
+      // Word + Spelling Ninja basic word categories (legacy)
       'Rising Speedster':   3,
       'Blitz Chaser':       8,
       // Phantom Mode (Word + Spelling)
@@ -178,10 +178,10 @@
       // Ninja Sense (Spelling + Sentence)
       'Insight Seeker':     5,
       'Eureka Finder':     10,
-      // Sentence Ninja standard (stages, speedster, blitz)
+      // Sentence Ninja standard (legacy — no longer actively issued)
       'Shadow Tactician':   6,
       'Elite Strategist':  11,
-      // Sentence Ninja Shadow Mode (if exists)
+      // Sentence Ninja Shadow Mode
       'Shadow Scout':       6,
       'Shadow Vanguard':   11,
       // Eigo Ninja grade ranks (one per grade — top-performance unlock)
@@ -191,7 +191,150 @@
       'Master Ninja':      20,
       // Reserved for future grades:
       // 'Grandmaster Ninja': 25 (Grade 1)
+
+      // ──────────── NEW UNIFIED SYSTEM ────────────
+      // Word + Spelling Ninja: difficulty-based perfect
+      'Apprentice Ninja':  1,  // Regular Easy — perfect score
+      'Novice Ninja':      2,  // Regular Normal — perfect score
+      'Adept Ninja':       4,  // Regular Hard — perfect score
+      'Junior Prodigy':    5,  // Regular Very Hard — perfect score
+      // Speedster mode (word count thresholds)
+      'Fast Apprentice':   1,  // Speedster ≥7
+      'Speedy Apprentice': 2,  // Speedster ≥10
+      'Junior Speedster':  4,  // Speedster ≥15
+      // Sentence Ninja unified standard modes
+      'Tactical Novice':   4,  // Stages/Master ≥70% / Speedster ≥90 / Blitz ≥110
+      'Junior Strategist': 6,  // Stages/Master ≥90% / Speedster ≥130 / Blitz ≥160
     };
+
+  // ── Alias acquisition rules — centralised per-game award logic ────────────
+  // Each game calls Ninja.getAliasRule(gameId, ruleType, params) to resolve
+  // the alias name from its current result, rather than hard-coding strings.
+  //
+  // Rule types:
+  //   'perfect'      — difficulty key → alias name (string map)
+  //   'speedster'    — threshold array, highest threshold ≤ count wins
+  //   'blitz'        — same threshold array shape as 'speedster'
+  //   'ninja-sense'  — accuracy (0-1) or pct (0-100) → alias name
+  //   'standard'     — pct (0-100) → alias name (sentence stages/master)
+  //   'shadow-mode'  — quality string ('perfect'|'solid') → alias name
+  var ALIAS_ACQUISITION_RULES = {
+    'word-ninja': {
+      'perfect': {
+        'easy':    'Apprentice Ninja',
+        'normal':  'Novice Ninja',
+        'hard':    'Adept Ninja',
+        'vhard':   'Junior Prodigy',
+        'ninja':   'Phantom Spark',
+        'phantom': 'Phantom Velocity',
+      },
+      // count = number of words correctly answered in Speedster mode
+      'speedster': [
+        { threshold: 15, alias: 'Junior Speedster' },
+        { threshold: 10, alias: 'Speedy Apprentice' },
+        { threshold:  7, alias: 'Fast Apprentice' },
+      ],
+    },
+    'spelling-ninja': {
+      'perfect': {
+        'easy':    'Apprentice Ninja',
+        'normal':  'Novice Ninja',
+        'hard':    'Adept Ninja',
+        'vhard':   'Junior Prodigy',
+        'ninja':   'Phantom Spark',
+        'phantom': 'Phantom Velocity',
+      },
+      // count = number of words correctly spelled in Speedmaster mode
+      'speedster': [
+        { threshold: 15, alias: 'Junior Speedster' },
+        { threshold: 10, alias: 'Speedy Apprentice' },
+        { threshold:  7, alias: 'Fast Apprentice' },
+      ],
+      // count = total characters correctly typed in Blitz mode
+      'blitz': [
+        { threshold: 60, alias: 'Blitz Chaser' },
+        { threshold: 45, alias: 'Rising Speedster' },
+      ],
+      // accuracy (0-1) or pct (0-100)
+      'ninja-sense': {
+        90: 'Eureka Finder',
+        70: 'Insight Seeker',
+      },
+    },
+    'sentence-ninja': {
+      // accuracy (0-1) or pct (0-100)
+      'ninja-sense': {
+        90: 'Eureka Finder',
+        70: 'Insight Seeker',
+      },
+      // pct (0-100) — used for Stages / Master modes
+      'standard': {
+        90: 'Junior Strategist',
+        70: 'Tactical Novice',
+      },
+      // count = characters typed in Speedster mode
+      'speedster': [
+        { threshold: 130, alias: 'Junior Strategist' },
+        { threshold:  90, alias: 'Tactical Novice' },
+      ],
+      // count = characters typed in Blitz mode
+      'blitz': [
+        { threshold: 160, alias: 'Junior Strategist' },
+        { threshold: 110, alias: 'Tactical Novice' },
+      ],
+      // quality = 'perfect' | 'solid'
+      'shadow-mode': {
+        'perfect': 'Shadow Vanguard',
+        'solid':   'Shadow Scout',
+      },
+    },
+  };
+
+  // getAliasRule — resolve an alias name for a game result.
+  //
+  // @param  gameId    'word-ninja' | 'spelling-ninja' | 'sentence-ninja'
+  // @param  ruleType  rule key within the game's entry (see ALIAS_ACQUISITION_RULES)
+  // @param  params    { difficulty, count, accuracy, pct, quality }
+  // @return {string|null}  alias name or null when no threshold is met
+  function getAliasRule(gameId, ruleType, params) {
+    params = params || {};
+    var game = ALIAS_ACQUISITION_RULES[gameId];
+    if (!game) return null;
+    var rule = game[ruleType];
+    if (!rule) return null;
+
+    // Threshold array (speedster / blitz) — walk descending and return first match
+    if (Array.isArray(rule)) {
+      var count = typeof params.count === 'number' ? params.count : 0;
+      for (var i = 0; i < rule.length; i++) {
+        if (count >= rule[i].threshold) return rule[i].alias;
+      }
+      return null;
+    }
+
+    // Object rules — branch by ruleType
+    if (ruleType === 'perfect') {
+      return rule[params.difficulty] || null;
+    }
+
+    if (ruleType === 'ninja-sense' || ruleType === 'standard') {
+      // Accept either accuracy (0–1) or pct (0–100)
+      var pct = (typeof params.pct === 'number') ? params.pct
+              : (typeof params.accuracy === 'number') ? params.accuracy * 100
+              : 0;
+      var keys = Object.keys(rule).map(Number).sort(function (a, b) { return b - a; });
+      for (var j = 0; j < keys.length; j++) {
+        if (pct >= keys[j]) return rule[keys[j]];
+      }
+      return null;
+    }
+
+    if (ruleType === 'shadow-mode') {
+      return rule[params.quality] || null;
+    }
+
+    return null;
+  }
 
   var design = {
     selected: null,   // id of the currently active design (null = no pick yet)
@@ -1010,7 +1153,8 @@
         var total = (w.correct || 0) + (w.wrong || 0);
         var acc   = total > 0 ? w.correct / total : 0;
         var need  = (w.wrong * 3) + (w.lastWrong ? 5 : 0) + (w.slow * 1.5) - (w.correct * 0.5);
-        if (need > 0 || w.lastWrong) {
+        // Include in Analysis Scroll if: has positive need, or has any wrong answers, or flagged as recently wrong
+        if (need > 0 || w.lastWrong || w.wrong > 0) {
           items.push({ entry: entry, label: cat.label || cat.namespace, w: w, need: need, acc: acc });
         }
       });
@@ -1654,6 +1798,10 @@
     loadFromScrollCode: loadFromScrollCode,
     exportData:         exportData,
     importData:         importData,
+
+    // alias acquisition rules (centralised per-game award logic)
+    ALIAS_ACQUISITION_RULES: ALIAS_ACQUISITION_RULES,
+    getAliasRule:            getAliasRule,
 
     // identity
     STATUS_THEMES:  STATUS_THEMES,

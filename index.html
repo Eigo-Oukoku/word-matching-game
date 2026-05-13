@@ -826,17 +826,33 @@ function renderSpeedsterEnd() {
   state.isGameOver = true;
   if (state.speedsterInterval) { clearInterval(state.speedsterInterval); state.speedsterInterval = null; }
   const n = state.score;
-  // Speedster aliases (Gemini-based): Lv.2 'Blitz Chaser', Lv.1 'Rising Speedster'
-  const rank = n >= 10 ? ['🥷','Blitz Chaser','Unbelievable speed!'] : n >= 7 ? ['🎉','Rising Speedster',"You're lightning fast!"] : n >= 5 ? ['⭐','Good job!','Keep it up!'] : n >= 2 ? ['👍','Not bad!','Try again!'] : ['💪','Keep going!','You can do it!'];
+  // Speedster aliases: word-count thresholds via ALIAS_ACQUISITION_RULES
+  const _spAlias = (typeof Ninja.getAliasRule === 'function')
+    ? (Ninja.getAliasRule('word-ninja', 'speedster', { count: n }) || '')
+    : (n >= 15 ? 'Junior Speedster' : n >= 10 ? 'Speedy Apprentice' : n >= 7 ? 'Fast Apprentice' : '');
+  const rank = n >= 15 ? ['🥷', _spAlias || 'Junior Speedster', 'Unbelievable speed!']
+             : n >= 10 ? ['🎉', _spAlias || 'Speedy Apprentice', "You're lightning fast!"]
+             : n >=  7 ? ['⭐', _spAlias || 'Fast Apprentice', 'Great effort!']
+             : n >=  5 ? ['⭐', 'Good job!', 'Keep it up!']
+             : n >=  2 ? ['👍', 'Not bad!', 'Try again!']
+             :            ['💪', 'Keep going!', 'You can do it!'];
 
   // Per-question XP was awarded inside handleChoice (with streak +
   // recovery bonuses).  Speedster gets a small completion bonus when
   // the player crushes it (10+ words in 20s).
   let gainedLv = 0;
+  let newAliasSpeedster = '';
   try {
     if (n >= 10) gainedLv = Ninja.addExp(6);
     Ninja.touchTrained();
+    if (_spAlias && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_spAlias)) newAliasSpeedster = _spAlias;
   } catch (e) {}
+  const newAliasSpeedsterHTML = newAliasSpeedster ? `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
+      <div style="font-size:10px;font-weight:800;color:#FFD54F;letter-spacing:1.5px;">🎉 称号解放 / NEW ALIAS</div>
+      <div style="font-size:17px;font-weight:900;color:#fff;margin:2px 0;">${newAliasSpeedster}</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.7);">ステータスメニューから選択可能 / Select from Status menu</div>
+    </div>` : '';
 
   // ── Type-Blitz-style review block (mistakes + unanswered words) ──
   const mistakes   = (state.mistakes   || []).filter(w => w);
@@ -871,6 +887,7 @@ function renderSpeedsterEnd() {
         <div style="font-size:18px;font-weight:900;">+${Math.max(0, Math.round(state.sessionBonusXp*0.5))} XP · Lv ${Ninja.progress.level}${gainedLv>0?' 🆙':''}</div>
         <div style="font-size:11px;font-weight:700;opacity:0.85;margin-top:2px;">streak / first-time / recovered bonuses included</div>
       </div>
+      ${newAliasSpeedsterHTML}
       ${reviewHTML}
       <button class="level-btn btn-speedster" style="width:auto;padding:15px 40px;margin:14px auto 0;" onclick="renderWelcome()">Play Again</button>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
@@ -893,14 +910,18 @@ function renderEnd() {
   try {
     if (isPerfect) gainedLv = Ninja.addExp(10);
     if (state.lives > 0) Ninja.touchTrained(); // only mark complete when not failed by losing all lives
-    // Mode-specific aliases (Gemini-based)
+    // Mode-specific aliases: difficulty-based for Perfect, Phantom Spark for near-perfect Phantom
     let _rankTitle = '';
     if (isPerfect) {
-      if (state.isPhantom) _rankTitle = 'Phantom Velocity';
-      else                 _rankTitle = 'Blitz Chaser';
-    } else if (state.score >= 7 && state.lives > 0) {
-      if (state.isPhantom) _rankTitle = 'Phantom Spark';
-      else                 _rankTitle = 'Rising Speedster';
+      const _diff = state.isPhantom ? 'phantom'
+                  : state.isNinja   ? 'ninja'
+                  : state.choiceCount >= 10 ? 'vhard'
+                  : state.choiceCount >= 8  ? 'hard'
+                  : state.choiceCount >= 6  ? 'normal'
+                  : 'easy';
+      _rankTitle = Ninja.getAliasRule('word-ninja', 'perfect', { difficulty: _diff }) || '';
+    } else if (state.score >= 7 && state.lives > 0 && state.isPhantom) {
+      _rankTitle = 'Phantom Spark';
     }
     if (_rankTitle && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_rankTitle)) newAliasUnlockedEnd = _rankTitle;
   } catch (e) {}

@@ -1225,6 +1225,8 @@ const Ninja = {
   familiarUnlock:              eigoFamiliarUnlock,
   familiarStarter:             eigoFamiliarStarter,
   familiarHasStarterAvailable: eigoFamiliarHasStarter,
+  // Alias unlock — local impl (eigo-ninja is self-contained; no ninja-core.js)
+  tryUnlockAlias: function(title) { return _eigoTryUnlockAlias(title); },
 };
 
 // ── NinjaUI facade (familiar picker) ─────────────────────────────────────────
@@ -1833,8 +1835,8 @@ const NINJA_ALIAS_RANKS = {
   'Blitz Master!':     22,  // Eigo Ninja Type Blitz: ≥65 chars
   'Spelling Star!':     8,  // Eigo Ninja Type Blitz: ≥50 chars
 
-  // ──────────── CURRENT SYSTEM (Gemini-based) ────────────
-  // Word + Spelling Ninja basic word categories
+  // ──────────── LEGACY SYSTEM (kept for backward compat) ────────────
+  // Word + Spelling Ninja basic word categories (legacy)
   'Rising Speedster':   3,
   'Blitz Chaser':       8,
   // Phantom Mode (Word + Spelling)
@@ -1843,10 +1845,10 @@ const NINJA_ALIAS_RANKS = {
   // Ninja Sense (Spelling + Sentence)
   'Insight Seeker':     5,
   'Eureka Finder':     10,
-  // Sentence Ninja standard (stages, speedster, blitz)
+  // Sentence Ninja standard (legacy — no longer actively issued)
   'Shadow Tactician':   6,
   'Elite Strategist':  11,
-  // Sentence Ninja Shadow Mode (if exists)
+  // Sentence Ninja Shadow Mode
   'Shadow Scout':       6,
   'Shadow Vanguard':   11,
   // Eigo Ninja grade ranks (one per grade — top-performance unlock)
@@ -1856,14 +1858,31 @@ const NINJA_ALIAS_RANKS = {
   'Master Ninja':      20,
   // Reserved for future grades:
   // 'Grandmaster Ninja': 25 (Grade 1)
+
+  // ──────────── NEW UNIFIED SYSTEM ────────────
+  // Word + Spelling Ninja: difficulty-based perfect
+  'Apprentice Ninja':  1,
+  'Novice Ninja':      2,
+  'Adept Ninja':       4,
+  'Junior Prodigy':    5,
+  // Speedster mode
+  'Fast Apprentice':   1,
+  'Speedy Apprentice': 2,
+  'Junior Speedster':  4,
+  // Sentence Ninja unified standard modes
+  'Tactical Novice':   4,
+  'Junior Strategist': 6,
 };
-function ninjaUnlockAlias(title) {
+// tryUnlockAlias — local implementation (eigo-ninja is self-contained; no ninja-core.js).
+// Returns true on first-time unlock (adds to unlockedAliases and saves); false otherwise.
+function _eigoTryUnlockAlias(title) {
   if (!title || !NINJA_ALIAS_RANKS[title]) return false;
-  if (progress.unlockedAliases.indexOf(title) >= 0) return false; // already unlocked
+  if (progress.unlockedAliases.indexOf(title) >= 0) return false;
   progress.unlockedAliases.push(title);
   ninjaSaveLocal();
-  return true; // newly unlocked
+  return true;
 }
+// NINJA_ALIAS_RANKS is kept above for cross-game scroll compatibility filtering.
 
 // ─── Alias resolution helpers ──────────────────────────────────────────
 // One alias per Eigo grade (top performance) — same alias regardless of mode.
@@ -2305,6 +2324,7 @@ function ninjaSaveLocal() {
       selectedAlias:    progress.selectedAlias,
       statusTheme:      progress.statusTheme,
       textColors:       progress.textColors,
+      eigoSlot:         _eigoClanActiveSlot,   // Fix 3: mark writes as eigo-ninja
       updatedAt: Date.now(),
     }));
     // Per-slot clan save — keeps active slot in sync
@@ -2312,7 +2332,11 @@ function ninjaSaveLocal() {
       name: progress.name, nameLocked: progress.nameLocked,
       exp: progress.exp, level: progress.level, words: progress.words,
       globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
-      lastTrainedAt: progress.lastTrainedAt,
+      lastTrainedAt:   progress.lastTrainedAt,
+      unlockedAliases: progress.unlockedAliases.slice(),  // Fix 4
+      selectedAlias:   progress.selectedAlias,             // Fix 4
+      statusTheme:     progress.statusTheme,               // Fix 4
+      textColors:      progress.textColors,                // Fix 4
     });
   } catch(e) {}
 }
@@ -2363,23 +2387,24 @@ function ninjaLoadLocal() {
         progress.lastTrainingGame = s.lastTrainingGame || progress.lastTrainingGame;
       }
       // Union-merge unlocked aliases from shared key
-      if (Array.isArray(s.unlockedAliases)) {
+      // Fix 5: only merge from other games (eigoSlot === undefined means written by non-eigo-ninja)
+      if (Array.isArray(s.unlockedAliases) && s.eigoSlot === undefined) {
         s.unlockedAliases.forEach(a => {
           if (NINJA_ALIAS_RANKS[a] && progress.unlockedAliases.indexOf(a) < 0) {
             progress.unlockedAliases.push(a);
           }
         });
       }
-      // Adopt selectedAlias from shared (always sync with other games)
-            if (s.selectedAlias && progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
-              progress.selectedAlias = s.selectedAlias;
-            }
-      // adopt theme from shared key if local has none set yet
-      if (s.statusTheme && NINJA_STATUS_THEMES[s.statusTheme] && progress.statusTheme === 'dark') {
+      // Adopt selectedAlias from shared — only from other games
+      if (s.eigoSlot === undefined && s.selectedAlias && progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
+        progress.selectedAlias = s.selectedAlias;
+      }
+      // adopt theme from shared key — only from other games (remove 'dark' restriction)
+      if (s.eigoSlot === undefined && s.statusTheme && NINJA_STATUS_THEMES[s.statusTheme]) {
         progress.statusTheme = s.statusTheme;
       }
-      // adopt text color preferences from shared key
-      if (s.textColors && typeof s.textColors === 'object') {
+      // adopt text color preferences from shared key — only from other games
+      if (s.eigoSlot === undefined && s.textColors && typeof s.textColors === 'object') {
         progress.textColors = Object.assign({name:'',alias:'',xpBar:'',complete:'',interrupted:''}, s.textColors);
       }
     }
@@ -4383,7 +4408,9 @@ function startChallenge() {
 }
 
 function renderQuestion() {
+  console.log('DEBUG: renderQuestion called - currentIndex:', state.currentIndex, 'sessionWords.length:', state.sessionWords.length);
   if (state.currentIndex >= state.sessionWords.length) {
+    console.log('DEBUG: Rendering results...');
     renderResults();
     return;
   }
@@ -4635,9 +4662,9 @@ function renderResults() {
   ninjaTouchTrained();
   // Try to unlock the new grade-specific alias first; fall back to legacy msg.
   let _aliasUnlockedTitle = '';
-  if (_gradeAlias && ninjaUnlockAlias(_gradeAlias)) {
+  if (_gradeAlias && Ninja.tryUnlockAlias(_gradeAlias)) {
     _aliasUnlockedTitle = _gradeAlias;
-  } else if (ninjaUnlockAlias(msg)) {
+  } else if (Ninja.tryUnlockAlias(msg)) {
     _aliasUnlockedTitle = msg;
   }
   const _newAliasHTML = _aliasUnlockedTitle ? `
@@ -5215,9 +5242,9 @@ function renderBlitzEnd() {
     _blitzGradeAlias = eigoAliasFor('blitz', ninjaGradeKey(), rank === 'S');
   }
   let _blitzAliasTitle = '';
-  if (_blitzGradeAlias && ninjaUnlockAlias(_blitzGradeAlias)) {
+  if (_blitzGradeAlias && Ninja.tryUnlockAlias(_blitzGradeAlias)) {
     _blitzAliasTitle = _blitzGradeAlias;
-  } else if (ninjaUnlockAlias(msg)) {
+  } else if (Ninja.tryUnlockAlias(msg)) {
     _blitzAliasTitle = msg;
   }
   const _blitzNewAlias = !!_blitzAliasTitle;
@@ -5678,7 +5705,12 @@ function _eigoCaptureToSlot(n) {
     name: progress.name, nameLocked: progress.nameLocked,
     exp: progress.exp, level: progress.level, words: progress.words,
     globalIndex: progress.globalIndex, totalSessions: progress.totalSessions,
-    lastTrainedAt: progress.lastTrainedAt,
+    lastTrainedAt:   progress.lastTrainedAt,
+    unlockedAliases: progress.unlockedAliases.slice(),
+    selectedAlias:   progress.selectedAlias,
+    statusTheme:     progress.statusTheme,
+    textColors:      progress.textColors,
+    savedAt:         Date.now(),
   });
   _eigoSaveSlotDesign(n, {
     selected: shadowNinja.selected,
@@ -5704,11 +5736,24 @@ function _eigoApplySlot(n) {
     progress.globalIndex   = d.globalIndex   || 0;
     progress.totalSessions = d.totalSessions || 0;
     progress.lastTrainedAt = d.lastTrainedAt || 0;
+    // Per-slot alias and theme — each character maintains their own
+    progress.unlockedAliases = Array.isArray(d.unlockedAliases)
+      ? d.unlockedAliases.filter(a => !!NINJA_ALIAS_RANKS[a]) : [];
+    progress.selectedAlias = (d.selectedAlias && progress.unlockedAliases.indexOf(d.selectedAlias) >= 0)
+      ? d.selectedAlias : '';
+    progress.statusTheme = (d.statusTheme && NINJA_STATUS_THEMES[d.statusTheme])
+      ? d.statusTheme : 'dark';
+    progress.textColors = (d.textColors && typeof d.textColors === 'object')
+      ? Object.assign({name:'',alias:'',xpBar:'',complete:'',interrupted:''}, d.textColors)
+      : {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
   } else {
-    // Brand-new slot
+    // Brand-new slot — clear all fields
     progress.name = 'Ninja'; progress.nameLocked = false;
     progress.exp = 0; progress.level = 0; progress.words = {};
     progress.globalIndex = 0; progress.totalSessions = 0; progress.lastTrainedAt = 0;
+    progress.unlockedAliases = []; progress.selectedAlias = '';
+    progress.statusTheme = 'dark';
+    progress.textColors = {name:'',alias:'',xpBar:'',complete:'',interrupted:''};
   }
   const des = _eigoLoadSlotDesign(n);
   shadowNinja.selected = null;
@@ -6300,20 +6345,21 @@ clanBoot();         // clan init — may overwrite sessionPending from slot data
       progress.lastTrainingGame = s.lastTrainingGame || progress.lastTrainingGame;
     }
     // Union-merge unlocked aliases from shared key
-    if (Array.isArray(s.unlockedAliases)) {
+    // Fix 6: only merge from other games (eigoSlot === undefined means written by non-eigo-ninja)
+    if (Array.isArray(s.unlockedAliases) && s.eigoSlot === undefined) {
       s.unlockedAliases.forEach(a => {
         if (NINJA_ALIAS_RANKS[a] && progress.unlockedAliases.indexOf(a) < 0) {
           progress.unlockedAliases.push(a);
         }
       });
     }
-    // Adopt selectedAlias from shared if none set locally
-    if (s.selectedAlias && !progress.selectedAlias &&
+    // Adopt selectedAlias from shared — only from other games
+    if (s.eigoSlot === undefined && s.selectedAlias && !progress.selectedAlias &&
         progress.unlockedAliases.indexOf(s.selectedAlias) >= 0) {
       progress.selectedAlias = s.selectedAlias;
     }
-    // Adopt theme if local still has the default
-    if (s.statusTheme && NINJA_STATUS_THEMES[s.statusTheme] && progress.statusTheme === 'dark') {
+    // Adopt theme — only from other games; remove 'dark' restriction so any theme syncs
+    if (s.eigoSlot === undefined && s.statusTheme && NINJA_STATUS_THEMES[s.statusTheme]) {
       progress.statusTheme = s.statusTheme;
     }
   } catch(e) {}

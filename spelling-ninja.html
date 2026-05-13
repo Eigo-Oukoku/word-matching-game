@@ -1658,8 +1658,11 @@ function renderBlitzEnd(){
   const n=state.letterScore;
   const w=state.score;
   const emoji=n>=60?'🏆':n>=45?'🥇':n>=30?'🥈':'🥷';
-  // New aliases (Gemini-based): top tier 'Blitz Chaser' (≥60), upper tier 'Rising Speedster' (≥45)
-  const msg=n>=60?'Blitz Chaser':n>=45?'Rising Speedster':n>=30?'Nice typing!':'Keep going!';
+  // Blitz aliases: character-count thresholds via ALIAS_ACQUISITION_RULES
+  const _blitzAliasSpell = (typeof Ninja.getAliasRule === 'function')
+    ? (Ninja.getAliasRule('spelling-ninja', 'blitz', { count: n }) || '')
+    : (n >= 60 ? 'Blitz Chaser' : n >= 45 ? 'Rising Speedster' : '');
+  const msg=n>=60?(_blitzAliasSpell||'Blitz Chaser'):n>=45?(_blitzAliasSpell||'Rising Speedster'):n>=30?'Nice typing!':'Keep going!';
 
   // Per-word XP (8 XP/char for Blitz) was awarded inside ninjaLogCorrect.
   // Rank completion bonus: Blitz Chaser ≥60 chars → +25 XP; Rising Speedster ≥45 → +12 XP.
@@ -1671,7 +1674,7 @@ function renderBlitzEnd(){
     else if (n >= 45) blitzBonus = 12;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
-    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(msg)) newAliasBlitz = msg;
+    if (_blitzAliasSpell && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_blitzAliasSpell)) newAliasBlitz = _blitzAliasSpell;
   } catch (e) {}
   const newAliasBlitzHTML = newAliasBlitz ? `
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
@@ -1754,8 +1757,13 @@ function renderSpeedsterEnd(){
   if(state.timer) clearTimeout(state.timer);
   const n=state.speedsterTotal;
   const emoji=n>=35?'🏆':n>=25?'🥇':n>=20?'🥈':'⚡';
-  // New aliases (Gemini-based): top tier 'Blitz Chaser' (≥35), upper tier 'Rising Speedster' (≥25)
-  const msg=n>=35?'Blitz Chaser':n>=25?'Rising Speedster':n>=20?'Keep it up!':'Keep training!';
+  // Speedster aliases: word-count thresholds via ALIAS_ACQUISITION_RULES
+  // w = state.score (number of words correctly spelled in Speedmaster)
+  const _spWordCount = state.score;
+  const _spAliasSpell = (typeof Ninja.getAliasRule === 'function')
+    ? (Ninja.getAliasRule('spelling-ninja', 'speedster', { count: _spWordCount }) || '')
+    : (_spWordCount >= 15 ? 'Junior Speedster' : _spWordCount >= 10 ? 'Speedy Apprentice' : _spWordCount >= 7 ? 'Fast Apprentice' : '');
+  const msg=n>=35?(_spAliasSpell||'Junior Speedster'):n>=25?(_spAliasSpell||'Speedy Apprentice'):n>=20?'Keep it up!':'Keep training!';
   // Per-word XP (11 XP/char for Speedmaster) was awarded inside ninjaLogCorrect.
   // Rank completion bonus: Blitz Chaser ≥35 chars → +25 XP; Rising Speedster ≥25 → +12 XP.
   let gainedLv = 0;
@@ -1766,7 +1774,7 @@ function renderSpeedsterEnd(){
     else if (n >= 25) speedsterBonus = 12;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
-    if (typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(msg)) newAliasSpeedster = msg;
+    if (_spAliasSpell && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_spAliasSpell)) newAliasSpeedster = _spAliasSpell;
   } catch (e) {}
   const newAliasSpeedsterHTML = newAliasSpeedster ? `
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:14px;padding:10px 16px;margin:8px 0 6px;border:2px solid #FFD54F;text-align:center;">
@@ -1827,24 +1835,20 @@ function renderSpeedsterEnd(){
 function renderEnd(){
   const isPerfect = state.score === 10 && state.lives === MAX_LIVES;
   const medal = isPerfect ? '🥷' : state.score===10 ? '🏆' : state.score>=7 ? '🥇' : state.score>=5 ? '🥈' : '🥉';
-  // Per-mode alias map (Gemini-based naming)
-  const _SPELLING_PERFECT_ALIAS = {
-    easy:    'Rising Speedster',
-    normal:  'Rising Speedster',
-    hard:    'Blitz Chaser',
-    vhard:   'Blitz Chaser',
-    ninja:   'Blitz Chaser',
-    phantom: 'Phantom Velocity',
-    sense:   'Eureka Finder',
-  };
-  // Lower-tier alias for non-perfect ≥7/10 runs (still "Lv.1" of the mode)
-  const _SPELLING_NEAR_ALIAS = {
-    phantom: 'Phantom Spark',
-    sense:   'Insight Seeker',
-  };
-  const rankTitle = isPerfect
-    ? (_SPELLING_PERFECT_ALIAS[state.mode] || 'Blitz Chaser')
-    : (state.score >= 7 ? (_SPELLING_NEAR_ALIAS[state.mode] || 'Rising Speedster') : '');
+  // Alias resolution: Ninja Sense uses accuracy threshold; other modes use difficulty-based perfect
+  let rankTitle = '';
+  if (state.mode === 'sense') {
+    const _senseAcc = state.score / 10; // 0-1
+    rankTitle = (typeof Ninja.getAliasRule === 'function'
+      ? Ninja.getAliasRule('spelling-ninja', 'ninja-sense', { accuracy: _senseAcc })
+      : null) || '';
+  } else if (isPerfect) {
+    rankTitle = (typeof Ninja.getAliasRule === 'function'
+      ? Ninja.getAliasRule('spelling-ninja', 'perfect', { difficulty: state.mode })
+      : null) || '';
+  } else if (state.score >= 7 && state.lives > 0 && state.mode === 'phantom') {
+    rankTitle = 'Phantom Spark';
+  }
   // Per-question XP awarded inside ninjaLogCorrect.  Add perfect bonus.
   let gainedLv = 0;
   let newAliasEnd = '';
