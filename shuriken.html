@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="google" content="notranslate">
-  <title>Shuriken Slinger - ELKえいご王国</title>
+  <title>Eigo Shuriken - ELKえいご王国</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +13,17 @@
   <style>
     /* ── CSS variables / reset ─────────────────────────────────────── */
     :root {
-      --bg:        #0d0f1a;
-      --header-bg: #111827;
-      --gold:      #FFD54F;
+      --bg:        #243a63;   /* やや明るめのネイビーブルー (was #0d0f1a) */
+      --header-bg: #2d4a7c;   /* ヘッダー用にもう少し明るい青 (was #111827) */
+      --gold:      #FFE082;
       --crimson:   #E63946;
-      --ink:       #e8eaf0;
-      --accent:    #7C3AED;
-      --green:     #2DD368;
+      --ink:       #f5f8ff;
+      --accent:    #9F75F0;
+      --green:     #6CE0A0;
+      /* 子ども向けの薄パステル — メニューやアクセントに使う */
+      --pastel-green:  #b2e0c5;
+      --pastel-orange: #ffd4a3;
+      --pastel-blue:   #b5dbf5;
     }
     * { box-sizing:border-box; margin:0; padding:0;
         -webkit-user-select:none; user-select:none;
@@ -113,7 +117,7 @@
     /* ── Stage ──────────────────────────────────────────────────────── */
     #stage {
       flex:1; position:relative; overflow:hidden;
-      background:linear-gradient(180deg,#0d1428 0%,#111827 60%,#0d0f1a 100%);
+      background:linear-gradient(180deg,#3d6098 0%,#2d4a7c 55%,#243a63 100%);
       touch-action:none;
     }
     /* subtle grid for depth */
@@ -184,22 +188,21 @@
     #ninja-char.throwing {
       transform:translateX(-50%) translateY(-14px) scale(1.18);
     }
-    /* Familiar badge */
+    /* Familiar badge — 丸枠なし。忍者の右側、中央 +43px に左端が来る位置
+       (chip width 30px, translateX(-50%) で -15px → +58px で 50% +43px) */
     #familiar-chip {
-      position:absolute; bottom:10px; left:50%;
-      transform:translateX(-50%) translateX(30px);
-      width:30px; height:30px; border-radius:50%;
-      background:rgba(14,16,36,0.85);
-      border:2px solid var(--gold);
+      position:absolute; bottom:30px; left:50%;
+      transform:translateX(-50%) translateX(58px);
+      width:30px; height:30px;
       display:flex; align-items:center; justify-content:center;
-      overflow:hidden; z-index:51; pointer-events:none;
+      z-index:51; pointer-events:none;
       animation:famBob 2s ease-in-out infinite;
     }
     @keyframes famBob {
-      0%,100%{ transform:translateX(-50%) translateX(30px) translateY(0); }
-      50%    { transform:translateX(-50%) translateX(30px) translateY(-4px); }
+      0%,100%{ transform:translateX(-50%) translateX(58px) translateY(0); }
+      50%    { transform:translateX(-50%) translateX(58px) translateY(-4px); }
     }
-    #familiar-chip svg { width:24px!important; height:24px!important; }
+    #familiar-chip svg { width:30px!important; height:30px!important; }
     #familiar-chip.hidden { display:none; }
 
     /* ── Shuriken projectile ────────────────────────────────────────── */
@@ -241,7 +244,7 @@
       position:absolute; inset:0; z-index:1000;
       display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
       overflow-y:auto; -webkit-overflow-scrolling:touch;
-      background:linear-gradient(180deg,#0d1428 0%,#111827 100%);
+      background:linear-gradient(180deg,#3d6098 0%,#2d4a7c 60%,#243a63 100%);
       padding:14px 14px max(14px,env(safe-area-inset-bottom));
     }
     .game-title {
@@ -275,18 +278,19 @@
     .btn-mode .mode-sub {
       font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; opacity:0.88;
     }
-    .btn-daily { background:linear-gradient(135deg,#1565c0,#1e88e5); }
-    .btn-alpha-lower { background:linear-gradient(135deg,#00695c,#00897b); }
-    .btn-alpha-upper { background:linear-gradient(135deg,#2e7d32,#43a047); }
-    .btn-alpha-both  { background:linear-gradient(135deg,#827717,#afb42b); }
+    /* 子ども向け 薄パステル系 — 少し明るめの 青 / 緑 / オレンジ */
+    .btn-daily       { background:linear-gradient(135deg,#4a90d4,#6ba8e8); }
+    .btn-alpha-lower { background:linear-gradient(135deg,#3fb8a0,#5fcfb7); }
+    .btn-alpha-upper { background:linear-gradient(135deg,#5cb85c,#7dd380); }
+    .btn-alpha-both  { background:linear-gradient(135deg,#f0a050,#f7c07a); }
 
     .util-row { display:flex; gap:8px; width:100%; margin-top:6px; }
     .btn-util {
       flex:1; padding:11px 5px; font-size:13px; font-weight:900;
-      background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8);
-      border:2px solid rgba(255,255,255,0.13); border-radius:12px;
+      background:rgba(255,212,163,0.12); color:rgba(255,225,200,0.95);
+      border:2px solid rgba(255,212,163,0.32); border-radius:12px;
       cursor:pointer; text-align:center;
-      box-shadow:0 3px 0 rgba(0,0,0,0.3); transition:0.1s;
+      box-shadow:0 3px 0 rgba(0,0,0,0.25); transition:0.1s;
     }
     .btn-util:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
 
@@ -411,6 +415,80 @@
     }
     .gameover-sub { font-size:13px; font-weight:700; color:rgba(255,255,255,0.6); margin-bottom:14px; }
 
+    /* ── Modal overlay (Other Games / あそびかた) ───────────────────── */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:2000;
+      background:rgba(0,0,0,0.62);
+      display:none; align-items:flex-start; justify-content:center;
+      padding:24px 14px max(24px,env(safe-area-inset-bottom));
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
+    }
+    .modal-overlay.show { display:flex; }
+    .modal-box {
+      background:linear-gradient(160deg,#3d6098 0%,#2d4a7c 60%,#243a63 100%);
+      border:2px solid rgba(255,212,163,0.40);
+      border-radius:18px;
+      padding:22px 16px 16px;
+      max-width:440px; width:100%;
+      position:relative;
+      box-shadow:0 10px 36px rgba(0,0,0,0.55);
+      margin:auto 0;
+    }
+    .modal-title {
+      font-family:'Bangers',cursive; font-size:26px; letter-spacing:2px;
+      color:var(--gold); text-align:center; margin-bottom:14px;
+      text-shadow:0 3px 0 rgba(0,0,0,0.35);
+    }
+    .modal-close-top {
+      position:absolute; top:9px; right:11px;
+      background:rgba(255,255,255,0.14); color:#fff;
+      border:none; border-radius:50%; width:32px; height:32px;
+      font-size:17px; cursor:pointer; line-height:1; font-weight:700;
+    }
+    .modal-close-bottom {
+      width:100%; margin-top:10px; padding:11px 6px;
+      background:rgba(255,255,255,0.10); color:#fff;
+      border:2px solid rgba(255,255,255,0.18); border-radius:13px;
+      font-weight:900; font-size:14px; letter-spacing:1px; cursor:pointer;
+    }
+    .modal-close-bottom:active { transform:translateY(2px); }
+
+    /* Other Games game-link buttons (anchors) */
+    .game-link {
+      display:flex; align-items:center; gap:12px;
+      padding:13px 16px; margin-bottom:9px;
+      color:#fff; text-decoration:none; border-radius:14px;
+      font-family:'Bangers',cursive; font-size:18px; letter-spacing:1.5px;
+      box-shadow:0 4px 0 rgba(0,0,0,0.28);
+      transition:0.1s;
+    }
+    .game-link:active { transform:translateY(2px); box-shadow:0 2px 0 rgba(0,0,0,0.28); }
+    .game-link .gl-icon { font-size:24px; line-height:1; }
+    .game-link .gl-sub  { display:block; font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; opacity:0.85; letter-spacing:0.5px; }
+    .game-link.link-eigo  { background:linear-gradient(135deg,#7B5BD6,#9F75F0); }
+    .game-link.link-spell { background:linear-gradient(135deg,#3fb8a0,#5fcfb7); }
+    .game-link.link-sent  { background:linear-gradient(135deg,#f0a050,#f7c07a); }
+    .game-link.link-wn1   { background:linear-gradient(135deg,#5cb85c,#7dd380); }
+    .game-link.link-wn2   { background:linear-gradient(135deg,#4a90d4,#6ba8e8); }
+
+    /* How to Play sections */
+    .how-section {
+      margin-bottom:11px;
+      background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,212,163,0.25);
+      border-radius:13px;
+      padding:11px 14px 12px;
+    }
+    .how-section h3 {
+      font-family:'Bangers',cursive; font-size:17px; letter-spacing:1px;
+      color:var(--gold); margin-bottom:6px;
+    }
+    .how-section p {
+      font-size:14px; line-height:1.65; color:rgba(255,255,255,0.94);
+      font-weight:400;
+    }
+    .how-section p + p { margin-top:4px; }
+
     /* safe-area for bottom */
     body { padding-bottom:env(safe-area-inset-bottom,0); }
     #stage { padding-bottom:env(safe-area-inset-bottom,0); }
@@ -421,7 +499,7 @@
 <!-- ── HEADER ─────────────────────────────────────────────────────────── -->
 <div id="elk-header">
   <button id="btn-home">HOME</button>
-  <div id="header-title">SHURIKEN SLINGER</div>
+  <div id="header-title">EIGO SHURIKEN</div>
   <div style="width:60px"></div>
 </div>
 
@@ -492,17 +570,11 @@
 
     <!-- HOME SCREEN ─────────────────────────────────────────── -->
     <div id="home-screen" class="screen">
-      <div class="game-title">SHURIKEN<br><span>SLINGER</span></div>
+      <div class="game-title">EIGO<br><span>SHURIKEN</span></div>
       <div class="game-sub">ELKえいご王国 — 手裏剣英単語</div>
 
       <!-- Status card -->
       <div id="status-card-wrap"></div>
-
-      <div class="mode-section-lbl">📅 DAILY MODE — 総合修行</div>
-      <button class="btn-mode btn-daily" onclick="SS.startGame('daily')">
-        <span>DAILY MODE<br><span class="mode-sub">All words — weak-word priority</span></span>
-        <span>🌀</span>
-      </button>
 
       <div class="mode-section-lbl">🔤 ALPHABET MODE — アルファベット修行</div>
       <button class="btn-mode btn-alpha-lower" onclick="SS.startGame('alpha-lower')">
@@ -518,13 +590,15 @@
         <span>🔤</span>
       </button>
 
+      <div class="mode-section-lbl">📅 DAILY MODE — 総合修行</div>
+      <button class="btn-mode btn-daily" onclick="SS.startGame('daily')">
+        <span>DAILY MODE<br><span class="mode-sub">All words — weak-word priority</span></span>
+        <span>🌀</span>
+      </button>
+
       <div class="util-row">
-        <button class="btn-util" onclick="NinjaUI.openScroll()">📜 Shadow Clone Scroll</button>
-        <button class="btn-util" onclick="NinjaUI.openAnalysis(SS.getCatalogs())">🔍 Analysis Scroll</button>
-      </div>
-      <div class="util-row" style="margin-top:8px;">
-        <button class="btn-util" onclick="NinjaUI.openFamiliarPicker()">🐾 Familiar</button>
-        <button class="btn-util" onclick="NinjaUI.openDesignPicker()">👘 Character</button>
+        <button class="btn-util" onclick="openLinks()">🎮 Other Games</button>
+        <button class="btn-util" onclick="openHow()">📖 あそびかた</button>
       </div>
     </div><!-- /home-screen -->
 
@@ -568,13 +642,91 @@
   </div><!-- /stage -->
 </div><!-- /game-container -->
 
+<!-- ── Other Games overlay ─────────────────────────────────────────────
+     リンクをタップすると Ninja.armHandoff() でセッションを退避してから
+     遷移するため、貼り付けなしで Shadow Clone Scroll が引き継がれる。
+─────────────────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="links-overlay" onclick="if(event.target===this)closeLinks()">
+  <div class="modal-box">
+    <button class="modal-close-top" onclick="closeLinks()" aria-label="Close">✕</button>
+    <div class="modal-title">🎮 OTHER GAMES</div>
+    <a class="game-link link-eigo"  href="eigo-ninja.html"     onclick="_navTo(event,'eigo-ninja.html')">
+      <span class="gl-icon">📚</span><span>EIGO-NINJA<span class="gl-sub">えいごにんじゃ — 語彙クイズ</span></span>
+    </a>
+    <a class="game-link link-spell" href="spelling-ninja.html" onclick="_navTo(event,'spelling-ninja.html')">
+      <span class="gl-icon">✏️</span><span>SPELLING NINJA<span class="gl-sub">スペリングにんじゃ</span></span>
+    </a>
+    <a class="game-link link-sent"  href="sentence-ninja.html" onclick="_navTo(event,'sentence-ninja.html')">
+      <span class="gl-icon">💬</span><span>SENTENCE NINJA<span class="gl-sub">センテンスにんじゃ</span></span>
+    </a>
+    <a class="game-link link-wn1"   href="game2.html"          onclick="_navTo(event,'game2.html')">
+      <span class="gl-icon">🥷</span><span>WORD NINJA Vol.1<span class="gl-sub">ワードにんじゃ</span></span>
+    </a>
+    <a class="game-link link-wn2"   href="index.html"          onclick="_navTo(event,'index.html')">
+      <span class="gl-icon">🥷</span><span>WORD NINJA Vol.2<span class="gl-sub">ワードにんじゃ</span></span>
+    </a>
+    <button class="modal-close-bottom" onclick="closeLinks()">CLOSE</button>
+  </div>
+</div>
+
+<!-- ── How to Play (あそびかた) overlay ──────────────────────────────── -->
+<div class="modal-overlay" id="how-overlay" onclick="if(event.target===this)closeHow()">
+  <div class="modal-box">
+    <button class="modal-close-top" onclick="closeHow()" aria-label="Close">✕</button>
+    <div class="modal-title">📖 あそびかた</div>
+
+    <div class="how-section">
+      <h3>🎯 きほんルール</h3>
+      <p>画面（がめん）の上（うえ）からアルファベットや単語（たんご）が落（お）ちてきます。</p>
+      <p>「ターゲット」と同（おな）じものを手裏剣（しゅりけん）で撃（う）ち落（お）としましょう！</p>
+    </div>
+
+    <div class="how-section">
+      <h3>🔄 ターゲット切（き）り替（か）え</h3>
+      <p>画面（がめん）の上部（じょうぶ）に、いま狙（ねら）うターゲットが表示（ひょうじ）されます。</p>
+      <p>10秒（びょう）ごとにターゲットが変（か）わります。「ピロ！」という音（おと）が合図（あいず）です。</p>
+    </div>
+
+    <div class="how-section">
+      <h3>❤️ ライフ</h3>
+      <p>ハズレを撃（う）つと、手裏剣（しゅりけん）が跳（は）ね返（かえ）って忍者（にんじゃ）にダメージ。ライフ ❤️ が１つ減（へ）ります。</p>
+      <p>ライフが ３つ なくなると ゲームオーバーです。</p>
+    </div>
+
+    <div class="how-section">
+      <h3>🔥 ラッシュタイム</h3>
+      <p>ときどき「RUSH TIME」に突入（とつにゅう）！スコアと経験値（けいけんち）が ２倍（ばい）になります。</p>
+      <p>終盤（しゅうばん）の残（のこ）り15秒（びょう）も ラッシュタイム です。</p>
+    </div>
+
+    <div class="how-section">
+      <h3>🔤 アルファベットモード</h3>
+      <p>小文字（しょうもじ）／大文字（おおもじ）／両方（りょうほう） の ３種類（しゅるい）。</p>
+      <p>👁 ボタンで文字（もじ）を かくす ことができます。耳（みみ）で聞（き）いて当（あ）ててみよう。</p>
+    </div>
+
+    <div class="how-section">
+      <h3>🌀 デイリーモード</h3>
+      <p>たくさんの単語（たんご）から、苦手（にがて）な ものを 優先（ゆうせん）して 出題（しゅつだい）します。</p>
+    </div>
+
+    <div class="how-section">
+      <h3>🥷 忍者（にんじゃ）の育成（いくせい）</h3>
+      <p>正解（せいかい）すると 経験値（けいけんち）が もらえます。レベルが 上（あ）がるほど、選（えら）べるキャラクターや お供（とも）が 増（ふ）えます。</p>
+      <p>ステータスカードを タップ すると、自分（じぶん）の 忍者（にんじゃ）の せってい を かえられます。</p>
+    </div>
+
+    <button class="modal-close-bottom" onclick="closeHow()">CLOSE</button>
+  </div>
+</div>
+
 <!-- ── NinjaCore / NinjaUI ───────────────────────────────────────────── -->
 <script src="ninja-core.js"></script>
 <script src="ninja-ui.js"></script>
 
 <script>
 /* =========================================================================
- * Shuriken Slinger — メインゲームスクリプト
+ * Eigo Shuriken — メインゲームスクリプト
  * =========================================================================
  * 設計方針:
  *   • 音声: fetch→Blob→URL.createObjectURL→new Audio() (iOS Safari/Chrome対応)
@@ -677,8 +829,8 @@ var ALPHA_BASE  = ALPHABET_LETTERS.map(function(l) { return makeAlphaEntry(l, fa
 window.getNinjaCatalogs = function() { return SS.getCatalogs(); };
 
 Ninja.configure({
-  gameId:          'shuriken-slinger',
-  gameLabel:       'Shuriken Slinger',
+  gameId:          'shuriken-slinger',   /* 互換維持のため gameId はそのまま */
+  gameLabel:       'Eigo Shuriken',
   xpMultiplier:    0.5,        /* word-ninja相当: eigo-ninjaの50% */
   slowMs:          8000,       /* 8秒以上かかった場合はslowに記録 */
   imagePathPrefix: 'images/',  /* 他ゲームと統一 — キャラデザ画像は images/ 配下 */
@@ -1043,6 +1195,12 @@ var SS = (function() {
   function qs(id) { return document.getElementById(id); }
 
   function showScreen(id) {
+    /* HUD と target-box は #stage の外（game-container 直下）にあるため、
+     * screen overlay（z-index 1000）では隠れない。プレイ中以外は明示的に
+     * 非表示にすることで、Top Menu に前回のターゲットが残るバグを防ぐ。 */
+    var inGame = (id === null);
+    var hud = qs('top-hud');     if (hud) hud.style.display = inGame ? '' : 'none';
+    var tb  = qs('target-box');  if (tb)  tb.style.display  = inGame ? '' : 'none';
     ['home-screen','result-screen','gameover-screen'].forEach(function(s) {
       var el = qs(s);
       if (el) el.style.display = (s === id) ? 'flex' : 'none';
@@ -1838,6 +1996,21 @@ document.addEventListener('mousedown',  _unlockSfxCtx, { passive: true });
 window.onNinjaProgressChanged = function() {
   try { SS.refresh(); } catch(e) {}
 };
+
+/* ── Modal handlers (Other Games / あそびかた) ──────────────────────── */
+function openLinks()  { _unlockSfxCtx(); document.getElementById('links-overlay').classList.add('show'); }
+function closeLinks() { document.getElementById('links-overlay').classList.remove('show'); }
+function openHow()    { _unlockSfxCtx(); document.getElementById('how-overlay').classList.add('show'); }
+function closeHow()   { document.getElementById('how-overlay').classList.remove('show'); }
+
+/* Other Games リンク遷移 — Ninja.armHandoff() でセッションを保存してから
+ * 次のゲームへ。受け取り側 (boot 内 consumeHandoff) が貼り付け不要で
+ * Shadow Clone Scroll を復元する。 */
+function _navTo(ev, url) {
+  if (ev) ev.preventDefault();
+  try { if (typeof Ninja !== 'undefined' && Ninja.armHandoff) Ninja.armHandoff(); } catch(e) {}
+  window.location.href = url;
+}
 
 /* ── Visibility change: iOS Safariでバックグラウンド時に音声停止 ──────── */
 document.addEventListener('visibilitychange', function() {
