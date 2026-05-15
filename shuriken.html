@@ -8,7 +8,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;900&family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Bangers&family=Nunito:wght@400;700;900&family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
 
   <style>
     /* ── CSS variables / reset ─────────────────────────────────────── */
@@ -275,9 +275,10 @@
     .btn-mode .mode-sub {
       font-family:'Nunito',sans-serif; font-size:11px; font-weight:700; opacity:0.88;
     }
-    .btn-weak1 { background:linear-gradient(135deg,#b71c1c,#e53935); }
-    .btn-weak2 { background:linear-gradient(135deg,#6a1b9a,#8e24aa); }
     .btn-daily { background:linear-gradient(135deg,#1565c0,#1e88e5); }
+    .btn-alpha-lower { background:linear-gradient(135deg,#00695c,#00897b); }
+    .btn-alpha-upper { background:linear-gradient(135deg,#2e7d32,#43a047); }
+    .btn-alpha-both  { background:linear-gradient(135deg,#827717,#afb42b); }
 
     .util-row { display:flex; gap:8px; width:100%; margin-top:6px; }
     .btn-util {
@@ -326,6 +327,90 @@
     }
     .btn-back:active { transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,0.3); }
 
+    /* ── Hearts / Lives (HUD) ───────────────────────────────────────── */
+    #ui-hearts {
+      font-size:16px; line-height:1; letter-spacing:1px;
+      background:rgba(255,255,255,0.07);
+      border:2px solid rgba(230,57,70,0.35);
+      border-radius:20px; padding:4px 10px; white-space:nowrap;
+    }
+    #ui-hearts.shake { animation:heartShake 0.5s ease; }
+    @keyframes heartShake {
+      0%,100% { transform:translateX(0); }
+      15%     { transform:translateX(-5px) rotate(-6deg); }
+      35%     { transform:translateX(5px)  rotate(6deg); }
+      55%     { transform:translateX(-4px) rotate(-4deg); }
+      75%     { transform:translateX(3px); }
+    }
+
+    /* ── Ninja avatar image (selected design) ───────────────────────── */
+    #ninja-char img {
+      width:100%; height:100%; object-fit:contain; display:block;
+      -webkit-user-drag:none;
+    }
+    #ninja-char.hurt { animation:ninjaHurt 0.42s ease; }
+    @keyframes ninjaHurt {
+      0%,100% { transform:translateX(-50%) translateY(0)   rotate(0); }
+      20%     { transform:translateX(-50%) translateY(2px) rotate(-10deg); filter:brightness(0.5) sepia(1) hue-rotate(-30deg) saturate(4); }
+      45%     { transform:translateX(-50%) translateY(0)   rotate(9deg);  filter:brightness(0.6) sepia(1) hue-rotate(-30deg) saturate(4); }
+      70%     { transform:translateX(-50%) translateY(1px) rotate(-5deg); }
+    }
+
+    /* ── Letter show/hide toggle ────────────────────────────────────── */
+    #btn-letter-toggle {
+      flex-shrink:0; display:none;
+      font-family:'Bangers',cursive; font-size:13px; letter-spacing:0.5px;
+      background:rgba(255,255,255,0.08); color:var(--ink);
+      border:2px solid rgba(255,255,255,0.2); border-radius:12px;
+      padding:7px 9px; cursor:pointer;
+    }
+    #btn-letter-toggle:active { opacity:0.7; }
+    #btn-letter-toggle.on { border-color:var(--gold); color:var(--gold); }
+
+    /* alphabet target glyphs render bigger & centred.
+       教育フォント Andika（SIL — 子ども向けに最適化された字形：単層 a / 単層 g・
+       I と l の区別が明瞭）を最優先。フォールバックに Helvetica。 */
+    #target-jp.alpha {
+      font-size:clamp(36px,12vw,56px); letter-spacing:6px;
+      font-family:'Andika','Helvetica Neue',Helvetica,Arial,sans-serif;
+      font-weight:700; color:var(--gold);
+    }
+    .falling-word.alpha-glyph {
+      font-family:'Andika','Helvetica Neue',Helvetica,Arial,sans-serif;
+      font-weight:700;
+      font-size:clamp(28px,7.5vw,38px); letter-spacing:1px;
+      padding:11px 22px;
+    }
+
+    /* ── RUSH TIME ──────────────────────────────────────────────────── */
+    #rush-banner {
+      position:absolute; top:34%; left:50%;
+      transform:translate(-50%,-50%) scale(0.4); opacity:0;
+      font-family:'Bangers',cursive; font-size:46px; letter-spacing:2px;
+      color:#fff; text-shadow:0 0 18px rgba(230,57,70,0.95),0 4px 0 rgba(0,0,0,0.4);
+      pointer-events:none; z-index:620; white-space:nowrap; text-align:center;
+      transition:transform 0.22s cubic-bezier(.2,1.6,.4,1), opacity 0.22s ease;
+    }
+    #rush-banner.show { transform:translate(-50%,-50%) scale(1); opacity:1; }
+    #rush-banner .rush-sub { display:block; font-size:16px; color:var(--gold); letter-spacing:1px; }
+    #stage.rush::after {
+      content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
+      background:radial-gradient(ellipse at 50% 100%,rgba(230,57,70,0.22),transparent 70%);
+      animation:rushPulse 0.9s ease-in-out infinite alternate;
+    }
+    @keyframes rushPulse { from{opacity:0.5} to{opacity:1} }
+    #ui-timer.rush { color:#fff; text-shadow:0 0 10px rgba(230,57,70,0.9); }
+    .float-rush { font-size:22px; color:#fff; text-shadow:0 0 10px rgba(230,57,70,0.95); }
+
+    /* ── Game Over screen ───────────────────────────────────────────── */
+    #gameover-screen { display:none; }
+    .gameover-emoji { font-size:74px; margin:14px 0 2px; }
+    .gameover-title {
+      font-family:'Bangers',cursive; font-size:46px; letter-spacing:2px;
+      color:var(--crimson); text-shadow:0 4px 0 rgba(0,0,0,0.4); margin-bottom:4px;
+    }
+    .gameover-sub { font-size:13px; font-weight:700; color:rgba(255,255,255,0.6); margin-bottom:14px; }
+
     /* safe-area for bottom */
     body { padding-bottom:env(safe-area-inset-bottom,0); }
     #stage { padding-bottom:env(safe-area-inset-bottom,0); }
@@ -343,10 +428,11 @@
 <!-- ── GAME CONTAINER ─────────────────────────────────────────────────── -->
 <div id="game-container">
 
-  <!-- HUD (score / combo / timer) -->
+  <!-- HUD (score / hearts / combo / timer) -->
   <div id="top-hud">
     <div class="hud-pill" id="ui-score">SCORE: 0</div>
-    <div class="hud-pill hidden" id="ui-combo">COMBO ×1</div>
+    <div id="ui-hearts">❤️❤️❤️</div>
+    <div class="hud-pill hidden" id="ui-combo">×1</div>
     <div class="hud-pill" id="ui-timer">90s</div>
   </div>
 
@@ -358,6 +444,7 @@
       <div id="target-en"></div>
       <div id="target-switch-bar"><div id="target-switch-fill" style="width:100%"></div></div>
     </div>
+    <button id="btn-letter-toggle">👁<br>HIDE</button>
     <button id="btn-listen">🔊 LISTEN</button>
   </div>
 
@@ -400,6 +487,9 @@
     <!-- Countdown flash -->
     <div id="countdown-flash"></div>
 
+    <!-- RUSH TIME banner -->
+    <div id="rush-banner">🔥 RUSH TIME! 🔥<span class="rush-sub">SCORE &amp; XP ×2</span></div>
+
     <!-- HOME SCREEN ─────────────────────────────────────────── -->
     <div id="home-screen" class="screen">
       <div class="game-title">SHURIKEN<br><span>SLINGER</span></div>
@@ -408,20 +498,24 @@
       <!-- Status card -->
       <div id="status-card-wrap"></div>
 
-      <div class="mode-section-lbl">⚡ WEAK POINT MODE — 弱点集中特訓</div>
-      <button class="btn-mode btn-weak1" onclick="SS.startGame('weak1')">
-        <span>WEAK POINT 1<br><span class="mode-sub">towel · soap · airplane · train · plate · pants · two</span></span>
-        <span>🎯</span>
-      </button>
-      <button class="btn-mode btn-weak2" onclick="SS.startGame('weak2')">
-        <span>WEAK POINT 2<br><span class="mode-sub">mirror · hairbrush · three · dish · five · knife · +more</span></span>
-        <span>🎯</span>
-      </button>
-
       <div class="mode-section-lbl">📅 DAILY MODE — 総合修行</div>
       <button class="btn-mode btn-daily" onclick="SS.startGame('daily')">
-        <span>DAILY MODE<br><span class="mode-sub">All 38 words — weak-word priority</span></span>
+        <span>DAILY MODE<br><span class="mode-sub">All words — weak-word priority</span></span>
         <span>🌀</span>
+      </button>
+
+      <div class="mode-section-lbl">🔤 ALPHABET MODE — アルファベット修行</div>
+      <button class="btn-mode btn-alpha-lower" onclick="SS.startGame('alpha-lower')">
+        <span>LOWERCASE<br><span class="mode-sub">小文字　a · b · c · d …</span></span>
+        <span>🔡</span>
+      </button>
+      <button class="btn-mode btn-alpha-upper" onclick="SS.startGame('alpha-upper')">
+        <span>UPPERCASE<br><span class="mode-sub">大文字　A · B · C · D …</span></span>
+        <span>🔠</span>
+      </button>
+      <button class="btn-mode btn-alpha-both" onclick="SS.startGame('alpha-both')">
+        <span>BOTH CASES<br><span class="mode-sub">大文字と小文字　A a · B b …</span></span>
+        <span>🔤</span>
       </button>
 
       <div class="util-row">
@@ -450,6 +544,26 @@
       <button class="btn-retry" onclick="SS.startGame(SS.lastMode)">⚔️ RETRY</button>
       <button class="btn-back" onclick="SS.goHome()">← HOME</button>
     </div><!-- /result-screen -->
+
+    <!-- GAME OVER SCREEN ────────────────────────────────────── -->
+    <div id="gameover-screen" class="screen">
+      <div class="gameover-emoji">💔</div>
+      <div class="gameover-title">GAME OVER</div>
+      <div class="gameover-sub" id="gameover-sub">ライフが尽きた…</div>
+
+      <div class="result-score" id="go-score">0</div>
+      <div class="result-sub">points</div>
+
+      <div class="result-stats" id="go-stats"></div>
+
+      <div class="result-xp" id="go-xp">+ 0 XP</div>
+
+      <!-- refreshed status card -->
+      <div id="go-status-wrap" style="width:100%;margin-bottom:14px;"></div>
+
+      <button class="btn-retry" onclick="SS.startGame(SS.lastMode)">⚔️ RETRY</button>
+      <button class="btn-back" onclick="SS.goHome()">← HOME</button>
+    </div><!-- /gameover-screen -->
 
   </div><!-- /stage -->
 </div><!-- /game-container -->
@@ -510,31 +624,6 @@ var SHURIKEN_SVG =
 /* =========================================================================
  * VOCABULARY DATA
  * ========================================================================= */
-var WEAK1_VOCAB = [
-  {en:'towel',     jp:'タオル',         audio:'towel'},
-  {en:'soap',      jp:'せっけん',       audio:'soap'},
-  {en:'airplane',  jp:'ひこうき',       audio:'airplane'},
-  {en:'train',     jp:'でんしゃ',       audio:'train'},
-  {en:'plate',     jp:'おさら',         audio:'plate'},
-  {en:'pants',     jp:'ズボン',         audio:'pants'},
-  {en:'two',       jp:'２',             audio:'two'},
-];
-
-var WEAK2_VOCAB = [
-  {en:'mirror',    jp:'かがみ',         audio:'mirror'},
-  {en:'hairbrush', jp:'ヘアブラシ',     audio:'hairbrush'},
-  {en:'three',     jp:'さん・３',       audio:'three'},
-  {en:'dish',      jp:'あさい皿',       audio:'dish'},
-  {en:'five',      jp:'ご・５',         audio:'five'},
-  {en:'knife',     jp:'ナイフ',         audio:'knife'},
-  {en:'helicopter',jp:'ヘリコプター',   audio:'helicopter'},
-  {en:'skirt',     jp:'スカート',       audio:'skirt'},
-  {en:'ten',       jp:'じゅう・１０',   audio:'ten'},
-  {en:'nine',      jp:'く・９',         audio:'nine'},
-  {en:'four',      jp:'し・４',         audio:'four'},
-  {en:'sweater',   jp:'セーター',       audio:'sweater'},
-];
-
 /* Daily: same 38 words as Word Ninja Vol.1 */
 var ALL_WORDS_KEYS = ['one','two','three','four','five','six','seven','eight','nine','ten',
   'pants','skirt','sweater','T-shirt','handkerchief','cap','toothbrush','soap','towel',
@@ -559,6 +648,29 @@ function makeVocabEntry(key) {
 }
 var DAILY_VOCAB = ALL_WORDS_KEYS.map(makeVocabEntry);
 
+/* ── ALPHABET DATA ──────────────────────────────────────────────────────
+ * 26 letters. Each entry carries a lowercase `base` used for both the
+ * Analysis-Scroll key and target matching, so 'A' and 'a' are treated as
+ * the same letter (文字単位で統合). Audio = audio/alphabet_<letter>.mp3.
+ * ───────────────────────────────────────────────────────────────────── */
+var ALPHABET_LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+function makeAlphaEntry(letter, upper) {
+  var ch = upper ? letter.toUpperCase() : letter;
+  return {
+    en:    ch,                       /* glyph shown on the falling pill   */
+    base:  letter,                   /* lowercase key (matching + Scroll) */
+    jp:    ch,                       /* glyph shown in the target box     */
+    audio: 'alphabet_' + letter,     /* audio/alphabet_a.mp3 …            */
+    alpha: true,
+    upper: !!upper,
+  };
+}
+var ALPHA_LOWER = ALPHABET_LETTERS.map(function(l) { return makeAlphaEntry(l, false); });
+var ALPHA_UPPER = ALPHABET_LETTERS.map(function(l) { return makeAlphaEntry(l, true);  });
+/* base letters used only for target selection in alphabet modes */
+var ALPHA_BASE  = ALPHABET_LETTERS.map(function(l) { return makeAlphaEntry(l, false); });
+
 /* =========================================================================
  * NINJACORE BOOT
  * ========================================================================= */
@@ -567,9 +679,9 @@ window.getNinjaCatalogs = function() { return SS.getCatalogs(); };
 Ninja.configure({
   gameId:          'shuriken-slinger',
   gameLabel:       'Shuriken Slinger',
-  xpMultiplier:    0.5,   /* word-ninja相当: eigo-ninjaの50% */
-  slowMs:          8000,  /* 8秒以上かかった場合はslowに記録 */
-  imagePathPrefix: '',    /* ninja-core.jsのデフォルトに合わせる */
+  xpMultiplier:    0.5,        /* word-ninja相当: eigo-ninjaの50% */
+  slowMs:          8000,       /* 8秒以上かかった場合はslowに記録 */
+  imagePathPrefix: 'images/',  /* 他ゲームと統一 — キャラデザ画像は images/ 配下 */
 });
 Ninja.boot();
 
@@ -603,52 +715,62 @@ function _unlockSfxCtx() {
   } catch(e) {}
 }
 
-/* ── SFX: 手裏剣を投げる「シュッ」 ─────────────────────────────────────── */
+/* ── SFX: 手裏剣を投げる「シュッ！」 ───────────────────────────────────────
+ * バンドパスノイズを sin エンベロープで膨らませて消す → 鋭い「シュッ」 */
 function sfxThrow() {
   try {
     var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
     var sr = ctx.sampleRate;
-    var dur = 0.11;
+    var dur = 0.13;
     var buf = ctx.createBuffer(1, Math.floor(sr * dur), sr);
     var d = buf.getChannelData(0);
-    for (var i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * (1 - i/d.length);
+    for (var i = 0; i < d.length; i++) {
+      var env = Math.sin(Math.PI * (i / d.length));   /* ふくらんで消える */
+      d[i] = (Math.random()*2-1) * env;
+    }
     var src = ctx.createBufferSource(); src.buffer = buf;
     var filt = ctx.createBiquadFilter();
     filt.type = 'bandpass';
-    filt.frequency.setValueAtTime(900, ctx.currentTime);
-    filt.frequency.exponentialRampToValueAtTime(7000, ctx.currentTime + dur);
-    filt.Q.value = 0.7;
+    filt.frequency.setValueAtTime(1200, ctx.currentTime);
+    filt.frequency.exponentialRampToValueAtTime(6500, ctx.currentTime + dur);
+    filt.Q.value = 1.1;
     var g = ctx.createGain();
-    g.gain.setValueAtTime(0.32, ctx.currentTime);
+    g.gain.setValueAtTime(0.34, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
     src.connect(filt); filt.connect(g); g.connect(ctx.destination);
     src.start();
   } catch(e) {}
 }
 
-/* ── SFX: 命中「ザクッ」(correct) ──────────────────────────────────────── */
+/* ── SFX: 命中「サクッ！」(correct) ────────────────────────────────────────
+ * 鋭く短いハイパスノイズ + 木質的な高い「クッ」トーン → 切断感のある「サク」 */
 function sfxHitCorrect() {
   try {
     var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
     var now = ctx.currentTime;
-    /* ノイズ成分 */
-    var sr = ctx.sampleRate, len = Math.floor(sr * 0.07);
+    /* ノイズ成分 — 鋭いアタック + 速い減衰 */
+    var sr = ctx.sampleRate, len = Math.floor(sr * 0.06);
     var buf = ctx.createBuffer(1, len, sr);
     var d = buf.getChannelData(0);
-    for (var i = 0; i < len; i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+    for (var i = 0; i < len; i++) {
+      var env = Math.pow(1 - i / len, 2.2);
+      d[i] = (Math.random()*2-1) * env;
+    }
     var ns = ctx.createBufferSource(); ns.buffer = buf;
-    var nf = ctx.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 2800;
+    var nf = ctx.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 3200;
     var ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.38, now); ng.gain.exponentialRampToValueAtTime(0.001, now+0.07);
+    ng.gain.setValueAtTime(0.5, now); ng.gain.exponentialRampToValueAtTime(0.001, now+0.06);
     ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination); ns.start(now);
-    /* トーン成分 */
-    var osc = ctx.createOscillator(); osc.type = 'triangle';
-    osc.frequency.setValueAtTime(640, now);
-    osc.frequency.exponentialRampToValueAtTime(180, now+0.1);
+    /* 「クッ」高めの木質トーン (短くスナップ) */
+    var osc = ctx.createOscillator(); osc.type = 'square';
+    osc.frequency.setValueAtTime(880, now+0.012);
+    osc.frequency.exponentialRampToValueAtTime(440, now+0.06);
     var og = ctx.createGain();
-    og.gain.setValueAtTime(0.25, now); og.gain.exponentialRampToValueAtTime(0.001, now+0.1);
+    og.gain.setValueAtTime(0, now);
+    og.gain.linearRampToValueAtTime(0.22, now+0.018);
+    og.gain.exponentialRampToValueAtTime(0.001, now+0.07);
     osc.connect(og); og.connect(ctx.destination);
-    osc.start(now); osc.stop(now+0.1);
+    osc.start(now); osc.stop(now+0.08);
   } catch(e) {}
 }
 
@@ -683,24 +805,49 @@ function sfxCountdown(n) {
   } catch(e) {}
 }
 
-/* ── SFX: ターゲット切り替え「シュウッ」 ──────────────────────────────── */
+/* ── SFX: ターゲット切り替え「ピロ！」 ─────────────────────────────────────
+ * 高く明るい2音の上昇チャイム（ピ→ロ）。子ども向けに耳に残る軽快な音。 */
 function sfxSwitch() {
   try {
     var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
     var now = ctx.currentTime;
-    /* 下降+上昇スウィープ */
-    var o1 = ctx.createOscillator(); o1.type = 'sawtooth';
-    o1.frequency.setValueAtTime(480, now);
-    o1.frequency.exponentialRampToValueAtTime(200, now+0.1);
-    var o2 = ctx.createOscillator(); o2.type = 'sawtooth';
-    o2.frequency.setValueAtTime(200, now+0.1);
-    o2.frequency.exponentialRampToValueAtTime(720, now+0.22);
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(0.28, now);
-    g.gain.linearRampToValueAtTime(0.0, now+0.26);
-    o1.connect(g); o2.connect(g); g.connect(ctx.destination);
-    o1.start(now); o1.stop(now+0.12);
-    o2.start(now+0.1); o2.stop(now+0.26);
+    /* 「ピ」E6 → 「ロ」A6 — 高音の上昇 */
+    var notes = [
+      { f: 1318.5, t: 0.00, d: 0.09 },   /* ピ */
+      { f: 1760.0, t: 0.10, d: 0.14 },   /* ロ */
+    ];
+    notes.forEach(function(n) {
+      var t   = now + n.t;
+      var osc = ctx.createOscillator(); osc.type = 'triangle';
+      osc.frequency.setValueAtTime(n.f, t);
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.34, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.001, t + n.d);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t + n.d + 0.02);
+    });
+  } catch(e) {}
+}
+
+/* ── SFX: RUSH TIME 突入「テッテレー」 ────────────────────────────────── */
+function sfxRush() {
+  try {
+    var ctx = _getSfxCtx(); if (!ctx || ctx.state !== 'running') return;
+    var now = ctx.currentTime;
+    /* 上昇アルペジオ — C5 → E5 → G5 → C6 */
+    var notes = [523.25, 659.25, 783.99, 1046.5];
+    notes.forEach(function(f, i) {
+      var t   = now + i * 0.085;
+      var osc = ctx.createOscillator(); osc.type = 'square';
+      osc.frequency.setValueAtTime(f, t);
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.26, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.18);
+    });
   } catch(e) {}
 }
 
@@ -712,15 +859,35 @@ function sfxSwitch() {
 var _wBlobs = {};    /* key → blobURL or '' (failed) */
 var _wProms = {};    /* key → Promise */
 
-function preloadWord(audioKey) {
-  if (!audioKey) return Promise.resolve(null);
-  if (audioKey in _wBlobs) return Promise.resolve(_wBlobs[audioKey] || null);
-  if (_wProms[audioKey])   return _wProms[audioKey];
-  _wProms[audioKey] = fetch('audio/' + audioKey + '.mp3')
+/* 音声ファイルの探索パス候補。
+ * アルファベット音声(alphabet_a 〜 alphabet_z)は専用フォルダ alphabet/ を
+ * 優先し、audio/ をフォールバックとする（どちらに置いても動くように）。 */
+function _audioCandidates(audioKey) {
+  if (audioKey.indexOf('alphabet_') === 0) {
+    return ['alphabet/' + audioKey + '.mp3', 'audio/' + audioKey + '.mp3'];
+  }
+  return ['audio/' + audioKey + '.mp3'];
+}
+
+/* 候補URLを順に fetch — 最初に成功したものの blob を返す */
+function _fetchFirst(urls, i) {
+  i = i || 0;
+  return fetch(urls[i])
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.blob();
     })
+    .catch(function(err) {
+      if (i + 1 < urls.length) return _fetchFirst(urls, i + 1);
+      throw err;
+    });
+}
+
+function preloadWord(audioKey) {
+  if (!audioKey) return Promise.resolve(null);
+  if (audioKey in _wBlobs) return Promise.resolve(_wBlobs[audioKey] || null);
+  if (_wProms[audioKey])   return _wProms[audioKey];
+  _wProms[audioKey] = _fetchFirst(_audioCandidates(audioKey))
     .then(function(blob) {
       _wBlobs[audioKey] = URL.createObjectURL(blob);
       return _wBlobs[audioKey];
@@ -792,11 +959,27 @@ var SS = (function() {
   var MIN_SPAWN_MS      = 700;  /* 最小スポーン間隔 */
   var BASE_SPEED        = 55;   /* px/sec — 5歳向け: ゆっくり */
   var MAX_SPEED         = 130;  /* px/sec — 終盤の最大速度 */
+  var MAX_LIVES         = 3;    /* ❤️×3 — 0でゲームオーバー */
+
+  var MODE_LABELS = {
+    'daily':       'Daily Mode',
+    'alpha-lower': 'Alphabet — 小文字',
+    'alpha-upper': 'Alphabet — 大文字',
+    'alpha-both':  'Alphabet — 大文字と小文字',
+  };
+
+  /* デフォルト忍者SVG（キャラデザ未選択時のフォールバック） — モジュール
+   * ロード時に #ninja-char の初期内容をそのまま退避しておく。 */
+  var NINJA_DEFAULT_SVG = (function() {
+    var n = document.getElementById('ninja-char');
+    return n ? n.innerHTML : '';
+  })();
+  window.NINJA_DEFAULT_SVG = NINJA_DEFAULT_SVG;
 
   /* ── state ──────────────────────────────────────────────────────────── */
-  var mode      = 'weak1';
-  var vocabSet  = [];
-  var distSet   = [];    /* distractors用 (modeによって異なる) */
+  var mode      = 'daily';
+  var vocabSet  = [];      /* ターゲット選択元 (alpha では ALPHA_BASE) */
+  var distSet   = [];      /* distractors用 (modeによって異なる) */
 
   var score         = 0;
   var combo         = 0;
@@ -805,8 +988,14 @@ var SS = (function() {
   var targetTimer   = TARGET_INTERVAL;
   var gameActive    = false;
 
+  var lives         = MAX_LIVES;
+  var letterHidden  = false;   /* アルファベットモードの文字 表示/非表示 */
+
+  var rushActive    = false;
+  var rushUntil     = -1;      /* timeLeft がこの値以下になったら RUSH 終了 */
+
   var currentTarget = null;
-  var activeItems   = [];    /* { el, y, speed, vocab, hit } */
+  var activeItems   = [];    /* { el, y, speed, vocab, isTarget, hit, spawnedAt } */
 
   /* timers / rAF */
   var _tickInterval  = null;
@@ -824,12 +1013,29 @@ var SS = (function() {
   var _totalXp        = 0;
   var _sessionStart   = 0;
 
-  /* ── catalog for Analysis Scroll ───────────────────────────────────── */
+  /* ── mode helpers ───────────────────────────────────────────────────── */
+  function isAlphaMode() { return mode.indexOf('alpha') === 0; }
+
+  function currentNamespace() {
+    return mode === 'daily' ? 'shuriken-daily'
+         :                    'shuriken-alpha';   /* 全アルファベットモード共通 */
+  }
+
+  /* ターゲット / 落下オブジェクトの一致判定。
+   * アルファベットは base(小文字) で照合するので 'A' と 'a' は同一文字扱い。 */
+  function isMatch(vocab, target) {
+    if (!vocab || !target) return false;
+    if (vocab.alpha) return vocab.base === target.base;
+    return vocab.en === target.en;
+  }
+
+  /* ── catalog for Analysis Scroll ─────────────────────────────────────
+   * Weak Point モードは廃止したため weak1/weak2 namespace は出題しない。
+   * (旧 namespace に履歴がある場合でも Analysis には表示しない) */
   function getCatalogs() {
     return [
-      { namespace:'shuriken-weak1', label:'WK1', entries: WEAK1_VOCAB.map(function(v){ return { word:v.en }; }) },
-      { namespace:'shuriken-weak2', label:'WK2', entries: WEAK2_VOCAB.map(function(v){ return { word:v.en }; }) },
       { namespace:'shuriken-daily', label:'SHU', entries: DAILY_VOCAB.map(function(v){ return { word:v.en }; }) },
+      { namespace:'shuriken-alpha', label:'ABC', entries: ALPHABET_LETTERS.map(function(l){ return { word:l }; }) },
     ];
   }
 
@@ -837,7 +1043,7 @@ var SS = (function() {
   function qs(id) { return document.getElementById(id); }
 
   function showScreen(id) {
-    ['home-screen','result-screen'].forEach(function(s) {
+    ['home-screen','result-screen','gameover-screen'].forEach(function(s) {
       var el = qs(s);
       if (el) el.style.display = (s === id) ? 'flex' : 'none';
     });
@@ -863,12 +1069,44 @@ var SS = (function() {
     chip.innerHTML = window.FAMILIAR_SVGS[fid];
   }
 
+  /* ── Ninja avatar — ステータスカードで選択した忍者に合わせて変化 ────── */
+  function updateNinjaAvatar() {
+    var host = qs('ninja-char');
+    if (!host) return;
+    var file = '';
+    try {
+      if (typeof Ninja !== 'undefined' && Ninja.designSelectedFile) file = Ninja.designSelectedFile();
+    } catch(e) { file = ''; }
+    if (file) {
+      host.innerHTML = '<img src="' + file + '" alt="忍者" '
+        + 'onerror="this.parentElement.innerHTML=window.NINJA_DEFAULT_SVG;">';
+    } else {
+      host.innerHTML = NINJA_DEFAULT_SVG;   /* 未選択時はデフォルト黒装束忍者 */
+    }
+  }
+
+  /* ── Hearts (ライフ) 表示 ───────────────────────────────────────────── */
+  function updateHearts(shake) {
+    var el = qs('ui-hearts');
+    if (!el) return;
+    var full = Math.floor(Math.max(0, lives));
+    el.textContent = '❤️'.repeat(full) + '🖤'.repeat(Math.max(0, MAX_LIVES - full));
+    if (shake) {
+      el.classList.remove('shake');
+      void el.offsetWidth;   /* reflow — アニメ再トリガ */
+      el.classList.add('shake');
+    }
+  }
+
   /* ── Home screen ────────────────────────────────────────────────────── */
   function goHome() {
     stopGame();
+    lives = MAX_LIVES;
     showScreen('home-screen');
     renderStatusCard('status-card-wrap');
+    updateNinjaAvatar();
     updateFamiliarChip();
+    updateHearts(false);
     /* 名前未登録ならモーダル表示 */
     if (typeof NinjaUI !== 'undefined') {
       NinjaUI.maybePromptName && NinjaUI.maybePromptName();
@@ -877,22 +1115,32 @@ var SS = (function() {
     }
   }
 
+  /* onNinjaProgressChanged から呼ばれる — 表示中の画面を最新化する */
+  function refresh() {
+    updateNinjaAvatar();
+    updateFamiliarChip();
+    if (qs('home-screen')     && qs('home-screen').style.display     !== 'none') renderStatusCard('status-card-wrap');
+    if (qs('result-screen')   && qs('result-screen').style.display   !== 'none') renderStatusCard('result-status-wrap');
+    if (qs('gameover-screen') && qs('gameover-screen').style.display !== 'none') renderStatusCard('go-status-wrap');
+  }
+
   /* ── Start game ─────────────────────────────────────────────────────── */
   function startGame(m) {
-    mode = m || 'weak1';
+    mode = m || 'daily';
     _unlockSfxCtx();  /* iOS: ユーザーのタップでAudioContext解放 */
 
-    /* vocab selection */
-    if (mode === 'weak1') {
-      vocabSet = WEAK1_VOCAB.slice();
-      distSet  = WEAK1_VOCAB.slice();
-    } else if (mode === 'weak2') {
-      vocabSet = WEAK2_VOCAB.slice();
-      distSet  = WEAK2_VOCAB.slice();
+    /* vocab selection — Weak Point モードは廃止済み */
+    if (mode === 'daily') {
+      vocabSet = DAILY_VOCAB.slice();  distSet = DAILY_VOCAB.slice();
+    } else if (mode === 'alpha-lower') {
+      vocabSet = ALPHA_BASE.slice();   distSet = ALPHA_LOWER.slice();
+    } else if (mode === 'alpha-upper') {
+      vocabSet = ALPHA_BASE.slice();   distSet = ALPHA_UPPER.slice();
+    } else if (mode === 'alpha-both') {
+      vocabSet = ALPHA_BASE.slice();   distSet = ALPHA_LOWER.concat(ALPHA_UPPER);
     } else {
-      /* daily: weakWordsを優先する加重サンプリング */
-      vocabSet = DAILY_VOCAB.slice();
-      distSet  = DAILY_VOCAB.slice();
+      mode = 'daily';
+      vocabSet = DAILY_VOCAB.slice();  distSet = DAILY_VOCAB.slice();
     }
 
     /* state reset */
@@ -910,18 +1158,47 @@ var SS = (function() {
     _totalXp        = 0;
     _sessionStart   = Date.now();
     _cdFired        = { 3:false, 2:false, 1:false };
+    lives           = MAX_LIVES;
+    letterHidden    = false;
+    rushActive      = false;
+    rushUntil       = -1;
+    currentTarget   = null;
 
     /* hide screens */
     showScreen(null);
 
+    /* stage / timer の演出クラスをクリア */
+    var stageEl = qs('stage');  if (stageEl) stageEl.classList.remove('rush');
+    var timerEl = qs('ui-timer'); if (timerEl) timerEl.classList.remove('rush','urgent');
+    var rb = qs('rush-banner'); if (rb) rb.classList.remove('show');
+    var nc = qs('ninja-char'); if (nc) nc.classList.remove('hurt');
+
     /* NinjaCore session */
-    Ninja.setTrainingMode('Shuriken');
+    Ninja.setTrainingMode(isAlphaMode() ? 'Shuriken ABC' : 'Shuriken');
     Ninja.setTrainingGame('Shuriken');
 
-    /* preload vocabSet audio */
-    vocabSet.forEach(function(v) { preloadWord(v.audio); });
+    /* preload audio */
+    if (isAlphaMode()) {
+      ALPHABET_LETTERS.forEach(function(l) { preloadWord('alphabet_' + l); });
+    } else {
+      vocabSet.forEach(function(v) { preloadWord(v.audio); });
+    }
+
+    /* 文字表示トグルボタン — アルファベットモードのみ表示 */
+    var tg = qs('btn-letter-toggle');
+    if (tg) {
+      tg.style.display = isAlphaMode() ? 'block' : 'none';
+      tg.classList.remove('on');
+      tg.innerHTML = '👁<br>HIDE';
+    }
+    /* LISTEN ボタンをリセット */
+    var lb = qs('btn-listen');
+    if (lb) { lb.textContent = '🔊 LISTEN'; lb.classList.remove('fail','playing'); }
 
     /* UI init */
+    updateNinjaAvatar();
+    updateFamiliarChip();
+    updateHearts(false);
     updateHUD();
     pickNewTarget();
 
@@ -937,12 +1214,46 @@ var SS = (function() {
     if (_tickInterval) { clearInterval(_tickInterval); _tickInterval = null; }
     if (_spawnTimeout) { clearTimeout(_spawnTimeout);  _spawnTimeout = null; }
     if (_rafId)        { cancelAnimationFrame(_rafId); _rafId = null; }
-    /* remove all falling words */
+    /* remove all falling words + shuriken projectiles */
     activeItems.forEach(function(item) { try { item.el.remove(); } catch(e){} });
     activeItems = [];
+    var stageEl = qs('stage');
+    if (stageEl) {
+      stageEl.classList.remove('rush');
+      var stars = stageEl.querySelectorAll('.shuriken-proj');
+      for (var s = 0; s < stars.length; s++) { try { stars[s].remove(); } catch(e){} }
+    }
+    rushActive = false;
+    var timerEl = qs('ui-timer'); if (timerEl) timerEl.classList.remove('rush');
+    var rb = qs('rush-banner'); if (rb) rb.classList.remove('show');
+    var nc = qs('ninja-char'); if (nc) nc.classList.remove('hurt');
     /* hide countdown */
     var cf = qs('countdown-flash');
     if (cf) { cf.textContent = ''; cf.classList.remove('show'); }
+  }
+
+  /* ── RUSH TIME ──────────────────────────────────────────────────────── */
+  function enterRush(dur) {
+    if (rushActive) return;
+    rushActive = true;
+    rushUntil  = timeLeft - dur;
+    var stageEl = qs('stage');  if (stageEl) stageEl.classList.add('rush');
+    var timerEl = qs('ui-timer'); if (timerEl) timerEl.classList.add('rush');
+    showRushBanner();
+    sfxRush();
+  }
+  function exitRush() {
+    rushActive = false;
+    var stageEl = qs('stage');  if (stageEl) stageEl.classList.remove('rush');
+    var timerEl = qs('ui-timer'); if (timerEl) timerEl.classList.remove('rush');
+  }
+  function showRushBanner() {
+    var b = qs('rush-banner');
+    if (!b) return;
+    b.classList.remove('show');
+    void b.offsetWidth;
+    b.classList.add('show');
+    setTimeout(function() { b.classList.remove('show'); }, 1500);
   }
 
   /* ── Tick (1秒ごと) ────────────────────────────────────────────────── */
@@ -951,6 +1262,12 @@ var SS = (function() {
 
     timeLeft--;
     targetTimer--;
+
+    /* RUSH TIME — 定期 (残り62秒 / 38秒に各8秒) ＋ 終盤 (残り15秒〜終了) */
+    if      (timeLeft === 62) enterRush(8);
+    else if (timeLeft === 38) enterRush(8);
+    else if (timeLeft === 15) enterRush(15);
+    if (rushActive && timeLeft <= rushUntil) exitRush();
 
     /* カウントダウン警告 (3-2-1秒前) */
     if (targetTimer <= 3 && targetTimer > 0 && !_cdFired[targetTimer]) {
@@ -973,47 +1290,96 @@ var SS = (function() {
 
     updateHUD();
 
-    if (timeLeft <= 0) endGame();
+    if (timeLeft <= 0) endGame('time');
   }
 
   /* ── Pick new target ────────────────────────────────────────────────── */
   function pickNewTarget() {
+    var prev = currentTarget;
+    /* ターゲット変更時、既存の落下ブロックはグレーアウトせずそのまま継続。
+     * 新ターゲットと一致するブロックは普通に破壊可能（＝得点）、
+     * 一致しないものは通常通りハズレ扱い(ricochet + damage)になる。 */
+
     var pool = vocabSet.filter(function(v) {
-      return !currentTarget || v.en !== currentTarget.en;
+      if (!prev) return true;
+      return isAlphaMode() ? v.base !== prev.base : v.en !== prev.en;
     });
     if (!pool.length) pool = vocabSet;
 
-    /* daily mode: 弱点単語を優先 */
-    if (mode === 'daily' && pool.length > 1) {
-      var ns = 'shuriken-daily';
+    /* daily / alphabet: 弱点(苦手)を優先する加重サンプリング */
+    var useWeak = (mode === 'daily' || isAlphaMode());
+    if (useWeak && pool.length > 1) {
+      var ns = currentNamespace();
       var weighted = pool.map(function(v) {
-        var w = Ninja.getWord({ word: v.en }, ns);
-        var score = 1 + (w.wrong || 0) * 2 + (w.lastWrong ? 4 : 0) - (w.correct || 0) * 0.3;
-        return { v: v, w: Math.max(0.5, score) };
+        var key = isAlphaMode() ? v.base : v.en;
+        var w = Ninja.getWord({ word: key }, ns);
+        var s = 1 + (w.wrong || 0) * 2 + (w.lastWrong ? 4 : 0) - (w.correct || 0) * 0.3;
+        return { v: v, w: Math.max(0.5, s) };
       });
       var total = weighted.reduce(function(s, x) { return s + x.w; }, 0);
       var r = Math.random() * total;
+      currentTarget = weighted[0].v;
       for (var i = 0; i < weighted.length; i++) {
         r -= weighted[i].w;
         if (r <= 0) { currentTarget = weighted[i].v; break; }
       }
-      if (!currentTarget) currentTarget = weighted[0].v;
     } else {
       currentTarget = pool[Math.floor(Math.random() * pool.length)];
     }
 
     /* update target box */
-    var jpEl = qs('target-jp');
-    var enEl = qs('target-en');
-    if (jpEl) jpEl.textContent = currentTarget.jp;
-    if (enEl) enEl.textContent = currentTarget.en;
+    displayTarget();
 
     /* reset switch bar */
     var fill = qs('target-switch-fill');
     if (fill) fill.style.width = '100%';
 
-    /* 音声再生 */
+    /* 音声再生 — 「ターゲットが確定する瞬間」に発音を流す。
+     * (alphabet/ フォルダから事前ロード済みなので遅延なく即再生される) */
     playTargetAudio();
+  }
+
+  /* ── Target box 表示更新 ────────────────────────────────────────────── */
+  function displayTarget() {
+    var jpEl = qs('target-jp');
+    var enEl = qs('target-en');
+    if (!currentTarget) return;
+    if (isAlphaMode()) {
+      if (jpEl) jpEl.classList.add('alpha');
+      var glyph;
+      if (mode === 'alpha-upper')      glyph = currentTarget.base.toUpperCase();
+      else if (mode === 'alpha-both')  glyph = currentTarget.base.toUpperCase() + ' ' + currentTarget.base;
+      else                             glyph = currentTarget.base;
+      if (jpEl) jpEl.textContent = letterHidden ? '？' : glyph;
+      if (enEl) enEl.textContent = letterHidden ? '🔊 おとを きいてね' : '';
+    } else {
+      if (jpEl) jpEl.classList.remove('alpha');
+      if (jpEl) jpEl.textContent = currentTarget.jp;
+      if (enEl) enEl.textContent = currentTarget.en;
+    }
+  }
+
+  /* ── 文字 表示/非表示 トグル (アルファベットモード) ─────────────────── */
+  function toggleLetter() {
+    if (!isAlphaMode()) return;
+    letterHidden = !letterHidden;
+    var tg = qs('btn-letter-toggle');
+    if (tg) {
+      tg.classList.toggle('on', letterHidden);
+      tg.innerHTML = letterHidden ? '🙈<br>SHOW' : '👁<br>HIDE';
+    }
+    displayTarget();
+  }
+
+  /* ── 落下させる実エントリを返す (alpha-both はランダムで大/小) ──────── */
+  function variantOf(baseEntry) {
+    if (!isAlphaMode() || !baseEntry || !baseEntry.alpha) return baseEntry;
+    var idx = ALPHABET_LETTERS.indexOf(baseEntry.base);
+    if (idx < 0) return baseEntry;
+    if (mode === 'alpha-upper') return ALPHA_UPPER[idx];
+    if (mode === 'alpha-lower') return ALPHA_LOWER[idx];
+    /* alpha-both: 大文字 / 小文字 をランダムに */
+    return Math.random() < 0.5 ? ALPHA_LOWER[idx] : ALPHA_UPPER[idx];
   }
 
   /* ── Play current target audio ──────────────────────────────────────── */
@@ -1059,7 +1425,7 @@ var SS = (function() {
     }
     if (comboEl) {
       if (combo >= 2) {
-        comboEl.textContent = 'COMBO ×' + combo;
+        comboEl.textContent = '×' + combo;
         comboEl.classList.remove('hidden');
       } else {
         comboEl.classList.add('hidden');
@@ -1072,6 +1438,7 @@ var SS = (function() {
     if (!gameActive) return;
     spawnWave();
     var interval = Math.max(MIN_SPAWN_MS, SPAWN_INTERVAL_MS - _elapsed * 12);
+    if (rushActive) interval *= 0.55;   /* RUSH TIME — 連続スポーン */
     _spawnTimeout = setTimeout(scheduleSpawn, interval);
   }
 
@@ -1081,26 +1448,37 @@ var SS = (function() {
     if (!stage) return;
     var sw = stage.clientWidth || 360;
 
-    /* wave size: 1〜3語 (経過時間で増加, 最大3語を超えないよう制限) */
-    var waveSize = 1 + Math.floor(_elapsed / 25);
-    if (waveSize > 3) waveSize = 3;
+    /* wave size: 序盤から 3 個。経過時間で増加、RUSH TIME 中は +1 (最大4個) */
+    var waveSize = 3 + Math.floor(_elapsed / 40);
+    if (rushActive) waveSize += 1;
+    if (waveSize > 4) waveSize = 4;
 
-    /* 必ずターゲットを1つ含む */
+    /* ハズレ(distractor)の数: 序盤から約1/3 → 「3個に1個はターゲット以外」。
+     * wave 拡大に伴い増やすが、ターゲットは必ず 1 個以上残す。 */
+    var distCount   = Math.min(waveSize - 1, Math.max(1, Math.round(waveSize * 0.4)));
+    var targetCount = waveSize - distCount;
+
     var toSpawn = [];
-    toSpawn.push({ vocab: currentTarget, isTarget: true });
-
-    /* 残りはdistractor */
-    for (var i = 1; i < waveSize; i++) {
-      var dist = getDistractor();
-      if (dist) toSpawn.push({ vocab: dist, isTarget: false });
+    var di;
+    /* ターゲット (alpha-both は1個ずつ大/小ランダム) */
+    for (di = 0; di < targetCount; di++) {
+      toSpawn.push({ vocab: variantOf(currentTarget), isTarget: true });
+    }
+    /* distractor — 同じ wave 内で文字/単語が重複しないように選ぶ */
+    var usedDist = {};
+    for (di = 0; di < distCount; di++) {
+      var dist = getDistractor(usedDist);
+      if (!dist) break;
+      usedDist[isAlphaMode() ? dist.base : dist.en] = true;
+      toSpawn.push({ vocab: dist, isTarget: false });
     }
 
     /* ランダム順で並べる */
     shuffle(toSpawn);
 
     /* X位置が重ならないよう間隔を計算 */
-    var minGap = 120;
-    var margin = 24;
+    var minGap = waveSize >= 4 ? 92 : 108;
+    var margin = 22;
     var maxX = sw - 140 - margin;
     var usedX = [];
 
@@ -1125,10 +1503,14 @@ var SS = (function() {
     return x;
   }
 
-  function getDistractor() {
+  function getDistractor(used) {
     if (!distSet || distSet.length <= 1) return null;
+    var tKey = currentTarget ? (isAlphaMode() ? currentTarget.base : currentTarget.en) : null;
     var pool = distSet.filter(function(v) {
-      return v.en !== (currentTarget && currentTarget.en);
+      var k = isAlphaMode() ? v.base : v.en;
+      if (k === tKey)            return false;   /* ターゲットと同一は除外 */
+      if (used && used[k])       return false;   /* 同 wave 内の重複を除外 */
+      return true;
     });
     if (!pool.length) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -1137,15 +1519,16 @@ var SS = (function() {
   /* ── Spawn single word ──────────────────────────────────────────────── */
   function spawnWord(vocab, isTarget, x, stage) {
     var el = document.createElement('div');
-    el.className = 'falling-word';
+    el.className = 'falling-word' + (vocab.alpha ? ' alpha-glyph' : '');
     el.textContent = vocab.en;
     el.style.left = Math.round(x) + 'px';
     el.style.top  = '-70px';
 
-    /* 速度: 経過時間で緩やかに増加 */
+    /* 速度: 経過時間で緩やかに増加。RUSH TIME 中は加速 */
     var speed = BASE_SPEED + (_elapsed / GAME_DURATION) * (MAX_SPEED - BASE_SPEED);
-    /* 弱点単語は少し遅め (5歳向け) */
+    /* ターゲットは少し遅め (5歳向け) */
     if (isTarget) speed *= 0.88;
+    if (rushActive) speed *= 1.4;
 
     var item = {
       el:       el,
@@ -1204,7 +1587,7 @@ var SS = (function() {
     _unlockSfxCtx();
     sfxThrow();
 
-    /* 忍者アニメーション */
+    /* 忍者アニメーション (triggerThrow) */
     var ninja = qs('ninja-char');
     if (ninja) {
       ninja.classList.add('throwing');
@@ -1237,25 +1620,60 @@ var SS = (function() {
       });
     });
 
+    /* 命中処理 — star は onHit に渡し、正解なら消滅・ハズレなら跳ね返す */
     setTimeout(function() {
-      star.remove();
-      onHit(tapX, tapY, item, stage);
+      onHit(tapX, tapY, item, stage, star);
     }, Math.round(dur * 1000) + 30);
   }
 
+  /* ── 手裏剣が忍者に跳ね返る (ハズレ命中時) ─────────────────────────── */
+  function ricochetStar(star, stage) {
+    var stageH = stage.clientHeight || 600;
+    var stageW = stage.clientWidth  || 360;
+    var nx = stageW / 2;
+    var ny = stageH - 40;
+    if (star) {
+      star.style.transition = 'left 0.24s ease-out, top 0.24s ease-in, transform 0.24s linear';
+      star.style.left      = nx + 'px';
+      star.style.top       = ny + 'px';
+      star.style.transform = 'translate(-50%,-50%) rotate(-560deg)';
+      setTimeout(function() { try { star.remove(); } catch(e) {} }, 280);
+    }
+    /* 手裏剣が戻ってきたタイミングでダメージ */
+    setTimeout(function() { takeDamage(); }, 230);
+  }
+
+  /* ── ダメージ処理 (❤️ -1, 0でゲームオーバー) ───────────────────────── */
+  function takeDamage() {
+    if (!gameActive) return;
+    lives = Math.max(0, lives - 1);
+    updateHearts(true);
+    var ninja = qs('ninja-char');
+    if (ninja) {
+      ninja.classList.remove('hurt');
+      void ninja.offsetWidth;
+      ninja.classList.add('hurt');
+    }
+    if (lives <= 0) {
+      gameActive = false;   /* 落下・スポーンを即停止 */
+      setTimeout(function() { endGame('dead'); }, 650);
+    }
+  }
+
   /* ── Handle hit ─────────────────────────────────────────────────────── */
-  function onHit(x, y, item, stage) {
-    if (!item.el.parentNode) return;
+  function onHit(x, y, item, stage, star) {
+    if (!item.el.parentNode) { if (star) { try { star.remove(); } catch(e){} } return; }
     item.hit = true;
 
-    var isCorrect = item.isTarget;
+    /* 現ターゲットと一致すれば正解、不一致ならハズレ。
+     * （ターゲット切替後も既存ブロックは普通に破壊可能 / ハズレ判定される） */
+    var isCorrect = isMatch(item.vocab, currentTarget);
     var timeMs    = Date.now() - item.spawnedAt;
-    var ns        = mode === 'weak1' ? 'shuriken-weak1'
-                  : mode === 'weak2' ? 'shuriken-weak2'
-                  : 'shuriken-daily';
 
-    /* NinjaCore記録 */
-    Ninja.recordAnswer({ word: item.vocab.en }, isCorrect, timeMs, ns);
+    /* NinjaCore記録 — 「お題(currentTarget)」を正解/不正解として記録する。 */
+    var ns      = currentNamespace();
+    var keyWord = isAlphaMode() ? currentTarget.base : currentTarget.en;
+    Ninja.recordAnswer({ word: keyWord }, isCorrect, timeMs, ns);
 
     /* hit ring effect */
     var ring = document.createElement('div');
@@ -1266,17 +1684,19 @@ var SS = (function() {
     setTimeout(function() { ring.remove(); }, 360);
 
     if (isCorrect) {
+      if (star) { try { star.remove(); } catch(e){} }
       sfxHitCorrect();
       /* combo */
       combo++;
       if (combo > maxCombo) maxCombo = combo;
+      var mult = rushActive ? 2 : 1;   /* RUSH TIME — スコア/XP ×2 */
       /* score */
-      var pts = 10 + Math.floor(combo / 2) * 2;
+      var pts = (10 + Math.floor(combo / 2) * 2) * mult;
       score  += pts;
       _answersCorrect++;
       /* XP per hit */
-      var xpRaw = 8 + Math.floor(combo / 3);
-      var gained = Ninja.addExp(xpRaw);
+      var xpRaw = (8 + Math.floor(combo / 3)) * mult;
+      Ninja.addExp(xpRaw);   /* xpMultiplier(0.5)は addExp 内部で適用 */
       _totalXp  += xpRaw;
       /* アニメーション: 正解色 → 消える */
       item.el.classList.add('hit-correct');
@@ -1284,20 +1704,23 @@ var SS = (function() {
       /* combo pop */
       if (combo >= 2) spawnFloatText(x, y - 24, '×'+combo+' COMBO!', 'float-combo', stage);
       /* xp burst */
-      spawnFloatText(x, y + 10, '+'+xpRaw+' XP', 'float-xp', stage);
+      spawnFloatText(x, y + 10, '+'+xpRaw+' XP', rushActive ? 'float-rush' : 'float-xp', stage);
     } else {
+      /* ハズレ命中 — 手裏剣が跳ね返り忍者にダメージ ❤️ -1 */
       sfxHitWrong();
       combo = 0;
       score = Math.max(0, score - 3);
       _answersWrong++;
       item.el.classList.add('hit-wrong');
-      /* 弾んだ後にhit-wrongクラスを外して落下再開 */
+      /* 弾んだ後にhit-wrongクラスを外して落下再開 (破壊はされない) */
       setTimeout(function() {
         if (item.el.parentNode) {
           item.el.classList.remove('hit-wrong');
           item.hit = false; /* 再び落下 */
         }
       }, 410);
+      /* 手裏剣を忍者へ跳ね返してダメージ */
+      ricochetStar(star, stage);
     }
 
     updateHUD();
@@ -1314,28 +1737,41 @@ var SS = (function() {
     setTimeout(function() { el.remove(); }, 750);
   }
 
+  /* ── 共通スタッツHTML ───────────────────────────────────────────────── */
+  function statsHTML() {
+    var lv = Ninja.progress.level;
+    return [
+      row('モード Mode',  MODE_LABELS[mode] || mode),
+      row('正解 Correct', _answersCorrect),
+      row('ミス Miss',    _answersWrong),
+      row('最大コンボ',   maxCombo + '×'),
+      row('レベル Level', 'Lv ' + lv),
+    ].join('');
+  }
+
   /* ── End game ───────────────────────────────────────────────────────── */
-  function endGame() {
+  /* reason: 'time' = 時間切れ(完遂) / 'dead' = ライフ切れ(ゲームオーバー) */
+  function endGame(reason) {
     stopGame();
     Ninja.touchTrained();
 
-    /* result stats */
-    qs('final-score').textContent = score;
-    qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
-
-    var stats = qs('result-stats');
-    if (stats) {
-      var lv = Ninja.progress.level;
-      stats.innerHTML = [
-        row('正解 Correct',   _answersCorrect),
-        row('ミス Miss',      _answersWrong),
-        row('最大コンボ',     maxCombo + '×'),
-        row('レベル Level',   'Lv ' + lv),
-      ].join('');
+    if (reason === 'dead') {
+      qs('go-score').textContent = score;
+      qs('go-xp').textContent    = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
+      var sub = qs('gameover-sub');
+      if (sub) sub.textContent = 'ライフが尽きた… 残り ' + Math.max(0, timeLeft) + '秒';
+      var gs = qs('go-stats');
+      if (gs) gs.innerHTML = statsHTML();
+      renderStatusCard('go-status-wrap');
+      showScreen('gameover-screen');
+    } else {
+      qs('final-score').textContent = score;
+      qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
+      var stats = qs('result-stats');
+      if (stats) stats.innerHTML = statsHTML();
+      renderStatusCard('result-status-wrap');
+      showScreen('result-screen');
     }
-
-    renderStatusCard('result-status-wrap');
-    showScreen('result-screen');
   }
 
   function row(label, val) {
@@ -1354,11 +1790,14 @@ var SS = (function() {
 
   /* ── Public API ─────────────────────────────────────────────────────── */
   return {
-    startGame:       startGame,
-    goHome:          goHome,
-    getCatalogs:     getCatalogs,
-    playTargetAudio: playTargetAudio,  /* LISTENボタン用 */
-    get lastMode()   { return mode; },
+    startGame:        startGame,
+    goHome:           goHome,
+    getCatalogs:      getCatalogs,
+    playTargetAudio:  playTargetAudio,  /* LISTENボタン用 */
+    toggleLetter:     toggleLetter,     /* 文字表示トグル用 */
+    updateNinjaAvatar:updateNinjaAvatar,
+    refresh:          refresh,          /* onNinjaProgressChanged用 */
+    get lastMode()    { return mode; },
   };
 
 })();
@@ -1382,9 +1821,23 @@ document.getElementById('btn-listen').addEventListener('click', function() {
   SS.playTargetAudio();
 });
 
+/* ── 文字 表示/非表示 トグル button (アルファベットモード) ────────────── */
+document.getElementById('btn-letter-toggle').addEventListener('click', function() {
+  _unlockSfxCtx();
+  SS.toggleLetter();
+});
+
 /* ── First gesture: unlock AudioContext ──────────────────────────────── */
 document.addEventListener('touchstart', _unlockSfxCtx, { passive: true });
 document.addEventListener('mousedown',  _unlockSfxCtx, { passive: true });
+
+/* ── onNinjaProgressChanged ──────────────────────────────────────────────
+ * ninja-ui.js が XP/レベル/キャラデザ変更時に呼ぶグローバル関数。
+ * ステータスカード・忍者アバター・お供チップを最新化する。
+ * ─────────────────────────────────────────────────────────────────────── */
+window.onNinjaProgressChanged = function() {
+  try { SS.refresh(); } catch(e) {}
+};
 
 /* ── Visibility change: iOS Safariでバックグラウンド時に音声停止 ──────── */
 document.addEventListener('visibilitychange', function() {
@@ -1395,9 +1848,18 @@ document.addEventListener('visibilitychange', function() {
 
 /* =========================================================================
  * BOOT: ホーム画面を表示
+ *
+ *  アルファベット音声(26文字)はページ読み込み直後にプリロードしておく:
+ *  - 専用フォルダ `alphabet/` を参照（フォールバック `audio/`）
+ *  - 「ターゲットが確定する瞬間」(pickNewTarget内 playTargetAudio) で
+ *    キャッシュからそのまま再生できるようにし、遅延ゼロかつ
+ *    iOS Safari のユーザージェスチャー要件にも引っかからないようにする。
  * ========================================================================= */
 window.addEventListener('DOMContentLoaded', function() {
   SS.goHome();
+  try {
+    ALPHABET_LETTERS.forEach(function(l) { preloadWord('alphabet_' + l); });
+  } catch (e) {}
 });
 </script>
 </body>
