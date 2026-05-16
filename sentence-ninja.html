@@ -1916,9 +1916,10 @@ function renderPasswordGate() {
       <span class="screen-sub">ELKえいご王国</span>
       <div style="width:100%;background:#f8f9fa;border:2px solid #dee2e6;border-radius:18px;padding:20px 16px;margin-bottom:12px;">
         <div style="font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#adb5bd;margin-bottom:12px;">🔒 Enter Password</div>
-        <input id="pw-input" type="password"
-          style="width:100%;font-size:20px;font-weight:bold;text-align:center;padding:12px;border:2.5px solid #dee2e6;border-radius:12px;outline:none;letter-spacing:4px;background:white;"
-          placeholder="••••••••"
+        new_string:
+                <input id="pw-input" type="password"
+                  style="width:100%;font-size:20px;font-weight:bold;text-align:center;padding:12px;border:2.5px solid #dee2e6;border-radius:12px;outline:none;letter-spacing:4px;background:white;color:#2b2d42;"
+                  placeholder="パスワードは英検父母の会の数字４桁"
           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
           onkeydown="if(event.key==='Enter'){event.preventDefault();checkPassword();}"
           oninput="this.style.borderColor='#dee2e6';document.getElementById('pw-err').textContent='';">
@@ -1946,11 +1947,12 @@ function checkPassword() {
   const err = document.getElementById('pw-err');
   if (!inp) return;
   if (inp.value === GAME_PASSWORD) {
-    playSfx('correctsound');
-    renderWelcome();
-    NinjaUI.maybePromptStarter(300);
-    NinjaUI.maybePromptFamiliarStarter(600);
-  } else {
+      playSfx('correctsound');
+      localStorage.setItem('sentenceNinjaPasswordCleared', 'true');
+      renderWelcome();
+      NinjaUI.maybePromptStarter(300);
+      NinjaUI.maybePromptFamiliarStarter(600);
+    } else {
     playSfx('wrongsound');
     inp.style.borderColor = '#E63946';
     inp.value = '';
@@ -1959,7 +1961,13 @@ function checkPassword() {
   }
 }
 
-renderPasswordGate();
-  </script>
+      // Check if password is already cleared in this browser
+      if (localStorage.getItem('sentenceNinjaPasswordCleared') === 'true') {
+        renderWelcome();
+        NinjaUI.maybePromptStarter(300);
+        NinjaUI.maybePromptFamiliarStarter(600);
+      } else {
+        renderPasswordGate();
+      }  </script>
  </body>
 </html>
