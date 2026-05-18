@@ -272,6 +272,7 @@
      </div>
      <div class="blitz-hint-row" id="blitz-hint-row"></div>
      <div class="kb-wrap">
+       <div id="sp-ninja-wrap" style="flex:0 0 auto;width:70px;height:70px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:44px;line-height:1;">🥷</div>
        <input class="kb-input" id="kb-input"
          type="text"
          placeholder="Type the word…"
@@ -972,6 +973,7 @@ function deleteLastLetter(){
 function showBlitzPanel(){
   document.getElementById('blitz-panel').classList.add('active');
   document.getElementById('game-area').style.display='none';
+  try { NinjaUI.updateNinjaAvatar(document.getElementById('sp-ninja-wrap')); } catch(e) {}
 }
 function hideBlitzPanel(){
   document.getElementById('blitz-panel').classList.remove('active');
@@ -1168,6 +1170,8 @@ function onKbInput(){
   const expected=state.currentWord.toLowerCase();
   if(!typed){ inp.className='kb-input'; return; }
   inp.className = expected.startsWith(typed) ? 'kb-input ok' : 'kb-input bad';
+  // Shuriken per keystroke
+  try { const _w=document.getElementById('sp-ninja-wrap'); if(_w && inp.value.length>0) NinjaUI.launchShurikenKey(_w, inp, inp.value[inp.value.length-1]||''); } catch(e) {}
 }
 
 function checkKeyboard(){

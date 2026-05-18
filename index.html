@@ -703,6 +703,7 @@ function nextRound() {
 function handleChoice(word, idx) {
   if (state.revealed || state.isGameOver) return;
   const btn = document.getElementById('btn-' + idx);
+  try { const _nav = document.getElementById('quiz-ninja-avatar'); if (_nav) NinjaUI.launchShuriken(_nav, btn, word === state.current); } catch(e) {}
   if (word === state.current) {
     state.revealed = true; state.score++;
     btn.classList.add('correct'); playSfx('correctsound');

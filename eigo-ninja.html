@@ -269,6 +269,40 @@
     .kb-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #5B21B6; }
     .kb-fb   { min-height:22px; text-align:center; font-size:15px; font-weight:800; font-family:'Nunito', sans-serif; }
     .kb-hint { font-size:11px; color:#adb5bd; text-align:center; }
+
+    /* ── Shuriken Effects ────────────────────────────────── */
+    @keyframes eigoShurikenSpin {
+      from { transform: translate(-50%,-50%) rotate(0deg); }
+      to   { transform: translate(-50%,-50%) rotate(720deg); }
+    }
+    @keyframes eigoShurikenStick {
+      0%   { transform: translate(-50%,-50%) rotate(720deg) scale(1.3); }
+      60%  { transform: translate(-50%,-50%) rotate(705deg) scale(0.85); }
+      100% { transform: translate(-50%,-50%) rotate(710deg) scale(1); }
+    }
+    @keyframes eigoShurikenPop {
+      0%   { transform: translate(-50%,-50%) scale(1); opacity:1; }
+      50%  { transform: translate(-50%,-50%) scale(1.6); opacity:0.8; }
+      100% { transform: translate(-50%,-50%) scale(0); opacity:0; }
+    }
+    /* Blitz ninja avatar — sits left of input field */
+    #blitz-ninja-wrap {
+      flex: 0 0 auto;
+      width: 70px; height: 70px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: visible;
+      position: relative;
+      font-size: 44px; line-height: 1;
+    }
+    #blitz-ninja-wrap img { width:100%; height:100%; object-fit:contain; }
+    /* Quiz hint-row ninja avatar */
+    #quiz-ninja-avatar {
+      flex: 0 0 auto;
+      width: 70px; height: 70px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #quiz-ninja-avatar img { width:100%; height:100%; object-fit:contain; }
   </style>
 </head>
 <body>
@@ -294,6 +328,7 @@
     </div>
     <div class="blitz-hint-row" id="blitz-hint-row"></div>
     <div class="kb-wrap">
+      <div id="blitz-ninja-wrap" title="忍者" style="font-size:44px;line-height:1;">🥷</div>
       <input class="kb-input" id="blitz-input"
         type="text"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
@@ -303,15 +338,8 @@
       <button class="kb-btn" onmousedown="event.preventDefault()" onclick="blitzCheckAnswer()">Go ➜</button>
     </div>
     <div class="kb-fb" id="blitz-fb"></div>
-    <div style="display:flex;gap:8px;width:100%;">
-      <button id="blitz-hint-btn" onclick="blitzUseHint()"
-        style="flex:0 0 auto;padding:9px 14px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
-               background:#FFFDE7;color:#7a5800;border:2px solid #FFD54F;border-radius:12px;
-               cursor:pointer;box-shadow:0 3px 0 #e6c200;transition:0.1s;white-space:nowrap;"
-        onmousedown="event.preventDefault();this.style.transform='translateY(2px)';this.style.boxShadow='0 1px 0 #e6c200'"
-        onmouseup="this.style.transform='';this.style.boxShadow='0 3px 0 #e6c200'">
-        💡 −0.5♥
-      </button>
+    <div style="display:flex;gap:8px;width:100%;align-items:center;">
+      <div id="blitz-fam-hint-wrap" style="flex:0 0 auto;"></div>
       <button id="blitz-pass-btn" onclick="blitzPass()"
         style="flex:1;padding:9px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
                background:#f1f3f5;color:#888;border:2px solid #dee2e6;border-radius:12px;
@@ -1684,6 +1712,181 @@ function getFamiliarSvg() {
 
 // _eigoFamChip — kept for backward compat; all status card uses replaced by _eigoFamBadgeHTML.
 function _eigoFamChip() { return ''; }
+
+// ═══════════════════════════════════════════════════════════
+// ── Shuriken Effects ─────────────────────────────────────
+// ═══════════════════════════════════════════════════════════
+
+const EIGO_SHURIKEN_SVG = '<svg viewBox="0 0 32 32" width="26" height="26" xmlns="http://www.w3.org/2000/svg">'
+  + '<polygon points="16,1 18.6,13.4 31,16 18.6,18.6 16,31 13.4,18.6 1,16 13.4,13.4" fill="#2a2a4a" stroke="#8080cc" stroke-width="0.8"/>'
+  + '<polygon points="16,1 18.6,13.4 31,16 18.6,18.6 16,31 13.4,18.6 1,16 13.4,13.4" fill="none" stroke="#b0b0ee" stroke-width="0.5" transform="rotate(45 16 16)"/>'
+  + '<circle cx="16" cy="16" r="3.5" fill="#a0a0e0" opacity="0.95"/>'
+  + '</svg>';
+
+// Small ninja avatar HTML for quiz hint-row (id="quiz-ninja-avatar")
+function _eigoQuizNinjaAvatarHTML(size) {
+  size = size || 48;
+  const src = (typeof shadowNinjaSelectedFile === 'function') ? shadowNinjaSelectedFile() : '';
+  const inner = src
+    ? '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" onerror="this.style.display=\'none\'">'
+    : '<span style="font-size:' + Math.round(size * 0.7) + 'px;line-height:1;">🥷</span>';
+  return '<div id="quiz-ninja-avatar">' + inner + '</div>';
+}
+
+// Populate #blitz-ninja-wrap with the current ninja design (call on blitz start)
+function eigoUpdateBlitzNinja() {
+  const wrap = document.getElementById('blitz-ninja-wrap');
+  if (!wrap) return;
+  const src = (typeof shadowNinjaSelectedFile === 'function') ? shadowNinjaSelectedFile() : '';
+  if (src) {
+    wrap.innerHTML = '<img src="' + src + '" alt="忍者" onerror="this.innerHTML=\'🥷\'">';
+  } else {
+    wrap.innerHTML = '<span style="font-size:28px;line-height:1;">🥷</span>';
+  }
+}
+
+// Render Familiar hint chip into #blitz-fam-hint-wrap.
+// disabled=true  → greyed out, pointer-events none (already used this word)
+// disabled=false → active, tappable
+function eigoRenderBlitzFamHint(disabled) {
+  const wrap = document.getElementById('blitz-fam-hint-wrap');
+  if (!wrap) return;
+  const fid = eigoFamiliar.selected;
+  let chipInner;
+  if (fid && FAMILIAR_SVGS[fid]) {
+    const s = FAMILIAR_SVGS[fid]
+      .replace(/(<svg[^>]*)\s+width="[^"]*"/, '$1')
+      .replace(/(<svg[^>]*)\s+height="[^"]*"/, '$1')
+      .replace(/<svg/, '<svg width="44" height="44"');
+    chipInner = s;
+  } else {
+    chipInner = '<span style="font-size:30px;line-height:1;">🐾</span>';
+  }
+
+  const glow    = disabled ? 'drop-shadow(0 0 5px #FFD54F)' : 'none';
+  const opacity = disabled ? '0.35' : '1';
+  const cursor  = disabled ? 'default' : 'pointer';
+  const onclick = disabled ? '' : 'onclick="blitzUseHint()"';
+
+  wrap.innerHTML =
+    '<div ' + onclick + ' style="display:inline-flex;align-items:center;gap:6px;'
+    + 'cursor:' + cursor + ';opacity:' + opacity + ';transition:opacity 0.2s;">'
+    + '<div style="width:52px;height:52px;display:inline-flex;align-items:center;justify-content:center;'
+    + 'filter:' + glow + ';animation:ninjaFamBob 2.4s ease-in-out infinite;transform-origin:50% 90%;">'
+    + chipInner + '</div>'
+    + '<div style="background:#FFFDE7;border:1.5px solid #FFD54F;border-radius:12px;'
+    + 'padding:5px 10px;font-size:12px;font-weight:800;color:#5a4000;line-height:1.4;'
+    + 'border-bottom-left-radius:4px;text-align:center;white-space:nowrap;">'
+    + '💡 ヒント<br><span style="font-size:11px;">−0.5♥</span></div>'
+    + '</div>';
+}
+
+// ── eigoLaunchShuriken ────────────────────────────────────
+// Launch shuriken from fromEl → toEl.
+// isCorrect=true: shuriken sticks; false: bounces back.
+function eigoLaunchShuriken(fromEl, toEl, isCorrect) {
+  try {
+    const fr = fromEl.getBoundingClientRect();
+    const tr = toEl.getBoundingClientRect();
+    const sx = fr.left + fr.width  / 2;
+    const sy = fr.top  + fr.height / 2;
+    const ex = tr.left + tr.width  / 2;
+    const ey = tr.top  + tr.height / 2;
+
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:' + sx + 'px;top:' + sy + 'px;'
+      + 'width:26px;height:26px;z-index:9999;pointer-events:none;'
+      + 'transform:translate(-50%,-50%);will-change:left,top,transform;';
+    el.innerHTML = EIGO_SHURIKEN_SVG;
+    document.body.appendChild(el);
+
+    const dist = Math.hypot(ex - sx, ey - sy);
+    const ms   = Math.min(230, Math.max(70, dist * 0.5));
+
+    el.style.animation = 'eigoShurikenSpin ' + ms + 'ms linear forwards';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transition = 'left ' + ms + 'ms cubic-bezier(0.3,0,0.7,1), top ' + ms + 'ms cubic-bezier(0.3,0,0.7,1)';
+      el.style.left = ex + 'px';
+      el.style.top  = ey + 'px';
+
+      setTimeout(() => {
+        if (isCorrect) {
+          el.style.animation = 'eigoShurikenStick 0.28s ease forwards';
+          setTimeout(() => { el.style.animation = 'eigoShurikenPop 0.2s ease forwards'; setTimeout(() => el.remove(), 220); }, 320);
+        } else {
+          // Bounce back to source
+          const back = Math.round(ms * 0.65);
+          el.style.transition = 'left ' + back + 'ms ease-out, top ' + back + 'ms ease-out, opacity ' + back + 'ms ease';
+          el.style.animation  = 'eigoShurikenSpin ' + back + 'ms linear reverse forwards';
+          el.style.left    = sx + 'px';
+          el.style.top     = sy + 'px';
+          el.style.opacity = '0.3';
+          setTimeout(() => el.remove(), back + 80);
+        }
+      }, ms + 10);
+    }));
+  } catch (e) {}
+}
+
+// ── eigoLaunchShurikenKey ─────────────────────────────────
+// Mini shuriken for each keystroke in Type Blitz.
+// Flies from ninja wrap → input field, morphs into the typed char.
+// Very fast (≤ 110ms) so input feel is unaffected.
+let _eigoLastKeyShuriken = 0; // throttle: skip if previous still in flight
+function eigoLaunchShurikenKey(fromEl, toInputEl, char) {
+  try {
+    const now = Date.now();
+    if (now - _eigoLastKeyShuriken < 60) return; // skip rapid repeat
+    _eigoLastKeyShuriken = now;
+
+    const fr = fromEl.getBoundingClientRect();
+    const tr = toInputEl.getBoundingClientRect();
+    const sx = fr.right  - 4;              // right edge of ninja
+    const sy = fr.top    + fr.height / 2;
+    const ex = tr.left   + 22;             // near left edge of input
+    const ey = tr.top    + tr.height / 2;
+
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:' + sx + 'px;top:' + sy + 'px;'
+      + 'width:22px;height:22px;z-index:9999;pointer-events:none;'
+      + 'transform:translate(-50%,-50%);will-change:left,top;';
+    el.innerHTML = EIGO_SHURIKEN_SVG.replace('width="26" height="26"', 'width="22" height="22"');
+    document.body.appendChild(el);
+
+    const dist = Math.hypot(ex - sx, ey - sy);
+    const ms   = Math.min(110, Math.max(45, dist * 0.55));
+
+    el.style.animation = 'eigoShurikenSpin ' + ms + 'ms linear forwards';
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      el.style.transition = 'left ' + ms + 'ms linear, top ' + ms + 'ms linear';
+      el.style.left = ex + 'px';
+      el.style.top  = ey + 'px';
+
+      setTimeout(() => {
+        // Morph into the character
+        el.style.animation   = 'none';
+        el.style.transition  = 'transform 0.07s ease, opacity 0.12s ease';
+        el.style.width       = '20px';
+        el.style.height      = '20px';
+        el.style.borderRadius = '4px';
+        el.style.display     = 'flex';
+        el.style.alignItems  = 'center';
+        el.style.justifyContent = 'center';
+        el.innerHTML = '<span style="font-size:15px;font-weight:900;color:#7C3AED;'
+          + 'font-family:Nunito,sans-serif;line-height:1;">' + char.replace(/</g,'&lt;') + '</span>';
+        setTimeout(() => {
+          el.style.opacity   = '0';
+          el.style.transform = 'translate(-50%,-50%) scale(1.5)';
+          setTimeout(() => el.remove(), 130);
+        }, 90);
+      }, ms + 5);
+    }));
+  } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════════════════
 
 // _eigoFamBadgeHTML — standalone familiar chip as a flex sibling between avatar and name.
 // size: pixel dimension of the SVG (default 40).
@@ -4487,9 +4690,10 @@ function renderQuestion() {
     ? `<div class="cat-strip ${catClasses[effectiveMode]}">${modeEmoji[effectiveMode]} ${modeNames[effectiveMode]}</div>`
     : '';
 
-  // Hint row — all modes get a tappable hint chip; label differs by mode
+  // Hint row — ninja avatar (left) + familiar chip (right) + hint bubble
   const hintSubLabel = effectiveMode === 2 ? '(日本語訳を見る)' : '(選択肢を1つ除外)';
-  const _hintPromptBubble = '<div style="display:inline-flex;align-items:center;gap:8px;">'
+  const _hintPromptBubble = '<div style="display:inline-flex;align-items:center;gap:4px;">'
+    + _eigoQuizNinjaAvatarHTML(70)
     + _eigoFamHintChipHTML('showHint()', false)
     + '<div style="background:#FFFDE7;border:1.5px solid #FFD54F;border-radius:12px;'
     + 'padding:5px 11px;font-size:12px;font-weight:800;color:#5a4000;max-width:150px;line-height:1.4;'
@@ -4604,6 +4808,11 @@ function showHint() {
 
 function checkAnswer(btn, selected, correct) {
   if (state.locked) return;
+
+  // ── Shuriken effect: launch before locking so animation overlaps response ──
+  const _ninjaAvEl = document.getElementById('quiz-ninja-avatar');
+  if (_ninjaAvEl) eigoLaunchShuriken(_ninjaAvEl, btn, selected === correct);
+
   state.locked = true;
 
   const allBtns = document.querySelectorAll('.choice-btn');
@@ -5035,13 +5244,12 @@ function blitzLoadItem() {
   }
   if (fb) fb.innerHTML = '';
 
-  // Refresh score pill, hearts, and hint button
-  const pill    = document.getElementById('blitz-score-pill');
-  const hearts  = document.getElementById('blitz-hearts');
-  const hintBtn = document.getElementById('blitz-hint-btn');
-  if (pill)    pill.textContent  = `⚡ ${blitz.charScore} chars`;
-  if (hearts)  hearts.innerHTML  = blitzHeartsHTML();
-  if (hintBtn) { hintBtn.disabled = false; hintBtn.style.opacity = '1'; hintBtn.style.cursor = 'pointer'; }
+  // Refresh score pill, hearts, and familiar hint chip
+  const pill   = document.getElementById('blitz-score-pill');
+  const hearts = document.getElementById('blitz-hearts');
+  if (pill)   pill.textContent = `⚡ ${blitz.charScore} chars`;
+  if (hearts) hearts.innerHTML = blitzHeartsHTML();
+  eigoRenderBlitzFamHint(false); // re-enable hint chip for new word
 }
 
 function blitzHeartsHTML() {
@@ -5125,6 +5333,13 @@ function blitzOnInput() {
   // Neutral border when empty, green/red once typing starts
   if (!typed) { inp.className = 'kb-input'; return; }
   inp.className = 'kb-input ' + (expected.startsWith(typed) ? 'ok' : 'bad');
+
+  // ── Shuriken effect: one shuriken per new character ──
+  const ninjaWrap = document.getElementById('blitz-ninja-wrap');
+  if (ninjaWrap && typed.length > 0) {
+    const lastChar = inp.value[inp.value.length - 1] || '';
+    eigoLaunchShurikenKey(ninjaWrap, inp, lastChar);
+  }
 }
 
 // Enter to submit
@@ -5290,13 +5505,8 @@ function blitzUseHint() {
   const heartsEl = document.getElementById('blitz-hearts');
   if (heartsEl) heartsEl.innerHTML = blitzHeartsHTML();
 
-  // Disable hint button after use (one hint per word)
-  const hintBtn = document.getElementById('blitz-hint-btn');
-  if (hintBtn) {
-    hintBtn.disabled = true;
-    hintBtn.style.opacity = '0.35';
-    hintBtn.style.cursor = 'default';
-  }
+  // Disable familiar hint chip after use (one hint per word)
+  eigoRenderBlitzFamHint(true);
 
   // Append next character into input and trigger input handler
   inp.value = inp.value + nextChar;
@@ -5355,6 +5565,8 @@ function startBlitz(subMode) {
   blitz.queue = ninjaWeightedSample(wordStock[state.level] || [], (wordStock[state.level] || []).length);
 
   showBlitzPanel();
+  eigoUpdateBlitzNinja();    // populate ninja avatar in the kb-wrap
+  eigoRenderBlitzFamHint(false); // draw familiar hint chip (enabled)
   blitzUpdateTimer();
   blitzLoadItem();
   blitzStartTimer();

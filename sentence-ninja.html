@@ -255,11 +255,13 @@
        <button class="listen-btn" id="blitz-listen-btn" onclick="blitzListen()">🔊 Listen</button>
      </div>
      <div class="blitz-input-wrap">
+       <div id="sn-ninja-wrap" style="flex:0 0 auto;width:70px;height:70px;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:44px;line-height:1;">🥷</div>
        <input class="blitz-input" id="blitz-inp"
          type="text"
          placeholder="Type the English sentence…"
          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
          inputmode="text" enterkeyhint="go"
+         oninput="snOnInput()"
          onkeydown="if(event.key==='Enter'){event.preventDefault();checkBlitz();}">
        <button class="blitz-submit" onmousedown="event.preventDefault()" onclick="checkBlitz()">Go ➜</button>
      </div>
@@ -894,6 +896,18 @@ function makeWordChoices(correctWords, allSentences, count=4) {
 function showBlitzPanel() {
   document.getElementById('blitz-panel').classList.add('active');
   document.getElementById('game-area').style.display='none';
+  try { NinjaUI.updateNinjaAvatar(document.getElementById('sn-ninja-wrap')); } catch(e) {}
+}
+
+// Shuriken per keystroke in blitz input
+function snOnInput() {
+  const inp = document.getElementById('blitz-inp');
+  const wrap = document.getElementById('sn-ninja-wrap');
+  if (!inp || !wrap) return;
+  const val = inp.value;
+  if (val.length > 0) {
+    try { NinjaUI.launchShurikenKey(wrap, inp, val[val.length - 1] || ''); } catch(e) {}
+  }
 }
 function hideBlitzPanel() {
   document.getElementById('blitz-panel').classList.remove('active');
@@ -1916,10 +1930,9 @@ function renderPasswordGate() {
       <span class="screen-sub">ELKえいご王国</span>
       <div style="width:100%;background:#f8f9fa;border:2px solid #dee2e6;border-radius:18px;padding:20px 16px;margin-bottom:12px;">
         <div style="font-size:13px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;color:#adb5bd;margin-bottom:12px;">🔒 Enter Password</div>
-        new_string:
-                <input id="pw-input" type="password"
-                  style="width:100%;font-size:20px;font-weight:bold;text-align:center;padding:12px;border:2.5px solid #dee2e6;border-radius:12px;outline:none;letter-spacing:4px;background:white;color:#2b2d42;"
-                  placeholder="パスワードは英検父母の会の数字４桁"
+        <input id="pw-input" type="password"
+          style="width:100%;font-size:20px;font-weight:bold;text-align:center;padding:12px;border:2.5px solid #dee2e6;border-radius:12px;outline:none;letter-spacing:4px;background:white;"
+          placeholder="••••••••"
           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
           onkeydown="if(event.key==='Enter'){event.preventDefault();checkPassword();}"
           oninput="this.style.borderColor='#dee2e6';document.getElementById('pw-err').textContent='';">
@@ -1947,12 +1960,11 @@ function checkPassword() {
   const err = document.getElementById('pw-err');
   if (!inp) return;
   if (inp.value === GAME_PASSWORD) {
-      playSfx('correctsound');
-      localStorage.setItem('sentenceNinjaPasswordCleared', 'true');
-      renderWelcome();
-      NinjaUI.maybePromptStarter(300);
-      NinjaUI.maybePromptFamiliarStarter(600);
-    } else {
+    playSfx('correctsound');
+    renderWelcome();
+    NinjaUI.maybePromptStarter(300);
+    NinjaUI.maybePromptFamiliarStarter(600);
+  } else {
     playSfx('wrongsound');
     inp.style.borderColor = '#E63946';
     inp.value = '';
@@ -1961,13 +1973,7 @@ function checkPassword() {
   }
 }
 
-      // Check if password is already cleared in this browser
-      if (localStorage.getItem('sentenceNinjaPasswordCleared') === 'true') {
-        renderWelcome();
-        NinjaUI.maybePromptStarter(300);
-        NinjaUI.maybePromptFamiliarStarter(600);
-      } else {
-        renderPasswordGate();
-      }  </script>
+renderPasswordGate();
+  </script>
  </body>
 </html>

@@ -735,7 +735,8 @@
  *   • iOS Safari: AudioContextはユーザージェスチャー後にresume()
  *   • play() Promiseのcatchを必ず実装 / 失敗時はUI通知
  *   • NinjaCore/NinjaUI連携: Ninja.boot(), addExp(), recordAnswer()
- *   • XP multiplier: 0.01 * ========================================================================= */
+ *   • XP multiplier: 0.5 (word-ninja相当)
+ * ========================================================================= */
 
 /* ── FAMILIAR_SVGS (全18体 — ninja-ui.jsが window.FAMILIAR_SVGS を参照) ── */
 window.FAMILIAR_SVGS = (function(){
@@ -783,13 +784,13 @@ var ALL_WORDS_KEYS = ['one','two','three','four','five','six','seven','eight','n
 
 /* Japanese translations for daily mode display */
 var WORD_JP = {
-  one:'いち・１', two:'に・２', three:'さん・３', four:'よん・４', five:'ご・５',
-  six:'ろく・６', seven:'しち・なな・７', eight:'はち・８', nine:'きゅう・９', ten:'じゅう・１０',
+  one:'いち・１', two:'に・２', three:'さん・３', four:'し・４', five:'ご・５',
+  six:'ろく・６', seven:'しち・７', eight:'はち・８', nine:'く・９', ten:'じゅう・１０',
   pants:'ズボン', skirt:'スカート', sweater:'セーター', 'T-shirt':'Tシャツ',
   handkerchief:'ハンカチ', cap:'ぼうし', toothbrush:'はぶらし', soap:'せっけん',
   towel:'タオル', hairbrush:'ヘアブラシ', mirror:'かがみ', knife:'ナイフ',
-  fork:'フォーク', chopsticks:'はし', cup:'コップ', glass:'グラス', plate:'（とりざら）おさら',
-  dish:'（もりつけようの）おさら・りょうり', bowl:'ちゃわん・どんぶり', car:'くるま', bus:'バス', motorcycle:'バイク',
+  fork:'フォーク', chopsticks:'はし', cup:'カップ', glass:'グラス', plate:'おさら',
+  dish:'あさい皿', bowl:'どんぶり', car:'くるま', bus:'バス', motorcycle:'バイク',
   bicycle:'じてんしゃ', tricycle:'さんりんしゃ', train:'でんしゃ',
   airplane:'ひこうき', helicopter:'ヘリコプター',
 };
@@ -830,7 +831,8 @@ window.getNinjaCatalogs = function() { return SS.getCatalogs(); };
 Ninja.configure({
   gameId:          'shuriken-slinger',   /* 互換維持のため gameId はそのまま */
   gameLabel:       'Eigo Shuriken',
-  xpMultiplier:    0.01,        /* eigo-ninjaの1% */  slowMs:          8000,       /* 8秒以上かかった場合はslowに記録 */
+  xpMultiplier:    0.5,        /* word-ninja相当: eigo-ninjaの50% */
+  slowMs:          8000,       /* 8秒以上かかった場合はslowに記録 */
   imagePathPrefix: 'images/',  /* 他ゲームと統一 — キャラデザ画像は images/ 配下 */
 });
 Ninja.boot();
@@ -1913,7 +1915,7 @@ var SS = (function() {
 
     if (reason === 'dead') {
       qs('go-score').textContent = score;
-      qs('go-xp').textContent    = '+ ' + _totalXp + ' XP (×0.01 multiplier)';
+      qs('go-xp').textContent    = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
       var sub = qs('gameover-sub');
       if (sub) sub.textContent = 'ライフが尽きた… 残り ' + Math.max(0, timeLeft) + '秒';
       var gs = qs('go-stats');
@@ -1922,7 +1924,7 @@ var SS = (function() {
       showScreen('gameover-screen');
     } else {
       qs('final-score').textContent = score;
-      qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.01 multiplier)';
+      qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
       var stats = qs('result-stats');
       if (stats) stats.innerHTML = statsHTML();
       renderStatusCard('result-status-wrap');

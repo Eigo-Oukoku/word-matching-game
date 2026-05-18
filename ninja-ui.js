@@ -135,6 +135,12 @@
       // ── In-game familiar hint row ─────────────────────────────────────
       '.ninja-fam-hint-row{display:block;text-align:center;margin:6px 0 4px;min-height:62px;}',
       '@keyframes popIn{0%{transform:scale(0.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}',
+      // ── Shuriken launch animations ────────────────────────────────────
+      '@keyframes ninjaLaunchSpin{from{transform:translate(-50%,-50%) rotate(0deg)}to{transform:translate(-50%,-50%) rotate(720deg)}}',
+      '@keyframes ninjaLaunchStick{0%{transform:translate(-50%,-50%) rotate(720deg) scale(1.3)}60%{transform:translate(-50%,-50%) rotate(705deg) scale(0.85)}100%{transform:translate(-50%,-50%) rotate(710deg) scale(1)}}',
+      '@keyframes ninjaLaunchPop{0%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.6);opacity:.8}100%{transform:translate(-50%,-50%) scale(0);opacity:0}}',
+      '#quiz-ninja-avatar{flex:0 0 auto;width:70px;height:70px;display:flex;align-items:center;justify-content:center;overflow:hidden;}',
+      '#quiz-ninja-avatar img{width:100%;height:100%;object-fit:contain;}',
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -1468,6 +1474,113 @@
       + inner + '</div>';
   }
 
+  // ── Shuriken effect helpers ──────────────────────────────────────────
+
+  var _NINJA_SHURIKEN_SVG =
+    '<svg viewBox="0 0 32 32" width="26" height="26" xmlns="http://www.w3.org/2000/svg">'
+    + '<polygon points="16,1 18.6,13.4 31,16 18.6,18.6 16,31 13.4,18.6 1,16 13.4,13.4" fill="#2a2a4a" stroke="#8080cc" stroke-width="0.8"/>'
+    + '<polygon points="16,1 18.6,13.4 31,16 18.6,18.6 16,31 13.4,18.6 1,16 13.4,13.4" fill="none" stroke="#b0b0ee" stroke-width="0.5" transform="rotate(45 16 16)"/>'
+    + '<circle cx="16" cy="16" r="3.5" fill="#a0a0e0" opacity="0.95"/>'
+    + '</svg>';
+
+  // quizNinjaAvatarHTML — 70px ninja avatar for the hint row (id="quiz-ninja-avatar").
+  function quizNinjaAvatarHTML(size) {
+    size = size || 70;
+    var src = (N.designSelectedFile && typeof N.designSelectedFile === 'function') ? N.designSelectedFile() : '';
+    var inner = src
+      ? '<img src="' + src + '" alt="" onerror="this.style.display=\'none\'">'
+      : '<span style="font-size:' + Math.round(size * 0.6) + 'px;line-height:1;">🥷</span>';
+    return '<div id="quiz-ninja-avatar">' + inner + '</div>';
+  }
+
+  // updateNinjaAvatar — populate a wrap div (e.g. #sp-ninja-wrap) with the current design.
+  function updateNinjaAvatar(wrapEl) {
+    if (!wrapEl) return;
+    var src = (N.designSelectedFile && typeof N.designSelectedFile === 'function') ? N.designSelectedFile() : '';
+    wrapEl.innerHTML = src
+      ? '<img src="' + src + '" alt="忍者" style="width:100%;height:100%;object-fit:contain;" onerror="this.innerHTML=\'🥷\'">'
+      : '<span style="font-size:28px;line-height:1;">🥷</span>';
+  }
+
+  // launchShuriken — flies from fromEl centre to toEl centre.
+  // isCorrect=true → sticks; false → bounces back.
+  function launchShuriken(fromEl, toEl, isCorrect) {
+    try {
+      injectStyles();
+      var fr = fromEl.getBoundingClientRect(), tr = toEl.getBoundingClientRect();
+      var sx = fr.left + fr.width  / 2, sy = fr.top  + fr.height / 2;
+      var ex = tr.left + tr.width  / 2, ey = tr.top  + tr.height / 2;
+      var el = document.createElement('div');
+      el.style.cssText = 'position:fixed;left:' + sx + 'px;top:' + sy + 'px;'
+        + 'width:26px;height:26px;z-index:9999;pointer-events:none;'
+        + 'transform:translate(-50%,-50%);will-change:left,top,transform;';
+      el.innerHTML = _NINJA_SHURIKEN_SVG;
+      document.body.appendChild(el);
+      var dist = Math.sqrt((ex-sx)*(ex-sx) + (ey-sy)*(ey-sy));
+      var ms   = Math.min(230, Math.max(70, dist * 0.5));
+      el.style.animation = 'ninjaLaunchSpin ' + ms + 'ms linear forwards';
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        el.style.transition = 'left ' + ms + 'ms cubic-bezier(0.3,0,0.7,1),top ' + ms + 'ms cubic-bezier(0.3,0,0.7,1)';
+        el.style.left = ex + 'px'; el.style.top = ey + 'px';
+        setTimeout(function() {
+          if (isCorrect) {
+            el.style.animation = 'ninjaLaunchStick 0.28s ease forwards';
+            setTimeout(function() {
+              el.style.animation = 'ninjaLaunchPop 0.2s ease forwards';
+              setTimeout(function() { el.remove(); }, 220);
+            }, 320);
+          } else {
+            var back = Math.round(ms * 0.65);
+            el.style.transition = 'left '+back+'ms ease-out,top '+back+'ms ease-out,opacity '+back+'ms ease';
+            el.style.animation  = 'ninjaLaunchSpin ' + back + 'ms linear reverse forwards';
+            el.style.left = sx + 'px'; el.style.top = sy + 'px'; el.style.opacity = '0.3';
+            setTimeout(function() { el.remove(); }, back + 80);
+          }
+        }, ms + 10);
+      }); });
+    } catch(e) {}
+  }
+
+  // launchShurikenKey — mini shuriken per keystroke (typing modes).
+  var _ninjaLastKeyStar = 0;
+  function launchShurikenKey(fromEl, toInputEl, char) {
+    try {
+      injectStyles();
+      var now = Date.now();
+      if (now - _ninjaLastKeyStar < 60) return;
+      _ninjaLastKeyStar = now;
+      var fr = fromEl.getBoundingClientRect(), tr = toInputEl.getBoundingClientRect();
+      var sx = fr.right - 4, sy = fr.top + fr.height / 2;
+      var ex = tr.left  + 22, ey = tr.top + tr.height / 2;
+      var el = document.createElement('div');
+      el.style.cssText = 'position:fixed;left:' + sx + 'px;top:' + sy + 'px;'
+        + 'width:22px;height:22px;z-index:9999;pointer-events:none;'
+        + 'transform:translate(-50%,-50%);will-change:left,top;';
+      el.innerHTML = _NINJA_SHURIKEN_SVG.replace('width="26" height="26"', 'width="22" height="22"');
+      document.body.appendChild(el);
+      var dist = Math.sqrt((ex-sx)*(ex-sx) + (ey-sy)*(ey-sy));
+      var ms   = Math.min(110, Math.max(45, dist * 0.55));
+      el.style.animation = 'ninjaLaunchSpin ' + ms + 'ms linear forwards';
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        el.style.transition = 'left ' + ms + 'ms linear,top ' + ms + 'ms linear';
+        el.style.left = ex + 'px'; el.style.top = ey + 'px';
+        setTimeout(function() {
+          el.style.animation = 'none';
+          el.style.width = '20px'; el.style.height = '20px';
+          el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
+          el.innerHTML = '<span style="font-size:15px;font-weight:900;color:#7C3AED;font-family:Nunito,sans-serif;line-height:1;">'
+            + (char || '').replace(/</g, '&lt;') + '</span>';
+          setTimeout(function() {
+            el.style.transition = 'opacity 0.12s ease,transform 0.1s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translate(-50%,-50%) scale(1.5)';
+            setTimeout(function() { el.remove(); }, 130);
+          }, 90);
+        }, ms + 5);
+      }); });
+    } catch(e) {}
+  }
+
   // familiarHintRowHTML — renders the sub-question row for all game screens.
   // opts:
   //   hintAction  {string}  onclick string for hint tap ('' = no hint)
@@ -1499,6 +1612,7 @@
       ? '<div id="lives-display" style="font-size:18px;letter-spacing:1px;line-height:1;">' + hearts + '</div>'
       : '';
     var chipHTML = _famHintChipHTML(hasHint ? opts.hintAction : '', hintShown);
+    var ninjaAvHTML = quizNinjaAvatarHTML(70);
     var rowContent = '';
     if (hasHint) {
       if (!hintShown) {
@@ -1507,12 +1621,12 @@
           + 'padding:5px 11px;font-size:12px;font-weight:800;color:#5a4000;max-width:150px;line-height:1.4;'
           + 'border-bottom-left-radius:4px;text-align:center;">🐾 タップでヒント！<br>'
           + '<span style="font-size:11px;font-weight:700;">(−0.5♥)</span></div>';
-        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;">'
-          + chipHTML + hintPromptBubble + (hasLives ? heartsHTML : '') + '</div>';
+        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:4px;">'
+          + ninjaAvHTML + chipHTML + hintPromptBubble + (hasLives ? heartsHTML : '') + '</div>';
       } else {
         // Hint used — show hint text if provided, otherwise just chip + hearts
-        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:10px;">'
-          + chipHTML + (hasLives ? heartsHTML : '') + '</div>';
+        rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;">'
+          + ninjaAvHTML + chipHTML + (hasLives ? heartsHTML : '') + '</div>';
         if (hintText) {
           rowContent += '<div style="margin-top:6px;padding:8px 14px;background:#FFFDE7;border:2px solid #FFD54F;'
             + 'border-radius:12px;font-size:14px;font-weight:800;color:#5a4000;text-align:center;'
@@ -1521,12 +1635,12 @@
       }
     } else {
       // No hint available — show cheer message bubble
-      var bubble = '<div style="position:relative;display:inline-flex;align-items:center;gap:8px;">'
-        + chipHTML
+      var bubble = '<div style="position:relative;display:inline-flex;align-items:center;gap:4px;">'
+        + ninjaAvHTML + chipHTML
         + '<div style="background:#f1f3f5;border:1.5px solid #dee2e6;border-radius:12px;'
         + 'padding:6px 12px;font-size:13px;font-weight:800;color:#555;max-width:160px;line-height:1.3;'
         + 'border-bottom-left-radius:4px;">' + cheerMsg + '</div></div>';
-      rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:12px;">'
+      rowContent = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;">'
         + bubble + (hasLives ? heartsHTML : '') + '</div>';
     }
     return '<div class="ninja-fam-hint-row">' + rowContent + '</div>';
@@ -2031,8 +2145,13 @@
     maybePromptFamiliarStarter: maybePromptFamiliarStarter,
     armOnLinks:                armOnLinks,
 
-    // in-game familiar hint row
-    familiarHintRowHTML: familiarHintRowHTML,
+    // in-game familiar hint row + ninja avatar
+    familiarHintRowHTML:  familiarHintRowHTML,
+    quizNinjaAvatarHTML:  quizNinjaAvatarHTML,
+    updateNinjaAvatar:    updateNinjaAvatar,
+    // shuriken effects
+    launchShuriken:       launchShuriken,
+    launchShurikenKey:    launchShurikenKey,
 
     // familiar picker
     openFamiliarPicker:   openFamiliarPicker,
