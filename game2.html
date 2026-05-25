@@ -156,7 +156,8 @@
   .listen-btn { margin-top: 5px; font-size: 14px; background: #E0F4FF !important; border: 2px solid #7CC3F0; border-radius: 999px; padding: 8px 25px; cursor: pointer; font-weight: bold; box-shadow: 0 3px 0 #7CC3F0; color: #0077B6 !important; }
 
   .choices-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin: 15px 0; }
-  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(16px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; }
+  .choice-btn { font-weight:bold; border-radius:18px; border: 2px solid #adb5bd; padding: 14px 8px; font-size: clamp(16px, 4.5vw, 40px); background: #ffffff !important; color: #212529 !important; min-height: 80px; box-shadow: 0 5px 0 #dee2e6; display: flex; align-items: center; justify-content: center; transition: 0.1s; text-align:center; word-break:break-word; touch-action: manipulation; }
+  button { touch-action: manipulation; }
   .choice-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #dee2e6; }
   .choice-btn.correct { background:#C8F7D8!important; border-color:#2DD368!important; color:#0A5C2D!important; box-shadow: 0 5px 0 #24A652 !important; }
   .choice-btn.wrong   { background:#FFD6D6!important; border-color:#FF6B6B!important; color:#8A0000!important; box-shadow: 0 5px 0 #B52D37 !important; }
@@ -743,7 +744,7 @@ function handleChoice(word, idx) {
     state.streak = (state.streak || 0) + 1;
     try {
       let qBase;
-      if      (state.isSpeedster)                        qBase = 3;
+      if      (state.isSpeedster)                        qBase = 17;
       else if (state.isPhantom || state.isNinja)         qBase = 21;
       else if (state.choiceCount >= 10)                  qBase = 17;
       else if (state.choiceCount >= 8)                   qBase = 14;
@@ -869,7 +870,7 @@ function renderSpeedsterEnd() {
   let speedsterBonus = 0;
   let newAliasUnlocked = '';
   try {
-    const rankBonus = n >= 15 ? 20 : n >= 10 ? 10 : n >= 7 ? 5 : 0;
+    const rankBonus = n >= 15 ? 90 : n >= 10 ? 45 : n >= 7 ? 22 : 0;
     speedsterBonus  = rankBonus;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();

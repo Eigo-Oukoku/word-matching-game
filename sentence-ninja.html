@@ -193,6 +193,7 @@
   .util-btn { flex:1; font-size:14px; font-weight:bold; border:2px solid #dee2e6; border-radius:12px; padding:11px 6px; cursor:pointer; background:#f8f9fa; color:#2b2d42; box-shadow:0 3px 0 #dee2e6; transition:0.1s; }
   .util-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #dee2e6; }
   .util-btn.links-btn { background:#E0F4FF; border-color:#7CC3F0; color:#064E8A; box-shadow:0 3px 0 #7CC3F0; }
+  button { touch-action: manipulation; }
 
   .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px 16px max(16px, env(safe-area-inset-bottom)); touch-action:none; }
   .overlay-box { position:relative; background:white; border-radius:20px; padding:20px 18px; max-width:400px; width:100%; max-height:86vh; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; box-shadow:0 10px 40px rgba(0,0,0,0.25); }
@@ -648,8 +649,9 @@ let G = {
 };
 // Helper: log a correct sentence + award per-question bonus XP.
 // Per-char XP (LEVEL_FACTOR=50 calibration):
-//   Ninja Sense / Type Blitz: 2.5 XP/char — same reward for both modes
-//   Speedmaster: 2.5 × 0.8 = 2.0 XP/char — tempo bonus offset by mode multiplier
+//   Regular (Ninja Sense): 3.5 XP/char
+//   Type Blitz:            6.0 XP/char  (detected via G.blitzInterval !== null)
+//   Speedmaster:          13.0 XP/char  (G.level === 'speedster')
 // Level penalty: Lv<15:×0.85 (see ninja-core.js ninjaLevelPenalty)
 function ninjaSentenceLogCorrect(s, ms){
   if(!s) return;
@@ -666,9 +668,10 @@ function ninjaSentenceLogCorrect(s, ms){
   try {
     const charCount = s.en ? s.en.length : 0;
     const penalty   = Ninja.ninjaLevelPenalty(Ninja.progress.level);
-    // Speedmaster is 0.8× Ninja Sense; Type Blitz uses the same rate as Ninja Sense.
-    const modeXpMul = G.level === 'speedster' ? 0.8 : 1.0;
-    const rawXp     = Math.max(1, Math.round(charCount * 2.5 * penalty * modeXpMul));
+    const isSpeedster  = G.level === 'speedster';
+    const isTypeBlitz  = G.blitzInterval !== null;
+    const baseRate     = isSpeedster ? 13 : isTypeBlitz ? 6 : 3.5;
+    const rawXp        = Math.max(1, Math.round(charCount * baseRate * penalty));
     Ninja.addExp(rawXp);
     G.sessionBonusXp += rawXp;
     NinjaUI.flashAnswerXp({
@@ -1768,8 +1771,8 @@ function renderSpeedsterEnd() {
   let speedsterBonus = 0;
   let newAliasSpeedster = '';
   try {
-    if      (n >= 130) speedsterBonus = 45;
-    else if (n >=  90) speedsterBonus = 25;
+    if      (n >= 130) speedsterBonus = 60;
+    else if (n >=  90) speedsterBonus = 35;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
     if (_snSpAlias && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_snSpAlias)) newAliasSpeedster = _snSpAlias;
@@ -1852,8 +1855,8 @@ function renderBlitzEnd() {
   let blitzBonus = 0;
   let newAliasBlitz = '';
   try {
-    if      (n >= 160) blitzBonus = 45;
-    else if (n >= 110) blitzBonus = 25;
+    if      (n >= 160) blitzBonus = 110;
+    else if (n >= 110) blitzBonus = 60;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
     if (_snBlitzAlias && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_snBlitzAlias)) newAliasBlitz = _snBlitzAlias;

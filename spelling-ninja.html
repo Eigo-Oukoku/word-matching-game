@@ -157,7 +157,8 @@
   .spelling-area { margin:12px 0; min-height:50px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap; }
   .letter-slot { width:clamp(24px, 7.5vw, 30px); height:clamp(32px, 10vw, 40px); border-bottom:3px solid #adb5bd; font-size:clamp(18px, 6vw, 24px); font-weight:bold; color:#2b2d42; display:flex; align-items:center; justify-content:center; }
   .letters-grid { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; width:100%; margin-top:8px; }
-  .letter-btn { width:clamp(38px, 11.5vw, 46px); height:clamp(38px, 11.5vw, 46px); font-size:clamp(17px, 5.5vw, 22px); font-weight:bold; border-radius:10px; border:2px solid #dee2e6; background:white; cursor:pointer; box-shadow:0 3px 0 #dee2e6; display:flex; align-items:center; justify-content:center; color:#2b2d42; }
+  .letter-btn { width:clamp(38px, 11.5vw, 46px); height:clamp(38px, 11.5vw, 46px); font-size:clamp(17px, 5.5vw, 22px); font-weight:bold; border-radius:10px; border:2px solid #dee2e6; background:white; cursor:pointer; box-shadow:0 3px 0 #dee2e6; display:flex; align-items:center; justify-content:center; color:#2b2d42; touch-action:manipulation; }
+  button { touch-action: manipulation; }
   .letter-btn:active { transform:translateY(2px); box-shadow:0 1px 0 #dee2e6; }
   .letter-btn.wrong-flash { animation:wrongFlash 0.35s ease; }
   @keyframes wrongFlash { 0%{background:white} 30%{background:#FFD6D9;border-color:#E63946} 100%{background:white} }
@@ -797,7 +798,7 @@ function ninjaLogCorrect(word, ms, charCount){
     const wordLen  = (charCount > 0 ? charCount : 0) || word.length;
     const isBlitz       = state.mode === 'keyboard';
     const isSpeedmaster = state.mode === 'speedster';
-    const xpPerChar  = isBlitz ? 8 : isSpeedmaster ? 11 : 3.5;
+    const xpPerChar  = isBlitz ? 11 : isSpeedmaster ? 15 : 5;
     const penalty    = Ninja.ninjaLevelPenalty(Ninja.progress.level);
     const rawXp      = Math.max(1, Math.round(wordLen * xpPerChar * penalty));
     Ninja.addExp(rawXp);
@@ -1430,6 +1431,12 @@ function tapLetter(letter,index){
   if(letterMatches){
     // ── Correct sequential tap ──
     state.userInput[targetIdx]=targetLetter;  // use canonical case, not tapped case
+    // Shuriken effect: grab button before it's nulled and re-rendered
+    try {
+      const _sBtn = document.querySelectorAll('.letter-btn')[index];
+      const _sTgt = document.querySelector('.spelling-area') || document.getElementById('game-root');
+      if (_sBtn && _sTgt) NinjaUI.launchShurikenKey(_sBtn, _sTgt, letter);
+    } catch(e) {}
     state.shuffledLetters[index]=null;
     state.placedHistory.push({inputIdx:targetIdx, shuffleIdx:index, letter:letter});
     playSfx('correctsound_short');
@@ -1601,7 +1608,7 @@ function render(){
     </div>
     <div class="letters-grid">
       ${state.shuffledLetters.map((l,i)=>l===null
-        ? `<div style="width:42px;height:42px"></div>`
+        ? `<button class="letter-btn" disabled style="opacity:0.2;cursor:default;pointer-events:none;box-shadow:none;color:transparent;">·</button>`
         : `<button class="letter-btn" onclick="tapLetter('${l.replace(/'/g,"\\'")}',${i})">${l}</button>`
       ).join('')}
     </div>
@@ -1681,8 +1688,8 @@ function renderBlitzEnd(){
   let blitzBonus = 0;
   let newAliasBlitz = '';
   try {
-    if      (n >= 60) blitzBonus = 25;
-    else if (n >= 45) blitzBonus = 12;
+    if      (n >= 60) blitzBonus = 34;
+    else if (n >= 45) blitzBonus = 16;
     if (blitzBonus > 0) gainedLv = Ninja.addExp(blitzBonus);
     Ninja.touchTrained();
     if (_blitzAliasSpell && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_blitzAliasSpell)) newAliasBlitz = _blitzAliasSpell;
@@ -1781,8 +1788,8 @@ function renderSpeedsterEnd(){
   let speedsterBonus = 0;
   let newAliasSpeedster = '';
   try {
-    if      (n >= 35) speedsterBonus = 25;
-    else if (n >= 25) speedsterBonus = 12;
+    if      (n >= 35) speedsterBonus = 34;
+    else if (n >= 25) speedsterBonus = 16;
     if (speedsterBonus > 0) gainedLv = Ninja.addExp(speedsterBonus);
     Ninja.touchTrained();
     if (_spAliasSpell && typeof Ninja.tryUnlockAlias === 'function' && Ninja.tryUnlockAlias(_spAliasSpell)) newAliasSpeedster = _spAliasSpell;

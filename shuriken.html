@@ -571,7 +571,6 @@
     <!-- HOME SCREEN ─────────────────────────────────────────── -->
     <div id="home-screen" class="screen">
       <div class="game-title">EIGO<br><span>SHURIKEN</span></div>
-      <div class="game-sub">ELKえいご王国 — 手裏剣英単語</div>
 
       <!-- Status card -->
       <div id="status-card-wrap"></div>
@@ -790,7 +789,7 @@ var WORD_JP = {
   handkerchief:'ハンカチ', cap:'ぼうし', toothbrush:'はぶらし', soap:'せっけん',
   towel:'タオル', hairbrush:'ヘアブラシ', mirror:'かがみ', knife:'ナイフ',
   fork:'フォーク', chopsticks:'はし', cup:'カップ', glass:'グラス', plate:'おさら',
-  dish:'あさい皿', bowl:'どんぶり', car:'くるま', bus:'バス', motorcycle:'バイク',
+  dish:'ふかざら・もりつけようのおさら', bowl:'どんぶり', car:'くるま', bus:'バス', motorcycle:'バイク',
   bicycle:'じてんしゃ', tricycle:'さんりんしゃ', train:'でんしゃ',
   airplane:'ひこうき', helicopter:'ヘリコプター',
 };
@@ -831,7 +830,7 @@ window.getNinjaCatalogs = function() { return SS.getCatalogs(); };
 Ninja.configure({
   gameId:          'shuriken-slinger',   /* 互換維持のため gameId はそのまま */
   gameLabel:       'Eigo Shuriken',
-  xpMultiplier:    0.5,        /* word-ninja相当: eigo-ninjaの50% */
+  xpMultiplier:    0.5,         /* word-ninja相当: eigo-ninjaの50% */
   slowMs:          8000,       /* 8秒以上かかった場合はslowに記録 */
   imagePathPrefix: 'images/',  /* 他ゲームと統一 — キャラデザ画像は images/ 配下 */
 });
@@ -1162,8 +1161,25 @@ var SS = (function() {
   /* results */
   var _answersCorrect = 0;
   var _answersWrong   = 0;
-  var _totalXp        = 0;
+  var _totalXp        = 0;   /* raw (before xpMultiplier) — internal use */
+  var _totalXpScaled  = 0;   /* actual XP shown to player */
   var _sessionStart   = 0;
+
+  /* モード別コンボ倍率 — コンボ数に応じてXPを上乗せする係数 */
+  var COMBO_RATE = {
+    'alpha-lower': 0.02,
+    'alpha-upper': 0.02,
+    'alpha-both':  0.025,
+    'daily':       0.04,
+  };
+
+  /* モード別ベースXP (daily≒word-ninja平均, alpha-lower/upper=1, alpha-both=1.2) */
+  var XP_BASE = {
+    'alpha-lower': 6,
+    'alpha-upper': 6,
+    'alpha-both':  7,
+    'daily':       18,
+  };
 
   /* ── mode helpers ───────────────────────────────────────────────────── */
   function isAlphaMode() { return mode.indexOf('alpha') === 0; }
@@ -1314,6 +1330,7 @@ var SS = (function() {
     _answersCorrect = 0;
     _answersWrong   = 0;
     _totalXp        = 0;
+    _totalXpScaled  = 0;
     _sessionStart   = Date.now();
     _cdFired        = { 3:false, 2:false, 1:false };
     lives           = MAX_LIVES;
@@ -1853,16 +1870,20 @@ var SS = (function() {
       score  += pts;
       _answersCorrect++;
       /* XP per hit */
-      var xpRaw = (8 + Math.floor(combo / 3)) * mult;
-      Ninja.addExp(xpRaw);   /* xpMultiplier(0.5)は addExp 内部で適用 */
-      _totalXp  += xpRaw;
+      var rate   = COMBO_RATE[mode] || 0.04;
+      var base   = XP_BASE[mode]    || 18;
+      var xpRaw  = Math.round(base * (1 + combo * rate)) * mult;
+      Ninja.addExp(xpRaw);   /* xpMultiplier は addExp 内部で適用 */
+      _totalXp       += xpRaw;
+      var xpScaled    = Math.max(1, Math.round(xpRaw * (Ninja.profile.xpMultiplier || 0.5)));
+      _totalXpScaled += xpScaled;
       /* アニメーション: 正解色 → 消える */
       item.el.classList.add('hit-correct');
       setTimeout(function() { try { item.el.remove(); } catch(e){} }, 320);
       /* combo pop */
       if (combo >= 2) spawnFloatText(x, y - 24, '×'+combo+' COMBO!', 'float-combo', stage);
       /* xp burst */
-      spawnFloatText(x, y + 10, '+'+xpRaw+' XP', rushActive ? 'float-rush' : 'float-xp', stage);
+      spawnFloatText(x, y + 10, '+'+xpScaled+' XP', rushActive ? 'float-rush' : 'float-xp', stage);
     } else {
       /* ハズレ命中 — 手裏剣が跳ね返り忍者にダメージ ❤️ -1 */
       sfxHitWrong();
@@ -1913,9 +1934,24 @@ var SS = (function() {
     stopGame();
     Ninja.touchTrained();
 
+    /* 完遂ボーナス: 時間切れ完走時のみ正解数に応じて加算 */
+    if (reason === 'time') {
+      var isAlpha   = isAlphaMode();
+      var n         = _answersCorrect;
+      var bonusRaw  = isAlpha
+        ? (n >= 20 ? 30 : n >= 12 ? 15 : 0)
+        : (n >= 15 ? 40 : n >=  8 ? 20 : 0);
+      if (bonusRaw > 0) {
+        Ninja.addExp(bonusRaw);
+        var bonusScaled = Math.max(1, Math.round(bonusRaw * (Ninja.profile.xpMultiplier || 0.5)));
+        _totalXp       += bonusRaw;
+        _totalXpScaled += bonusScaled;
+      }
+    }
+
     if (reason === 'dead') {
       qs('go-score').textContent = score;
-      qs('go-xp').textContent    = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
+      qs('go-xp').textContent    = '+ ' + _totalXpScaled + ' XP';
       var sub = qs('gameover-sub');
       if (sub) sub.textContent = 'ライフが尽きた… 残り ' + Math.max(0, timeLeft) + '秒';
       var gs = qs('go-stats');
@@ -1924,7 +1960,7 @@ var SS = (function() {
       showScreen('gameover-screen');
     } else {
       qs('final-score').textContent = score;
-      qs('result-xp').textContent   = '+ ' + _totalXp + ' XP (×0.5 multiplier)';
+      qs('result-xp').textContent   = '+ ' + _totalXpScaled + ' XP';
       var stats = qs('result-stats');
       if (stats) stats.innerHTML = statsHTML();
       renderStatusCard('result-status-wrap');
